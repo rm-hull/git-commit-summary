@@ -4,6 +4,7 @@ go 1.25.3
 
 require (
 	github.com/briandowns/spinner v1.23.2
+	github.com/earthboundkid/versioninfo/v2 v2.24.1
 	github.com/gookit/color v1.6.0
 	github.com/joho/godotenv v1.5.1
 	google.golang.org/genai v1.32.0
@@ -12,7 +13,6 @@ require (
 require (
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
-	github.com/earthboundkid/versioninfo/v2 v2.24.1 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
