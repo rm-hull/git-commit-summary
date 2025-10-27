@@ -27,9 +27,8 @@ func main() {
 
 	ctx := context.Background()
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	s.Suffix = color.Magenta.Render(" Running git diff")
+	s.Suffix = color.Render(" <magenta>Running git diff</>")
 	s.Start()
-	defer s.Stop()
 
 	out, err := git.Diff()
 	if err != nil {
@@ -37,12 +36,13 @@ func main() {
 	}
 
 	if len(out) == 0 {
-		s.FinalMSG = color.Red.Render("No changes are staged")
+		s.FinalMSG = color.Render("<fg=red;op=bold>No changes are staged</>")
 		s.Stop()
 		os.Exit(1)
 	}
 
-	s.Suffix = color.Blue.Render(" Generating commit summary")
+	model := getModel()
+	s.Suffix = color.Render(fmt.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", model))
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -52,10 +52,7 @@ func main() {
 
 	result, err := client.Models.GenerateContent(
 		ctx,
-		// "gemini-2.5-pro",
-		// "gemini-2.5-flash",
-		"gemini-2.5-flash-preview-09-2025",
-		// "gemini-2.5-flash-lite-preview-09-2025",
+		model,
 		genai.Text(text),
 		nil,
 	)
@@ -69,7 +66,7 @@ func main() {
 
 	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
 	Box.Print("Commit message", message)
-	confirm, err := internal.Ask(color.Yellow.Render("Confirm commit?"))
+	confirm, err := internal.Ask(color.Render("<yellow>Confirm commit?</>"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -78,6 +75,14 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		color.Red.Println("ABORTED!")
+		color.Println("<fg=red;op=bold>ABORTED!</>")
 	}
+}
+
+func getModel() string {
+	model := os.Getenv("GEMINI_MODEL")
+	if model == "" {
+		model = "gemini-2.5-flash-preview-09-2025"
+	}
+	return model
 }
