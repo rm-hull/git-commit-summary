@@ -10,10 +10,10 @@ import (
 
 	"github.com/Delta456/box-cli-maker/v2"
 	"github.com/briandowns/spinner"
+	"github.com/gookit/color"
 	"github.com/joho/godotenv"
 	"github.com/rm-hull/git-commit-summary/internal"
 	"github.com/rm-hull/git-commit-summary/internal/git"
-	"github.com/ttacon/chalk"
 	"google.golang.org/genai"
 )
 
@@ -27,7 +27,7 @@ func main() {
 
 	ctx := context.Background()
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	s.Suffix = chalk.Magenta.Color(" Running git diff")
+	s.Suffix = color.Magenta.Render(" Running git diff")
 	s.Start()
 	defer s.Stop()
 
@@ -37,11 +37,12 @@ func main() {
 	}
 
 	if len(out) == 0 {
-		s.FinalMSG = chalk.Red.Color("No changes are staged\n")
+		s.FinalMSG = color.Red.Render("No changes are staged")
+		s.Stop()
 		os.Exit(1)
 	}
 
-	s.Suffix = chalk.Blue.Color(" Generating commit summary")
+	s.Suffix = color.Blue.Render(" Generating commit summary")
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -68,7 +69,7 @@ func main() {
 
 	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
 	Box.Print("Commit message", message)
-	confirm, err := internal.Ask(chalk.Yellow.Color("Confirm commit?"))
+	confirm, err := internal.Ask(color.Yellow.Render("Confirm commit?"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -77,6 +78,6 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		fmt.Println(chalk.Red.Color("ABORTED!"))
+		color.Red.Println("ABORTED!")
 	}
 }
