@@ -11,6 +11,7 @@ import (
 	"github.com/Delta456/box-cli-maker/v2"
 	"github.com/briandowns/spinner"
 	"github.com/joho/godotenv"
+	"github.com/rm-hull/git-commit-summary/internal"
 	"github.com/rm-hull/git-commit-summary/internal/git"
 	"github.com/ttacon/chalk"
 	"google.golang.org/genai"
@@ -41,7 +42,6 @@ func main() {
 	}
 
 	s.Suffix = chalk.Blue.Color(" Generating git summary")
-	s.Start()
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -55,11 +55,18 @@ func main() {
 		genai.Text(text),
 		nil,
 	)
+	s.Stop()
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	s.Stop()
-	// fmt.Println(result.Text())
 	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
 	Box.Print("Commit message", result.Text())
+	confirm, err := internal.Ask(chalk.Yellow.Color("Confirm commit?"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	if !confirm {
+		fmt.Println(chalk.Red.Color("ABORTED!"))
+	}
 }
