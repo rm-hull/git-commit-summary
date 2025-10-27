@@ -7,7 +7,7 @@ what and why, not how.
 
 - Use markdown for emphasis (code blocks, bold, links) if they adds value.
 - You can use bullet points.
-- Wrap lines at ~72 characters.
+- Wrap lines at max 72 characters. DO NOT EXCEED THE LINE WIDTH!
 
 Diff follows:
 
