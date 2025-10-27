@@ -11,7 +11,7 @@ Tired of writing git commit messages? This tool uses AI :sparkle: to automatical
 ## Installation
 
 ```bash
-go install github.com/rm-hull/git-commit-summary@latest
+go install github.com/rm-hull/git-commit-summary
 ```
 
 ## Usage
