@@ -15,7 +15,9 @@ func Ask(prompt string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState) // restore terminal on exit
+	defer func() {
+		_ = term.Restore(int(os.Stdin.Fd()), oldState) // restore terminal on exit
+	}()
 
 	fmt.Printf("%s [y/n]: ", prompt)
 
