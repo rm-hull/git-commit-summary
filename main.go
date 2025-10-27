@@ -29,6 +29,7 @@ func main() {
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Suffix = chalk.Magenta.Color(" Running git diff")
 	s.Start()
+	defer s.Stop()
 
 	out, err := git.Diff()
 	if err != nil {
@@ -37,11 +38,10 @@ func main() {
 
 	if len(out) == 0 {
 		s.FinalMSG = chalk.Red.Color("No changes are staged\n")
-		s.Stop()
-		os.Exit(-1)
+		os.Exit(1)
 	}
 
-	s.Suffix = chalk.Blue.Color(" Generating git summary")
+	s.Suffix = chalk.Blue.Color(" Generating commit summary")
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -51,22 +51,32 @@ func main() {
 
 	result, err := client.Models.GenerateContent(
 		ctx,
-		"gemini-2.5-flash-lite-preview-09-2025",
+		// "gemini-2.5-pro",
+		// "gemini-2.5-flash",
+		"gemini-2.5-flash-preview-09-2025",
+		// "gemini-2.5-flash-lite-preview-09-2025",
 		genai.Text(text),
 		nil,
 	)
-	s.Stop()
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	s.Stop()
+
+	message := result.Text()
+
 	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
-	Box.Print("Commit message", result.Text())
+	Box.Print("Commit message", message)
 	confirm, err := internal.Ask(chalk.Yellow.Color("Confirm commit?"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	if !confirm {
+	if confirm {
+		if err := git.Commit(message); err != nil {
+			log.Fatal(err)
+		}
+	} else {
 		fmt.Println(chalk.Red.Color("ABORTED!"))
 	}
 }
