@@ -24,11 +24,20 @@ var prompt string
 
 func main() {
 	version := flag.Bool("v", false, "display version information")
+	m := flag.String("m", "", "append a message to the commit summary")
+	messageFlag := flag.String("message", "", "append a message to the commit summary")
 	flag.Parse()
 
 	if *version {
 		fmt.Println(versioninfo.Short())
 		os.Exit(0)
+	}
+
+	var userMessage string
+	if *m != "" {
+		userMessage = *m
+	} else {
+		userMessage = *messageFlag
 	}
 
 	if err := godotenv.Load(); err != nil {
@@ -73,6 +82,9 @@ func main() {
 	s.Stop()
 
 	message := result.Text()
+	if userMessage != "" {
+		message = fmt.Sprintf("%s\n\n%s", message, userMessage)
+	}
 
 	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
 	Box.Print("Commit message", message)
