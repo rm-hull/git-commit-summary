@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	_ "embed"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/Delta456/box-cli-maker/v2"
 	"github.com/briandowns/spinner"
+	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/gookit/color"
 	"github.com/joho/godotenv"
 	"github.com/rm-hull/git-commit-summary/internal"
@@ -21,6 +23,14 @@ import (
 var prompt string
 
 func main() {
+	version := flag.Bool("v", false, "display version information")
+	flag.Parse()
+
+	if *version {
+		fmt.Println(versioninfo.Short())
+		os.Exit(0)
+	}
+
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
