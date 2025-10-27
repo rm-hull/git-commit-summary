@@ -10,11 +10,13 @@ require (
 )
 
 require (
-	github.com/gookit/color v1.5.2 // indirect
-	github.com/huandu/xstrings v1.3.2 // indirect
-	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/clipperhouse/stringish v0.1.1 // indirect
+	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
+	github.com/gookit/color v1.6.0 // indirect
+	github.com/huandu/xstrings v1.5.0 // indirect
+	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 )
 
@@ -23,7 +25,6 @@ require (
 	cloud.google.com/go/auth v0.17.0 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	github.com/Delta456/box-cli-maker/v2 v2.3.0
-	github.com/da0x/golang v1.0.4 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -43,7 +44,7 @@ require (
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
-	golang.org/x/term v0.36.0 // indirect
+	golang.org/x/term v0.36.0
 	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8 // indirect
 	google.golang.org/grpc v1.76.0 // indirect
