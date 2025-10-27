@@ -33,6 +33,8 @@ go build
     GEMINI_API_KEY=<your_api_key>
     ```
 
+    You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`.
+
 2.  Run the application:
 
     ```bash

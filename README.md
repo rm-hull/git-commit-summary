@@ -4,9 +4,9 @@ Tired of writing git commit messages? This tool uses AI :sparkle: to automatical
 
 ## Features
 
-*   **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
-*   **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
-*   **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
+- **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
+- **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
+- **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
 
 ## Installation
 
@@ -23,8 +23,10 @@ go install github.com/rm-hull/git-commit-summary
     ```
     GEMINI_API_KEY=<your_api_key>
     ```
+
     Get an API key from: https://aistudio.google.com/api-keys
 
+    You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`.
 
 2.  **Stage your changes:**
 
