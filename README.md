@@ -1,6 +1,6 @@
 # Git Commit Summary
 
-Tired of writing git commit messages? This tool uses AI :sparkle: to automatically generate a concise commit summary for your staged changes.
+Tired of writing git commit messages? This tool uses AI ✨ to automatically generate a concise commit summary for your staged changes.
 
 ## Features
 
