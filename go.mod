@@ -5,13 +5,25 @@ go 1.25.3
 require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/joho/godotenv v1.5.1
+	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 	google.golang.org/genai v1.32.0
+)
+
+require (
+	github.com/gookit/color v1.5.2 // indirect
+	github.com/huandu/xstrings v1.3.2 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 )
 
 require (
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.17.0 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
+	github.com/Delta456/box-cli-maker/v2 v2.3.0
+	github.com/da0x/golang v1.0.4 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect

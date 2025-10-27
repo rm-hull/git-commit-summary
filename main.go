@@ -5,12 +5,14 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
-	"os/exec"
-	"strings"
+	"os"
 	"time"
 
+	"github.com/Delta456/box-cli-maker/v2"
 	"github.com/briandowns/spinner"
 	"github.com/joho/godotenv"
+	"github.com/rm-hull/git-commit-summary/internal/git"
+	"github.com/ttacon/chalk"
 	"google.golang.org/genai"
 )
 
@@ -24,14 +26,21 @@ func main() {
 
 	ctx := context.Background()
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Suffix = chalk.Magenta.Color(" Running git diff")
+	s.Start()
 
-	args := strings.Split("--no-pager diff --no-ext-diff --no-textconv --staged --diff-filter=ACMRTUXB", " ")
-	out, err := exec.Command("git", args...).CombinedOutput()
+	out, err := git.Diff()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s.Suffix = " Generating git summary"
+	if len(out) == 0 {
+		s.FinalMSG = chalk.Red.Color("No changes are staged\n")
+		s.Stop()
+		os.Exit(-1)
+	}
+
+	s.Suffix = chalk.Blue.Color(" Generating git summary")
 	s.Start()
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
@@ -50,5 +59,7 @@ func main() {
 		log.Fatal(err)
 	}
 	s.Stop()
-	fmt.Println(result.Text())
+	// fmt.Println(result.Text())
+	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
+	Box.Print("Commit message", result.Text())
 }
