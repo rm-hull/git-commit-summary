@@ -53,7 +53,9 @@ func run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = godotenv.Load(configFile, ".env")
+
+	_ = godotenv.Load(configFile)
+	_ = godotenv.Overload(".env")
 
 	ctx := context.Background()
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)

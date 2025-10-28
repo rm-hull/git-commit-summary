@@ -40,7 +40,7 @@ Get an API key from: https://aistudio.google.com/api-keys
 
 You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`.
 
-For local development or repository-specific overrides, you can still create a `.env` file in the project root.
+For local development or repository-specific overrides, you can still create a `.env` file in the project root. The application loads the local `.env` file *after* the global XDG configuration, so any variables in your local `.env` file will correctly override the global settings.
 
 For more information on the XDG Base Directory Specification, see: [https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
 
