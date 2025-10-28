@@ -14,33 +14,41 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 go install github.com/rm-hull/git-commit-summary
 ```
 
+## Installation
+
+### Set up your API key
+
+`git-commit-summary` is XDG compliant, meaning it looks for its configuration file in a standard location. Create a `config.env` file in your XDG config home directory (e.g., `~/.config/git-commit-summary/config.env` on Linux, `~/Library/Application Support/git-config-summary/config.env` on macOS, or `%USERPROFILE%\.config\git-commit-summary\config.env` on Windows) and add your Gemini API key:
+
+```
+GEMINI_API_KEY=<your_api_key>
+```
+
+Get an API key from: https://aistudio.google.com/api-keys
+
+You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`.
+
+For local development or repository-specific overrides, you can still create a `.env` file in your git repository root.
+
+For more information on the XDG Base Directory Specification, see: [https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+
 ## Usage
 
-1.  **Set up your API key:**
+Once installed, check that the executable is on the $PATH, with `git-commit-summary --version`. Then, as part of your development workflow
 
-    Create a `.env` file in your git repository and add your Gemini API key:
-
-    ```
-    GEMINI_API_KEY=<your_api_key>
-    ```
-
-    Get an API key from: https://aistudio.google.com/api-keys
-
-    You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`.
-
-2.  **Stage your changes:**
+1.  **Stage your changes:**
 
     ```bash
     git add <files>
     ```
 
-3.  **Run the tool:**
+2.  **Run the tool:**
 
     ```bash
     git commit-summary
     ```
 
-4.  **Confirm the commit:**
+3.  **Confirm the commit:**
 
     The tool will display the generated commit summary and ask for your confirmation. Type `y` to accept and commit, or `n` to abort.
 

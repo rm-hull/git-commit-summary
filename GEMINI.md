@@ -10,6 +10,7 @@ This project is a Go application that automatically generates commit summaries u
 -   **Gookit/Color:** For providing colorful output in the terminal.
 -   **Spinner:** To display a loading spinner while generating the summary.
 -   **Godotenv:** For managing environment variables.
+-   **adrg/xdg:** For XDG Base Directory Specification compliance.
 -   **VersionInfo:** To provide version information.
 
 # Building and Running
@@ -29,15 +30,21 @@ go build
 
 ## Running
 
-1.  Create a `.env` file in the project root and add your Gemini API key:
+`git-commit-summary` is XDG compliant, meaning it looks for its configuration file in a standard location. Create a `config.env` file in your XDG config home directory (e.g., `~/.config/git-commit-summary/config.env`) and add your Gemini API key:
 
-    ```
-    GEMINI_API_KEY=<your_api_key>
-    ```
+```
+GEMINI_API_KEY=<your_api_key>
+```
 
-    You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`.
+Get an API key from: https://aistudio.google.com/api-keys
 
-2.  Run the application:
+You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`.
+
+For local development or repository-specific overrides, you can still create a `.env` file in the project root.
+
+For more information on the XDG Base Directory Specification, see: [https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+
+2. Run the application:
 
     ```bash
     ./git-commit-summary

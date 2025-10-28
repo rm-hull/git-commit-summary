@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Delta456/box-cli-maker/v2"
+	"github.com/adrg/xdg"
 	"github.com/briandowns/spinner"
 	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/gookit/color"
@@ -48,9 +49,11 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
+	configFile, err := xdg.ConfigFile("git-commit-summary/config.env")
+	if err != nil {
+		log.Fatal(err)
 	}
+	_ = godotenv.Load(configFile, ".env")
 
 	ctx := context.Background()
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)

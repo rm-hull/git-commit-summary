@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
