@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	_ "embed"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -16,28 +15,37 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rm-hull/git-commit-summary/internal"
 	"github.com/rm-hull/git-commit-summary/internal/git"
+	"github.com/spf13/cobra"
 	"google.golang.org/genai"
 )
 
 //go:embed prompt.md
 var prompt string
 
-func main() {
-	version := flag.Bool("v", false, "display version information")
-	m := flag.String("m", "", "append a message to the commit summary")
-	messageFlag := flag.String("message", "", "append a message to the commit summary")
-	flag.Parse()
+var userMessage string
 
-	if *version {
+var rootCmd = &cobra.Command{
+	Use:   "git-commit-summary",
+	Short: "Generate a commit summary using Gemini",
+	Run:   run,
+}
+
+func init() {
+	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
+	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run(cmd *cobra.Command, args []string) {
+	version, _ := cmd.Flags().GetBool("version")
+	if version {
 		fmt.Println(versioninfo.Short())
 		os.Exit(0)
-	}
-
-	var userMessage string
-	if *m != "" {
-		userMessage = *m
-	} else {
-		userMessage = *messageFlag
 	}
 
 	if err := godotenv.Load(); err != nil {
@@ -83,7 +91,7 @@ func main() {
 
 	message := result.Text()
 	if userMessage != "" {
-		message = fmt.Sprintf("%s\n\n%s", message, userMessage)
+		message = fmt.Sprintf("%s\n\n%s", userMessage, message)
 	}
 
 	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})

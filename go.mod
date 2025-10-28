@@ -7,6 +7,7 @@ require (
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
 	github.com/gookit/color v1.6.0
 	github.com/joho/godotenv v1.5.1
+	github.com/spf13/cobra v1.10.1
 	google.golang.org/genai v1.32.0
 )
 
@@ -14,8 +15,10 @@ require (
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 )
 
