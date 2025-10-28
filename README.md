@@ -4,9 +4,9 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 
 ## Features
 
-- **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
-- **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
-- **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
+-   **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
+-   **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
+-   **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
 
 ## Installation
 
@@ -43,6 +43,13 @@ go install github.com/rm-hull/git-commit-summary
 4.  **Confirm the commit:**
 
     The tool will display the generated commit summary and ask for your confirmation. Type `y` to accept and commit, or `n` to abort.
+
+## Flags
+
+| Flag        | Shorthand | Description                            |
+| ----------- | --------- | -------------------------------------- |
+| `--version` | `-v`      | Display version information            |
+| `--message` | `-m`      | Append a message to the commit summary |
 
 ## Aliases
 
