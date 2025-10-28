@@ -64,6 +64,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	out, err := git.Diff()
 	if err != nil {
+		s.Stop()
 		log.Fatal(err)
 	}
 
@@ -77,6 +78,7 @@ func run(cmd *cobra.Command, args []string) {
 	s.Suffix = color.Render(fmt.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", model))
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
+		s.Stop()
 		log.Fatal(err)
 	}
 
@@ -89,6 +91,7 @@ func run(cmd *cobra.Command, args []string) {
 		nil,
 	)
 	if err != nil {
+		s.Stop()
 		log.Fatal(err)
 	}
 
