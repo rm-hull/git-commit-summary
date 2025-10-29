@@ -22,6 +22,10 @@ go install github.com/rm-hull/git-commit-summary
 
 You can configure the LLM provider by setting the `LLM_PROVIDER` environment variable. The supported providers are `google` (default) and `openai`.
 
+For local development or repository-specific overrides, you can still create a `.env` file in your git repository root.
+
+For more information on the XDG Base Directory Specification, see: [https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+
 #### Google
 
 Add your Gemini API key to the `config.env` file:
@@ -51,10 +55,6 @@ LLM_PROVIDER="openai"
 OPENAI_BASE_URL="http://localhost:8080/v1"
 OPENAI_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 ```
-
-For local development or repository-specific overrides, you can still create a `.env` file in your git repository root.
-
-For more information on the XDG Base Directory Specification, see: [https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
 
 ## Usage
 
