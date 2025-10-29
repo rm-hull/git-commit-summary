@@ -16,8 +16,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rm-hull/git-commit-summary/internal"
 	"github.com/rm-hull/git-commit-summary/internal/git"
+	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	"github.com/spf13/cobra"
-	"google.golang.org/genai"
 )
 
 //go:embed prompt.md
@@ -74,22 +74,16 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	model := getModel()
-	s.Suffix = color.Render(fmt.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", model))
-	client, err := genai.NewClient(ctx, nil)
+	provider, err := llmprovider.NewGoogleProvider(ctx)
 	if err != nil {
 		s.Stop()
 		log.Fatal(err)
 	}
 
+	s.Suffix = color.Render(fmt.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", provider.Model()))
 	text := fmt.Sprintf(prompt, out)
 
-	result, err := client.Models.GenerateContent(
-		ctx,
-		model,
-		genai.Text(text),
-		nil,
-	)
+	message, err := provider.Call(ctx, "", text)
 	if err != nil {
 		s.Stop()
 		log.Fatal(err)
@@ -97,7 +91,6 @@ func run(cmd *cobra.Command, args []string) {
 
 	s.Stop()
 
-	message := result.Text()
 	if userMessage != "" {
 		message = fmt.Sprintf("%s\n\n%s", userMessage, message)
 	}
@@ -115,12 +108,4 @@ func run(cmd *cobra.Command, args []string) {
 	} else {
 		color.Println("<fg=red;op=bold>ABORTED!</>")
 	}
-}
-
-func getModel() string {
-	model := os.Getenv("GEMINI_MODEL")
-	if model == "" {
-		model = "gemini-2.5-flash-preview-09-2025"
-	}
-	return model
 }
