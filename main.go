@@ -74,7 +74,7 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	provider, err := llmprovider.NewGoogleProvider(ctx)
+	provider, err := llmprovider.NewProvider(ctx)
 	if err != nil {
 		s.Stop()
 		log.Fatal(err)

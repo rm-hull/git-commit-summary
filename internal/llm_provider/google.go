@@ -13,7 +13,7 @@ type GoogleProvider struct {
 	model  string
 }
 
-func NewGoogleProvider(ctx context.Context) (*GoogleProvider, error) {
+func NewGoogleProvider(ctx context.Context) (Provider, error) {
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize Google client")

@@ -6,6 +6,7 @@ This project is a Go application that automatically generates commit summaries u
 
 -   **Go:** The application is written in the Go programming language.
 -   **Gemini API:** It uses the Google Gemini API to generate the commit summaries.
+-   **OpenAI API:** It uses the OpenAI API to generate the commit summaries.
 -   **Cobra:** For creating a powerful and modern CLI application.
 -   **Gookit/Color:** For providing colorful output in the terminal.
 -   **Spinner:** To display a loading spinner while generating the summary.
