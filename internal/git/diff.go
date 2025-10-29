@@ -21,5 +21,7 @@ func Diff() ([]byte, error) {
 		":(exclude)**/dist/**",
 		":(exclude)**/target/**",
 		":(exclude)**/out/**",
+		":(exclude)go.sum",
+
 	).CombinedOutput()
 }
