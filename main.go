@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Delta456/box-cli-maker/v2"
 	"github.com/adrg/xdg"
 	"github.com/briandowns/spinner"
 	"github.com/earthboundkid/versioninfo/v2"
+	"github.com/galactixx/stringwrap"
 	"github.com/gookit/color"
 	"github.com/joho/godotenv"
 	"github.com/rm-hull/git-commit-summary/internal"
@@ -95,14 +97,22 @@ func run(cmd *cobra.Command, args []string) {
 		message = fmt.Sprintf("%s\n\n%s", userMessage, message)
 	}
 
+	wrapped, _, err := stringwrap.StringWrap(message, 72, 4, false)
+	if err != nil {
+		s.Stop()
+		log.Fatal(err)
+	}
+
+	wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
+
 	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
-	Box.Print("Commit message", message)
+	Box.Print("Commit message", wrapped)
 	confirm, err := internal.Ask(color.Render("<yellow>Confirm commit?</>"))
 	if err != nil {
 		log.Fatal(err)
 	}
 	if confirm {
-		if err := git.Commit(message); err != nil {
+		if err := git.Commit(wrapped); err != nil {
 			log.Fatal(err)
 		}
 	} else {
