@@ -12,9 +12,9 @@ The `main.go` file currently contains a large `run` function that handles all th
 
 ## 2. Improve Error Handling
 
-Error handling is inconsistent. Some errors are logged and the application exits, while others are returned.
+~~Error handling is inconsistent. Some errors are logged and the application exits, while others are returned.~~
 
--   **Use a consistent error handling strategy:** Return errors from functions and handle them in the `main` function. This will make the code more robust and easier to debug.
+-   ~~**Use a consistent error handling strategy:** Return errors from functions and handle them in the `main` function. This will make the code more robust and easier to debug.~~
 -   **Provide more context for errors:** When an error occurs, log the error message and any relevant context, such as the file or line number where the error occurred.
 
 ## 3. Centralize Configuration

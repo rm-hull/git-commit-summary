@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -22,23 +22,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func handleError(err error) {
+	if err != nil {
+		color.Fprintf(os.Stderr, "<fg=red;op=bold>ERROR:</> %v\n", err)
+		os.Exit(1)
+	}
+}
+
 //go:embed prompt.md
 var prompt string
-
 var userMessage string
 var llmProvider string
 
-var rootCmd = &cobra.Command{
-	Use:   "git-commit-summary",
-	Short: "Generate a commit summary using Gemini or OpenAI",
-	Run:   run,
-}
-
 func main() {
 	configFile, err := xdg.ConfigFile("git-commit-summary/config.env")
-	if err != nil {
-		log.Fatal(err)
-	}
+	handleError(err)
 
 	_ = godotenv.Load(configFile)
 	_ = godotenv.Overload(".env")
@@ -47,13 +45,17 @@ func main() {
 	if defaultProvider == "" {
 		defaultProvider = "google"
 	}
+
+	rootCmd := &cobra.Command{
+		Use:   "git-commit-summary",
+		Short: "Generate a commit summary using Gemini or OpenAI",
+		Run:   run,
+	}
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
 	rootCmd.PersistentFlags().StringVarP(&llmProvider, "llm-provider", "", defaultProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
-	}
+	handleError(rootCmd.Execute())
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -71,28 +73,27 @@ func run(cmd *cobra.Command, args []string) {
 	out, err := git.Diff()
 	if err != nil {
 		s.Stop()
-		log.Fatal(err)
+		handleError(err)
 	}
 
 	if len(out) == 0 {
-		s.FinalMSG = color.Render("<fg=red;op=bold>No changes are staged</>")
 		s.Stop()
-		os.Exit(1)
+		handleError(errors.New("no changes are staged"))
 	}
 
 	provider, err := llmprovider.NewProvider(ctx, llmProvider)
 	if err != nil {
 		s.Stop()
-		log.Fatal(err)
+		handleError(err)
 	}
 
-	s.Suffix = color.Render(fmt.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", provider.Model()))
+	s.Suffix = color.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", provider.Model())
 	text := fmt.Sprintf(prompt, out)
 
 	message, err := provider.Call(ctx, "", text)
 	if err != nil {
 		s.Stop()
-		log.Fatal(err)
+		handleError(err)
 	}
 
 	s.Stop()
@@ -102,20 +103,14 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	wrapped, _, err := stringwrap.StringWrap(message, 72, 4, false)
-	if err != nil {
-		log.Fatal(err)
-	}
+	handleError(err)
 
 	wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
 	edited, accepted, err := internal.TextArea(wrapped)
-	if err != nil {
-		log.Fatal(err)
-	}
+	handleError(err)
 
 	if accepted {
-		if err := git.Commit(edited); err != nil {
-			log.Fatal(err)
-		}
+		handleError(git.Commit(edited))
 	} else {
 		color.Println("<fg=red;op=bold>ABORTED!</>")
 	}
