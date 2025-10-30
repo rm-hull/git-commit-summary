@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Delta456/box-cli-maker/v2"
+	// "github.com/Delta456/box-cli-maker/v2"
 	"github.com/adrg/xdg"
 	"github.com/briandowns/spinner"
 	"github.com/earthboundkid/versioninfo/v2"
@@ -99,20 +99,17 @@ func run(cmd *cobra.Command, args []string) {
 
 	wrapped, _, err := stringwrap.StringWrap(message, 72, 4, false)
 	if err != nil {
-		s.Stop()
 		log.Fatal(err)
 	}
 
 	wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
-
-	Box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
-	Box.Print("Commit message", wrapped)
-	confirm, err := internal.Ask(color.Render("<yellow>Confirm commit?</>"))
+	edited, accepted, err := internal.TextArea(wrapped)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if confirm {
-		if err := git.Commit(wrapped); err != nil {
+
+	if accepted {
+		if err := git.Commit(edited); err != nil {
 			log.Fatal(err)
 		}
 	} else {
