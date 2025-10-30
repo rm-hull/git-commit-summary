@@ -30,13 +30,13 @@ type model struct {
 
 func initialModel(value string) model {
 	ti := textarea.New()
+	ti.CharLimit = 0
+	ti.ShowLineNumbers = false
+	ti.Prompt = ""
 	ti.Focus()
 	ti.SetHeight(strings.Count(value, "\n") + 1)
 	ti.SetWidth(72)
 	ti.SetValue(value)
-	ti.CharLimit = 0
-	ti.ShowLineNumbers = false
-	ti.Prompt = ""
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ti.BlurredStyle.CursorLine = lipgloss.NewStyle()
