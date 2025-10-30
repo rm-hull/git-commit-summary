@@ -56,7 +56,7 @@ func main() {
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
 	rootCmd.PersistentFlags().StringVarP(&llmProvider, "llm-provider", "", defaultProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 
-	rootCmd.Execute()
+	_ = rootCmd.Execute()
 }
 
 func handleError(err error) {
