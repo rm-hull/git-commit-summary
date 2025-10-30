@@ -10,9 +10,10 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/galactixx/stringwrap"
 	"github.com/gookit/color"
-	"github.com/rm-hull/git-commit-summary/internal"
+	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/rm-hull/git-commit-summary/internal/git"
 	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
+	"github.com/rm-hull/git-commit-summary/internal/ui"
 )
 
 type App struct {
@@ -20,15 +21,15 @@ type App struct {
 	prompt      string
 }
 
-func NewApp(ctx context.Context, providerName, promptContent string) (*App, error) {
-	provider, err := llmprovider.NewProvider(ctx, providerName)
+func NewApp(ctx context.Context, cfg *config.Config) (*App, error) {
+	provider, err := llmprovider.NewProvider(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &App{
 		llmProvider: provider,
-		prompt:      promptContent,
+		prompt:      cfg.Prompt,
 	}, nil
 }
 
@@ -67,7 +68,7 @@ func (a *App) Run(ctx context.Context, userMessage string) error {
 	}
 
 	wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
-	edited, accepted, err := internal.TextArea(wrapped)
+	edited, accepted, err := ui.TextArea(wrapped)
 	if err != nil {
 		return err
 	}

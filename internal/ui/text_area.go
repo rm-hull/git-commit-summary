@@ -1,4 +1,4 @@
-package internal
+package ui
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func initialModel(value string) model {
 	ti.Prompt = ""
 	ti.Focus()
 	ti.SetHeight(strings.Count(value, "\n") + 1)
-	ti.SetWidth(72)
+	ti.SetWidth(73)
 	ti.SetValue(value)
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()

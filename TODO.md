@@ -17,13 +17,13 @@ This document outlines a plan to refactor and improve the `git-commit-summary` G
 -   ~~**Use a consistent error handling strategy:** Return errors from functions and handle them in the `main` function. This will make the code more robust and easier to debug.~~
 -   **Provide more context for errors:** When an error occurs, log the error message and any relevant context, such as the file or line number where the error occurred.
 
-## 3. Centralize Configuration
+## ~~3. Centralize Configuration~~
 
-Configuration is currently scattered throughout the code.
+~~Configuration is currently scattered throughout the code.~~
 
--   **Create a new `internal/config` package:** This package will be responsible for loading and managing the application's configuration.
--   **Define a `Config` struct:** This struct will hold all the application's configuration settings.
--   **Load the configuration from a file or environment variables:** The `config` package should support loading the configuration from a variety of sources.
+-   ~~**Create a new `internal/config` package:** This package will be responsible for loading and managing the application's configuration.~~
+-   ~~**Define a `Config` struct:** This struct will hold all the application's configuration settings.~~
+-   ~~**Load the configuration from a file or environment variables:** The `config` package should support loading the configuration from a variety of sources.~~
 
 ## 4. Use `text/template` for the Prompt
 

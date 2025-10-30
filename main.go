@@ -2,32 +2,19 @@ package main
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
 	"os"
 
-	"github.com/adrg/xdg"
 	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/gookit/color"
-	"github.com/joho/godotenv"
-	"github.com/rm-hull/git-commit-summary/internal/app" // New import
+	"github.com/rm-hull/git-commit-summary/internal/app"
+	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/spf13/cobra"
 )
 
-//go:embed prompt.md
-var prompt string
-
 func main() {
-	configFile, err := xdg.ConfigFile("git-commit-summary/config.env")
+	cfg, err := config.Load()
 	handleError(err)
-
-	_ = godotenv.Load(configFile)
-	_ = godotenv.Overload(".env")
-
-	defaultProvider := os.Getenv("LLM_PROVIDER")
-	if defaultProvider == "" {
-		defaultProvider = "google"
-	}
 
 	var userMessage string
 	var llmProvider string
@@ -42,9 +29,13 @@ func main() {
 				os.Exit(0)
 			}
 
+			if cmd.Flags().Changed("llm-provider") {
+				cfg.LLMProvider = llmProvider
+			}
+
 			ctx := context.Background()
 
-			application, err := app.NewApp(ctx, llmProvider, prompt)
+			application, err := app.NewApp(ctx, cfg)
 			if err != nil {
 				handleError(err)
 			}
@@ -52,9 +43,9 @@ func main() {
 		},
 	}
 
-	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
-	rootCmd.PersistentFlags().StringVarP(&llmProvider, "llm-provider", "", defaultProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
+	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
+	rootCmd.PersistentFlags().StringVarP(&llmProvider, "llm-provider", "", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 
 	_ = rootCmd.Execute()
 }

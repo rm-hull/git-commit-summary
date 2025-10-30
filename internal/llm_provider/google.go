@@ -3,8 +3,8 @@ package llmprovider
 import (
 	"context"
 	"fmt"
-	"os"
 
+	"github.com/rm-hull/git-commit-summary/internal/config"
 	"google.golang.org/genai"
 )
 
@@ -13,19 +13,17 @@ type GoogleProvider struct {
 	model  string
 }
 
-func NewGoogleProvider(ctx context.Context) (Provider, error) {
+func NewGoogleProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
+	// The genai library automatically uses the GEMINI_API_KEY environment variable.
+	// The config package has already loaded it from the .env file.
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize Google client")
-	}
-	model := os.Getenv("GEMINI_MODEL")
-	if model == "" {
-		model = "gemini-2.5-flash-preview-09-2025"
+		return nil, fmt.Errorf("failed to initialize Google client, is GEMINI_API_KEY set? %w", err)
 	}
 
 	return &GoogleProvider{
 		client: client,
-		model:  model,
+		model:  cfg.Gemini.Model,
 	}, nil
 }
 

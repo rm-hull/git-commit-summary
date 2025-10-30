@@ -3,7 +3,8 @@ package llmprovider
 import (
 	"context"
 	"fmt"
-	"os"
+
+	"github.com/rm-hull/git-commit-summary/internal/config"
 
 	openai "github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -14,27 +15,14 @@ type OpenAiProvider struct {
 	model  string
 }
 
-func NewOpenAiProvider(ctx context.Context) (Provider, error) {
-	baseURL := os.Getenv("OPENAI_BASE_URL")
-	if baseURL == "" {
-		baseURL = "https://api.openai.com/v1"
-	}
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	if apiKey == "" {
-		apiKey = "none"
-	}
-	model := os.Getenv("OPENAI_MODEL")
-	if model == "" {
-		model = "gpt-4o"
-	}
-
+func NewOpenAiProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
 	client := openai.NewClient(
-		option.WithAPIKey(apiKey),
-		option.WithBaseURL(baseURL))
+		option.WithAPIKey(cfg.OpenAI.APIKey),
+		option.WithBaseURL(cfg.OpenAI.BaseURL))
 
 	return &OpenAiProvider{
 		client: &client,
-		model:  model,
+		model:  cfg.OpenAI.Model,
 	}, nil
 }
 
