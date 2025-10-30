@@ -3,7 +3,6 @@ package llmprovider
 import (
 	"context"
 	"fmt"
-	"os"
 )
 
 type Provider interface {
@@ -11,18 +10,13 @@ type Provider interface {
 	Model() string
 }
 
-func NewProvider(ctx context.Context) (Provider, error) {
-	provider := os.Getenv("LLM_PROVIDER")
-	if provider == "" {
-		provider = "google"
-	}
-
-	switch provider {
+func NewProvider(ctx context.Context, llmProvider string) (Provider, error) {
+	switch llmProvider {
 	case "google":
 		return NewGoogleProvider(ctx)
 	case "openai":
 		return NewOpenAiProvider(ctx)
 	default:
-		return nil, fmt.Errorf("unknown provider: %s", provider)
+		return nil, fmt.Errorf("unknown LLM provider: %s", llmProvider)
 	}
 }

@@ -26,19 +26,31 @@ import (
 var prompt string
 
 var userMessage string
+var llmProvider string
 
 var rootCmd = &cobra.Command{
 	Use:   "git-commit-summary",
-	Short: "Generate a commit summary using Gemini",
+	Short: "Generate a commit summary using Gemini or OpenAI",
 	Run:   run,
 }
 
-func init() {
+func main() {
+	configFile, err := xdg.ConfigFile("git-commit-summary/config.env")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_ = godotenv.Load(configFile)
+	_ = godotenv.Overload(".env")
+
+	defaultProvider := os.Getenv("LLM_PROVIDER")
+	if defaultProvider == "" {
+		defaultProvider = "google"
+	}
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
-}
+	rootCmd.PersistentFlags().StringVarP(&llmProvider, "llm-provider", "", defaultProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 
-func main() {
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
@@ -50,14 +62,6 @@ func run(cmd *cobra.Command, args []string) {
 		fmt.Println(versioninfo.Short())
 		os.Exit(0)
 	}
-
-	configFile, err := xdg.ConfigFile("git-commit-summary/config.env")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_ = godotenv.Load(configFile)
-	_ = godotenv.Overload(".env")
 
 	ctx := context.Background()
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
@@ -76,7 +80,7 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	provider, err := llmprovider.NewProvider(ctx)
+	provider, err := llmprovider.NewProvider(ctx, llmProvider)
 	if err != nil {
 		s.Stop()
 		log.Fatal(err)
