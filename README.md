@@ -78,10 +78,11 @@ Once installed, check that the executable is on the $PATH, with `git-commit-summ
 
 ## Flags
 
-| Flag        | Shorthand | Description                            |
-| ----------- | --------- | -------------------------------------- |
-| `--version` | `-v`      | Display version information            |
-| `--message` | `-m`      | Append a message to the commit summary |
+| Flag             | Shorthand | Description                                                                                                                                      |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--version`      | `-v`      | Display version information                                                                                                                      |
+| `--message`      | `-m`      | Append a message to the commit summary                                                                                                           |
+| `--llm-provider` | _n/a_     | Use the specific LLM provider: supported values are currently only **google** & **openai**. Overrides the `LLM_PROVIDER` environmental variable. |
 
 ## Aliases
 
