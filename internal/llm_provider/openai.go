@@ -41,7 +41,7 @@ func NewOpenAiProvider(ctx context.Context) (Provider, error) {
 func (provider *OpenAiProvider) Call(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	result, err := provider.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Temperature: openai.Float(0.1),
-		Model: provider.model,
+		Model:       provider.model,
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(systemPrompt),
 			openai.UserMessage(userPrompt),

@@ -2,13 +2,13 @@
 
 This document outlines a plan to refactor and improve the `git-commit-summary` Go application.
 
-## 1. Refactor `main.go` and the `run` function
+## ~~1. Refactor `main.go` and the `run` function~~
 
-The `main.go` file currently contains a large `run` function that handles all the application logic. This makes it difficult to read, test, and maintain.
+~~The `main.go` file currently contains a large `run` function that handles all the application logic. This makes it difficult to read, test, and maintain.~~
 
--   **Create a new `internal/app` package:** This package will encapsulate the core application logic.
--   **Move the `run` function's logic into a new `Run` function in `internal/app/app.go`:** This will separate the application logic from the command-line interface.
--   **Break down the `Run` function into smaller, more focused functions:** Each function should have a single responsibility, such as getting the git diff, generating the commit summary, or editing the commit message.
+-   ~~**Create a new `internal/app` package:** This package will encapsulate the core application logic.~~
+-   ~~**Move the `run` function's logic into a new `Run` function in `internal/app/app.go`:** This will separate the application logic from the command-line interface.~~
+-   ~~**Break down the `Run` function into smaller, more focused functions:** Each function should have a single responsibility, such as getting the git diff, generating the commit summary, or editing the commit message.~~
 
 ## 2. Improve Error Handling
 
