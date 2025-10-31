@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-func Commit(message string) error {
+func commit(message string) error {
 	tmpfile, err := os.CreateTemp("", "gitmsg-*.txt")
 	if err != nil {
 		return err

@@ -50,5 +50,5 @@ A `Makefile` would automate common development tasks, such as building, testing,
 
 The application currently has no unit tests.
 
--   **Add unit tests for the core application logic:** This will help to ensure that the application is working correctly and prevent regressions.
--   **Use a testing framework, such as `testify`:** A testing framework will make it easier to write and run tests.
+~~-   **Add unit tests for the core application logic:** This will help to ensure that the application is working correctly and prevent regressions.~~
+-   ~~**Use a testing framework, such as `testify`:** A testing framework will make it easier to write and run tests.~~
