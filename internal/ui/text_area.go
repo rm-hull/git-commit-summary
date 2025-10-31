@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func TextArea(value string) (string, bool, error) {
+func textArea(value string) (string, bool, error) {
 	p := tea.NewProgram(initialModel(value))
 
 	finalModel, err := p.Run()

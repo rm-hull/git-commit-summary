@@ -9,6 +9,9 @@ import (
 	"github.com/gookit/color"
 	"github.com/rm-hull/git-commit-summary/internal/app"
 	"github.com/rm-hull/git-commit-summary/internal/config"
+	"github.com/rm-hull/git-commit-summary/internal/git"
+	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
+	"github.com/rm-hull/git-commit-summary/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -35,16 +38,16 @@ func main() {
 
 			ctx := context.Background()
 
-			application, err := app.NewApp(ctx, cfg)
-			if err != nil {
-				handleError(err)
-			}
+			provider, err := llmprovider.NewProvider(ctx, cfg)
+			handleError(err)
+
+			application := app.NewApp(provider, &git.Client{}, &ui.Client{}, cfg.Prompt)
 			handleError(application.Run(ctx, userMessage))
 		},
 	}
 
-	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
+	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
 	rootCmd.PersistentFlags().StringVarP(&llmProvider, "llm-provider", "", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 
 	_ = rootCmd.Execute()

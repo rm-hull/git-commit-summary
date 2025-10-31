@@ -10,48 +10,59 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/galactixx/stringwrap"
 	"github.com/gookit/color"
-	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/rm-hull/git-commit-summary/internal/git"
 	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	"github.com/rm-hull/git-commit-summary/internal/ui"
 )
 
+type Git interface {
+	Diff() (string, error)
+	Commit(message string) error
+}
+
+type UI interface {
+	TextArea(value string) (string, bool, error)
+}
+
+// Verify that structs implement interfaces
+var _ Git = (*git.Client)(nil)
+var _ UI = (*ui.Client)(nil)
+
 type App struct {
 	llmProvider llmprovider.Provider
+	git         Git
+	ui          UI
 	prompt      string
 }
 
-func NewApp(ctx context.Context, cfg *config.Config) (*App, error) {
-	provider, err := llmprovider.NewProvider(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-
+func NewApp(provider llmprovider.Provider, gitClient Git, uiClient UI, prompt string) *App {
 	return &App{
 		llmProvider: provider,
-		prompt:      cfg.Prompt,
-	}, nil
+		git:         gitClient,
+		ui:          uiClient,
+		prompt:      prompt,
+	}
 }
 
-func (a *App) Run(ctx context.Context, userMessage string) error {
+func (app *App) Run(ctx context.Context, userMessage string) error {
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Suffix = color.Render(" <magenta>Running git diff</>")
 	s.Start()
 	defer s.Stop()
 
-	out, err := git.Diff()
+	diffOutput, err := app.git.Diff()
 	if err != nil {
 		return err
 	}
 
-	if len(out) == 0 {
+	if len(diffOutput) == 0 {
 		return errors.New("no changes are staged")
 	}
 
-	s.Suffix = color.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", a.llmProvider.Model())
-	text := fmt.Sprintf(a.prompt, out)
+	s.Suffix = color.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", app.llmProvider.Model())
+	text := fmt.Sprintf(app.prompt, diffOutput)
 
-	message, err := a.llmProvider.Call(ctx, "", text)
+	message, err := app.llmProvider.Call(ctx, "", text)
 	if err != nil {
 		return err
 	}
@@ -68,13 +79,13 @@ func (a *App) Run(ctx context.Context, userMessage string) error {
 	}
 
 	wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
-	edited, accepted, err := ui.TextArea(wrapped)
+	edited, accepted, err := app.ui.TextArea(wrapped)
 	if err != nil {
 		return err
 	}
 
 	if accepted {
-		return git.Commit(edited)
+		return app.git.Commit(edited)
 	} else {
 		color.Println("<fg=red;op=bold>ABORTED!</>")
 		return nil // Or a specific error for abortion

@@ -4,7 +4,7 @@ import (
 	"os/exec"
 )
 
-func Diff() ([]byte, error) {
+func diff() ([]byte, error) {
 	return exec.Command(
 		"git",
 		"--no-pager",
