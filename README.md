@@ -18,7 +18,10 @@ go install github.com/rm-hull/git-commit-summary
 
 ### Set up your API key
 
-`git-commit-summary` is XDG compliant, meaning it looks for its configuration file in a standard location. Create a `config.env` file in your XDG config home directory (e.g., `~/.config/git-commit-summary/config.env` on Linux, `~/Library/Application Support/git-config-summary/config.env` on macOS, or `%USERPROFILE%\.config\git-commit-summary\config.env` on Windows).
+`git-commit-summary` is XDG compliant, meaning it looks for its configuration file in a standard location. Create a `config.env` file in your XDG config home directory, e.g. on:
+* **Linux**: `~/.config/git-commit-summary/config.env`,
+* **MacOS**: `~/Library/Application Support/git-config-summary/config.env`, or
+* **Windows**: `%USERPROFILE%\.config\git-commit-summary\config.env`.
 
 You can configure the LLM provider by setting the `LLM_PROVIDER` environment variable. The supported providers are `google` (default) and `openai`.
 
@@ -74,7 +77,25 @@ Once installed, check that the executable is on the $PATH, with `git-commit-summ
 
 3.  **Confirm the commit:**
 
-    The tool will display the generated commit summary and ask for your confirmation. Type `y` to accept and commit, or `n` to abort.
+    The tool will display the generated commit summary and ask for your confirmation. Note that it is possible to amend the message, if necessary. Type `CTRL-X` to accept and commit, or `ESC` to abort.
+
+    ```
+    $ git commit-summary
+    ╭ Commit message ──────────────────────────────────────────────────────────╮
+    │ docs: Clarify config paths and update usage keys                         │
+    │                                                                          │
+    │ Clarify the README by addressing several points:                         │
+    │                                                                          │
+    │ *   Configuration path examples are now bulleted and                     │
+    │     bolded by OS for better clarity in the Installation                  │
+    │     section.                                                             │
+    │ *   The commit confirmation keys in the Usage section                    │
+    │     are updated from `y/n` to `CTRL-X`/`ESC` to reflect                  │
+    │     the current keybindings.                                             │
+    │ *   Added a detailed usage example block.                                │
+    ╰──────────────────────────────────────────────────────────────────────────╯
+    (Ctrl-X to commit, ESC to abort)
+    ```
 
 ## Flags
 
