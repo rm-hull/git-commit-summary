@@ -7,11 +7,13 @@ import (
 	"strings"
 
 	"github.com/galactixx/stringwrap"
-	"github.com/gookit/color"
 	"github.com/rm-hull/git-commit-summary/internal/git"
 	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	"github.com/rm-hull/git-commit-summary/internal/ui"
 )
+
+// ErrAborted is returned when the user aborts the commit message editing.
+var ErrAborted = errors.New("aborted")
 
 type GitClient interface {
 	Diff() (string, error)
@@ -60,7 +62,7 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 		return errors.New("no changes are staged")
 	}
 
-	app.ui.UpdateSpinner(color.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", app.llmProvider.Model()))
+	app.ui.UpdateSpinner(fmt.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", app.llmProvider.Model()))
 	text := fmt.Sprintf(app.prompt, out)
 
 	message, err := app.llmProvider.Call(ctx, "", text)
@@ -72,6 +74,8 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 		message = fmt.Sprintf("%s\n\n%s", userMessage, message)
 	}
 
+	// Dont remove this line: it is important to stop the spinner
+	// before rendering the text area below
 	app.ui.StopSpinner()
 
 	wrapped, _, err := stringwrap.StringWrap(message, 72, 4, false)
@@ -88,7 +92,6 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 	if accepted {
 		return app.git.Commit(edited)
 	} else {
-		color.Println("<fg=red;op=bold>ABORTED!</>")
-		return nil // Or a specific error for abortion
+		return ErrAborted
 	}
 }

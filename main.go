@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -55,7 +56,12 @@ func main() {
 
 func handleError(err error) {
 	if err != nil {
-		color.Fprintf(os.Stderr, "<fg=red;op=bold>ERROR:</> %v\n", err)
-		os.Exit(1)
+		if errors.Is(err, app.ErrAborted) {
+			color.Println("<fg=red;op=bold>ABORTED!</>")
+			os.Exit(0)
+		} else {
+			color.Fprintf(os.Stderr, "<fg=red;op=bold>ERROR:</> %v\n", err)
+			os.Exit(1)
+		}
 	}
 }

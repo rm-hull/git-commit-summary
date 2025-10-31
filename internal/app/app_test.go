@@ -166,7 +166,7 @@ func TestAppRun(t *testing.T) {
 		}
 		app := NewApp(mp, gitClient, uiClient, "prompt")
 		err := app.Run(ctx, "")
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, ErrAborted)
 	})
 
 	t.Run("CommitError", func(t *testing.T) {
