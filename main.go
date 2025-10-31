@@ -42,13 +42,13 @@ func main() {
 			provider, err := llmprovider.NewProvider(ctx, cfg)
 			handleError(err)
 
-			application := app.NewApp(provider, &git.Client{}, &ui.Client{}, cfg.Prompt)
+			application := app.NewApp(provider, git.NewClient(), ui.NewClient(), cfg.Prompt)
 			handleError(application.Run(ctx, userMessage))
 		},
 	}
 
-	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
+	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().StringVarP(&llmProvider, "llm-provider", "", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 
 	_ = rootCmd.Execute()
