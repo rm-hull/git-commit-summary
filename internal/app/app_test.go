@@ -34,11 +34,32 @@ func (m *mockGitClient) Commit(message string) error {
 }
 
 type mockUIClient struct {
-	TextAreaFunc func(value string) (string, bool, error)
+	TextAreaFunc      func(value string) (string, bool, error)
+	StartSpinnerFunc  func(message string)
+	UpdateSpinnerFunc func(message string)
+	StopSpinnerFunc   func()
 }
 
 func (m *mockUIClient) TextArea(value string) (string, bool, error) {
 	return m.TextAreaFunc(value)
+}
+
+func (m *mockUIClient) StartSpinner(message string) {
+	if m.StartSpinnerFunc != nil {
+		m.StartSpinnerFunc(message)
+	}
+}
+
+func (m *mockUIClient) UpdateSpinner(message string) {
+	if m.UpdateSpinnerFunc != nil {
+		m.UpdateSpinnerFunc(message)
+	}
+}
+
+func (m *mockUIClient) StopSpinner() {
+	if m.StopSpinnerFunc != nil {
+		m.StopSpinnerFunc()
+	}
 }
 
 func TestNewApp(t *testing.T) {
@@ -59,103 +80,132 @@ func TestAppRun(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("DiffError", func(t *testing.T) {
+		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{
 			DiffFunc: func() (string, error) { return "", assert.AnError },
 		}
-		app := NewApp(&mockProvider{}, gitClient, &mockUIClient{}, "prompt")
+		uiClient := &mockUIClient{
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
+		}
+		app := NewApp(mp, gitClient, uiClient, "prompt")
 		err := app.Run(ctx, "")
 		assert.Error(t, err)
 		assert.Equal(t, assert.AnError, err)
 	})
 
 	t.Run("NoStagedChanges", func(t *testing.T) {
+		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{
 			DiffFunc: func() (string, error) { return "", nil },
 		}
-		app := NewApp(&mockProvider{}, gitClient, &mockUIClient{}, "prompt")
+		uiClient := &mockUIClient{
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
+		}
+		app := NewApp(mp, gitClient, uiClient, "prompt")
 		err := app.Run(ctx, "")
 		assert.Error(t, err)
 		assert.EqualError(t, err, "no changes are staged")
 	})
 
 	t.Run("LLMCallError", func(t *testing.T) {
-		gitClient := &mockGitClient{
-			DiffFunc: func() (string, error) { return "diff output", nil },
-		}
-		llmProvider := &mockProvider{
+		mp := &mockProvider{
 			modelName: "test-model",
 			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "", assert.AnError },
 		}
-		app := NewApp(llmProvider, gitClient, &mockUIClient{}, "prompt")
+		gitClient := &mockGitClient{
+			DiffFunc: func() (string, error) { return "diff output", nil },
+		}
+		uiClient := &mockUIClient{
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
+		}
+		app := NewApp(mp, gitClient, uiClient, "prompt")
 		err := app.Run(ctx, "")
 		assert.Error(t, err)
 		assert.Equal(t, assert.AnError, err)
 	})
 
 	t.Run("TextAreaError", func(t *testing.T) {
-		gitClient := &mockGitClient{
-			DiffFunc: func() (string, error) { return "diff output", nil },
-		}
-		llmProvider := &mockProvider{
+		mp := &mockProvider{
 			modelName: "test-model",
 			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
 		}
-		uiClient := &mockUIClient{
-			TextAreaFunc: func(value string) (string, bool, error) { return "", false, assert.AnError },
+		gitClient := &mockGitClient{
+			DiffFunc: func() (string, error) { return "diff output", nil },
 		}
-		app := NewApp(llmProvider, gitClient, uiClient, "prompt")
+		uiClient := &mockUIClient{
+			TextAreaFunc:      func(value string) (string, bool, error) { return "", false, assert.AnError },
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
+		}
+		app := NewApp(mp, gitClient, uiClient, "prompt")
 		err := app.Run(ctx, "")
 		assert.Error(t, err)
 		assert.Equal(t, assert.AnError, err)
 	})
 
 	t.Run("UserAborted", func(t *testing.T) {
-		gitClient := &mockGitClient{
-			DiffFunc: func() (string, error) { return "diff output", nil },
-		}
-		llmProvider := &mockProvider{
+		mp := &mockProvider{
 			modelName: "test-model",
 			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
 		}
-		uiClient := &mockUIClient{
-			TextAreaFunc: func(value string) (string, bool, error) { return "", false, nil },
+		gitClient := &mockGitClient{
+			DiffFunc: func() (string, error) { return "diff output", nil },
 		}
-		app := NewApp(llmProvider, gitClient, uiClient, "prompt")
+		uiClient := &mockUIClient{
+			TextAreaFunc:      func(value string) (string, bool, error) { return "", false, nil },
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
+		}
+		app := NewApp(mp, gitClient, uiClient, "prompt")
 		err := app.Run(ctx, "")
 		assert.NoError(t, err)
 	})
 
 	t.Run("CommitError", func(t *testing.T) {
+		mp := &mockProvider{
+			modelName: "test-model",
+			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
+		}
 		gitClient := &mockGitClient{
 			DiffFunc:   func() (string, error) { return "diff output", nil },
 			CommitFunc: func(message string) error { return assert.AnError },
 		}
-		llmProvider := &mockProvider{
-			modelName: "test-model",
-			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
-		}
 		uiClient := &mockUIClient{
-			TextAreaFunc: func(value string) (string, bool, error) { return "edited message", true, nil },
+			TextAreaFunc:      func(value string) (string, bool, error) { return "edited message", true, nil },
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
 		}
-		app := NewApp(llmProvider, gitClient, uiClient, "prompt")
+		app := NewApp(mp, gitClient, uiClient, "prompt")
 		err := app.Run(ctx, "")
 		assert.Error(t, err)
 		assert.Equal(t, assert.AnError, err)
 	})
 
 	t.Run("Success", func(t *testing.T) {
+		mp := &mockProvider{
+			modelName: "test-model",
+			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
+		}
 		gitClient := &mockGitClient{
 			DiffFunc:   func() (string, error) { return "diff output", nil },
 			CommitFunc: func(message string) error { return nil },
 		}
-		llmProvider := &mockProvider{
-			modelName: "test-model",
-			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
-		}
 		uiClient := &mockUIClient{
-			TextAreaFunc: func(value string) (string, bool, error) { return "edited message", true, nil },
+			TextAreaFunc:      func(value string) (string, bool, error) { return "edited message", true, nil },
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
 		}
-		app := NewApp(llmProvider, gitClient, uiClient, "prompt")
+		app := NewApp(mp, gitClient, uiClient, "prompt")
 		err := app.Run(ctx, "")
 		assert.NoError(t, err)
 	})
