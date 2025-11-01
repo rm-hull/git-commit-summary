@@ -21,8 +21,13 @@ func (m *mockProvider) Model() string {
 }
 
 type mockGitClient struct {
-	DiffFunc   func() (string, error)
-	CommitFunc func(message string) error
+	IsInWorkTreeFunc func() error
+	DiffFunc         func() (string, error)
+	CommitFunc       func(message string) error
+}
+
+func (m *mockGitClient) IsInWorkTree() error {
+	return m.IsInWorkTreeFunc()
 }
 
 func (m *mockGitClient) Diff() (string, error) {
@@ -79,10 +84,27 @@ func TestNewApp(t *testing.T) {
 func TestAppRun(t *testing.T) {
 	ctx := context.Background()
 
+	t.Run("NotInWorkTree", func(t *testing.T) {
+		mp := &mockProvider{modelName: "test-model"}
+		gitClient := &mockGitClient{
+			IsInWorkTreeFunc: func() error { return assert.AnError },
+		}
+		uiClient := &mockUIClient{
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
+		}
+		app := NewApp(mp, gitClient, uiClient, "prompt")
+		err := app.Run(ctx, "")
+		assert.Error(t, err)
+		assert.Equal(t, assert.AnError, err)
+	})
+
 	t.Run("DiffError", func(t *testing.T) {
 		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{
-			DiffFunc: func() (string, error) { return "", assert.AnError },
+			IsInWorkTreeFunc: func() error { return nil },
+			DiffFunc:         func() (string, error) { return "", assert.AnError },
 		}
 		uiClient := &mockUIClient{
 			StartSpinnerFunc:  func(message string) {},
@@ -98,7 +120,8 @@ func TestAppRun(t *testing.T) {
 	t.Run("NoStagedChanges", func(t *testing.T) {
 		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{
-			DiffFunc: func() (string, error) { return "", nil },
+			IsInWorkTreeFunc: func() error { return nil },
+			DiffFunc:         func() (string, error) { return "", nil },
 		}
 		uiClient := &mockUIClient{
 			StartSpinnerFunc:  func(message string) {},
@@ -117,7 +140,8 @@ func TestAppRun(t *testing.T) {
 			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "", assert.AnError },
 		}
 		gitClient := &mockGitClient{
-			DiffFunc: func() (string, error) { return "diff output", nil },
+			IsInWorkTreeFunc: func() error { return nil },
+			DiffFunc:         func() (string, error) { return "diff output", nil },
 		}
 		uiClient := &mockUIClient{
 			StartSpinnerFunc:  func(message string) {},
@@ -136,7 +160,8 @@ func TestAppRun(t *testing.T) {
 			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
 		}
 		gitClient := &mockGitClient{
-			DiffFunc: func() (string, error) { return "diff output", nil },
+			IsInWorkTreeFunc: func() error { return nil },
+			DiffFunc:         func() (string, error) { return "diff output", nil },
 		}
 		uiClient := &mockUIClient{
 			TextAreaFunc:      func(value string) (string, bool, error) { return "", false, assert.AnError },
@@ -156,7 +181,8 @@ func TestAppRun(t *testing.T) {
 			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
 		}
 		gitClient := &mockGitClient{
-			DiffFunc: func() (string, error) { return "diff output", nil },
+			IsInWorkTreeFunc: func() error { return nil },
+			DiffFunc:         func() (string, error) { return "diff output", nil },
 		}
 		uiClient := &mockUIClient{
 			TextAreaFunc:      func(value string) (string, bool, error) { return "", false, nil },
@@ -175,8 +201,9 @@ func TestAppRun(t *testing.T) {
 			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
 		}
 		gitClient := &mockGitClient{
-			DiffFunc:   func() (string, error) { return "diff output", nil },
-			CommitFunc: func(message string) error { return assert.AnError },
+			IsInWorkTreeFunc: func() error { return nil },
+			DiffFunc:         func() (string, error) { return "diff output", nil },
+			CommitFunc:       func(message string) error { return assert.AnError },
 		}
 		uiClient := &mockUIClient{
 			TextAreaFunc:      func(value string) (string, bool, error) { return "edited message", true, nil },
@@ -196,8 +223,9 @@ func TestAppRun(t *testing.T) {
 			callFunc:  func(ctx context.Context, systemPrompt, userPrompt string) (string, error) { return "llm message", nil },
 		}
 		gitClient := &mockGitClient{
-			DiffFunc:   func() (string, error) { return "diff output", nil },
-			CommitFunc: func(message string) error { return nil },
+			IsInWorkTreeFunc: func() error { return nil },
+			DiffFunc:         func() (string, error) { return "diff output", nil },
+			CommitFunc:       func(message string) error { return nil },
 		}
 		uiClient := &mockUIClient{
 			TextAreaFunc:      func(value string) (string, bool, error) { return "edited message", true, nil },

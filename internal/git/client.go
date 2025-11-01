@@ -1,15 +1,37 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type Client struct{}
 
 func NewClient() *Client {
 	return &Client{}
+}
+
+func (c *Client) IsInWorkTree() error {
+	result, err := exec.Command(
+		"git",
+		"rev-parse",
+		"--is-inside-work-tree",
+	).CombinedOutput()
+	output := strings.Trim(string(result), "\n")
+
+	if err != nil {
+		fmt.Println(output)
+		return fmt.Errorf("git rev-parse failed: %w", err)
+	}
+
+	if output != "true" {
+		return errors.New(output)
+	}
+
+	return nil
 }
 
 func (c *Client) Diff() (string, error) {

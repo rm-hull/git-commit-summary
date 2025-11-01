@@ -16,6 +16,7 @@ import (
 var ErrAborted = errors.New("aborted")
 
 type GitClient interface {
+	IsInWorkTree() error
 	Diff() (string, error)
 	Commit(message string) error
 }
@@ -50,6 +51,11 @@ func NewApp(provider llmprovider.Provider, git GitClient, ui UIClient, prompt st
 }
 
 func (app *App) Run(ctx context.Context, userMessage string) error {
+
+	if err := app.git.IsInWorkTree(); err != nil {
+		return err
+	}
+
 	app.ui.StartSpinner(" <magenta>Running git diff</>")
 	defer app.ui.StopSpinner()
 
