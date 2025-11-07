@@ -45,7 +45,7 @@ func initialModel(value string) model {
 	ti.SetWidth(73)
 	ti.SetValue(value)
 	if value == "" {
-		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summaraized or were excluded from the visible diff."
+		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
 	}
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
