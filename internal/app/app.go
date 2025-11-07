@@ -95,9 +95,8 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 		if err != nil {
 			return err
 		}
+		wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
 	}
-
-	wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
 	edited, accepted, err := app.ui.TextArea(wrapped)
 	if err != nil {
 		return err
