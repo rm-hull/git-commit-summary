@@ -17,6 +17,7 @@ var ErrAborted = errors.New("aborted")
 
 type GitClient interface {
 	IsInWorkTree() error
+	StagedFiles() ([]string, error)
 	Diff() (string, error)
 	Commit(message string) error
 }
@@ -56,16 +57,20 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 		return err
 	}
 
-	app.ui.StartSpinner(" <magenta>Running git diff</>")
+	app.ui.StartSpinner(" <magenta>Running git commands to determine staged changes...</>")
 	defer app.ui.StopSpinner()
+
+	stagedFiles, err := app.git.StagedFiles()
+	if err != nil {
+		return err
+	}
+	if len(stagedFiles) == 0 {
+		return errors.New("no changes are staged")
+	}
 
 	out, err := app.git.Diff()
 	if err != nil {
 		return err
-	}
-
-	if len(out) == 0 {
-		return errors.New("no changes are staged")
 	}
 
 	app.ui.UpdateSpinner(fmt.Sprintf(" <blue>Generating commit summary (using: </><fg=blue;op=bold>%s</><blue>)</>", app.llmProvider.Model()))
@@ -84,12 +89,14 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 	// before rendering the text area below
 	app.ui.StopSpinner()
 
-	wrapped, _, err := stringwrap.StringWrap(message, 72, 4, false)
-	if err != nil {
-		return err
+	var wrapped string
+	if message != "" {
+		wrapped, _, err = stringwrap.StringWrap(message, 72, 4, false)
+		if err != nil {
+			return err
+		}
+		wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
 	}
-
-	wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
 	edited, accepted, err := app.ui.TextArea(wrapped)
 	if err != nil {
 		return err
