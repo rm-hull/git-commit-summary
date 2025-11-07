@@ -26,7 +26,7 @@ type GitClient interface {
 var _ GitClient = (*git.Client)(nil)
 
 type UIClient interface {
-	TextArea(value string) (string, bool, error)
+	TextArea(value string) (string, ui.Action, error)
 	StartSpinner(message string)
 	UpdateSpinner(message string)
 	StopSpinner()
@@ -97,12 +97,12 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 		}
 		wrapped = strings.ReplaceAll(wrapped, "\n\n\n", "\n\n")
 	}
-	edited, accepted, err := app.ui.TextArea(wrapped)
+	edited, action, err := app.ui.TextArea(wrapped)
 	if err != nil {
 		return err
 	}
 
-	if accepted {
+	if action == ui.Commit {
 		return app.git.Commit(edited)
 	} else {
 		return ErrAborted
