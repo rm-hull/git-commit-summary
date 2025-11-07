@@ -17,6 +17,6 @@ Diff follows:
 %s
 ```
 
-Note that if the diff is empty, is is likely there **are** staged changes, but they have
+Note that if the diff is empty, it is likely there **are** staged changes, but they have
 been excluded because they are too big to be shown. In that case, just reply with a
 completely blank response.
