@@ -24,6 +24,7 @@ func textArea(value string) (string, bool, error) {
 
 type model struct {
 	textarea textarea.Model
+	history  *History
 	accepted bool
 	err      error
 }
@@ -46,6 +47,8 @@ func initialModel(value string) model {
 	ti.SetValue(value)
 	if value == "" {
 		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
+	} else {
+		ti.Placeholder = "Please supply a commit message."
 	}
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
@@ -53,6 +56,7 @@ func initialModel(value string) model {
 
 	return model{
 		textarea: ti,
+		history:  NewHistory(value),
 		accepted: false,
 		err:      nil,
 	}
@@ -74,20 +78,42 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 
+	// Store the value before the update to track changes.
+	oldValue := m.textarea.Value()
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
+		case tea.KeyCtrlZ:
+			if value, ok := m.history.Undo(); ok {
+				m.textarea.SetValue(value)
+			}
+			return m, nil
+
+		case tea.KeyCtrlY:
+			if value, ok := m.history.Redo(); ok {
+				m.textarea.SetValue(value)
+			}
+			return m, nil
+
 		case tea.KeyCtrlK:
+			if m.textarea.Value() == "" {
+				return m, nil
+			}
+			m.history.Add("")
 			m.textarea.SetValue("")
 			return m, nil
+
 		case tea.KeyEsc:
 			m.accepted = false
 			m.textarea.Blur()
 			return m, tea.Quit
+
 		case tea.KeyCtrlX:
 			m.accepted = true
 			m.textarea.Blur()
 			return m, tea.Quit
+
 		default:
 			if !m.textarea.Focused() {
 				cmd = m.textarea.Focus()
@@ -102,6 +128,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.textarea, cmd = m.textarea.Update(msg)
 	cmds = append(cmds, cmd)
+
+	// After the update, check if the value has changed.
+	newValue := m.textarea.Value()
+	if oldValue != newValue {
+		m.history.Add(newValue)
+	}
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -112,9 +145,11 @@ func (m model) View() string {
 	keyStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.AdaptiveColor{Light: "#FFD700", Dark: "#FFFF00"}).
 		Bold(true)
-	helpText := fmt.Sprintf("(%s to commit, %s to clear, %s to abort)",
+	helpText := fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:abort",
 		keyStyle.Render("Ctrl-X"),
 		keyStyle.Render("Ctrl-K"),
+		keyStyle.Render("Ctrl-Z"),
+		keyStyle.Render("Ctrl-Y"),
 		keyStyle.Render("ESC"))
 
 	return view + helpText

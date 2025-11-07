@@ -81,20 +81,18 @@ Once installed, check that the executable is on the $PATH, with `git-commit-summ
 
     ```
     $ git commit-summary
-    ╭ Commit message ──────────────────────────────────────────────────────────╮
-    │ docs: Clarify config paths and update usage keys                         │
-    │                                                                          │
-    │ Clarify the README by addressing several points:                         │
-    │                                                                          │
-    │ *   Configuration path examples are now bulleted and                     │
-    │     bolded by OS for better clarity in the Installation                  │
-    │     section.                                                             │
-    │ *   The commit confirmation keys in the Usage section                    │
-    │     are updated from `y/n` to `CTRL-X`/`ESC` to reflect                  │
-    │     the current keybindings.                                             │
-    │ *   Added a detailed usage example block.                                │
-    ╰──────────────────────────────────────────────────────────────────────────╯
-    (Ctrl-X to commit, ESC to abort)
+    ╭ Commit message ───────────────────────────────────────────────────────────╮
+    │ feat: Implement Undo/Redo functionality                                   │
+    │                                                                           │
+    │ Adds history management to the text input component, allowing             │
+    │ users to undo and redo changes using keyboard shortcuts.                  │
+    │                                                                           │
+    │ *   Uses `Ctrl-Z` for undo operations.                                    │
+    │ *   Uses `Ctrl-Y` for redo operations.                                    │
+    │ *   Introduces the `History` struct (`internal/ui/history.go`)            │
+    │     to manage the state stack.                                            │
+    ╰───────────────────────────────────────────────────────────────────────────╯
+    Ctrl-X:commit  Ctrl-K:clear  Ctrl-Z:undo  Ctrl-Y:redo  ESC:abort
     ```
 
 ## Flags
