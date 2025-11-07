@@ -30,6 +30,7 @@ type UIClient interface {
 	StartSpinner(message string)
 	UpdateSpinner(message string)
 	StopSpinner()
+	Prompt(message, placeholder string) (string, ui.Action, error)
 }
 
 // Verify that ui.Client implements UIClient.
@@ -102,9 +103,14 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 		return err
 	}
 
-	if action == ui.Commit {
+	switch action {
+	case ui.Commit:
 		return app.git.Commit(edited)
-	} else {
+	case ui.Regenerate:
+		app.ui.Prompt("<purple>Add an optional instruction when regenerating the commit summary:</>", "ENTER to confirm, or ESC to abort.")
+	default:
 		return ErrAborted
 	}
+
+	return nil
 }

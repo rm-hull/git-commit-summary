@@ -12,6 +12,8 @@ type Action int
 const (
 	Abort Action = iota
 	Commit
+	Ok
+	Regenerate
 )
 
 type Client struct {
@@ -39,4 +41,8 @@ func (c *Client) UpdateSpinner(message string) {
 
 func (c *Client) StopSpinner() {
 	c.spinner.Stop()
+}
+
+func (c *Client) Prompt(text, placeholder string) (string, Action, error) {
+	return prompt(text, placeholder)
 }

@@ -19,7 +19,7 @@ func commitMessage(value string) (string, Action, error) {
 	}
 	m := finalModel.(commitMessageModel)
 
-	return m.Value(), m.Action(), nil
+	return m.textarea.Value(), m.action, nil
 }
 
 type commitMessageModel struct {
@@ -60,14 +60,6 @@ func initialCommitMessageModel(value string) commitMessageModel {
 		action:   Abort,
 		err:      nil,
 	}
-}
-
-func (m commitMessageModel) Value() string {
-	return m.textarea.Value()
-}
-
-func (m commitMessageModel) Action() Action {
-	return m.action
 }
 
 func (m commitMessageModel) Init() tea.Cmd {
@@ -114,6 +106,11 @@ func (m commitMessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Blur()
 			return m, tea.Quit
 
+		case tea.KeyCtrlR:
+			m.action = Regenerate
+			m.textarea.Blur()
+			return m, tea.Quit
+
 		default:
 			if !m.textarea.Focused() {
 				cmd = m.textarea.Focus()
@@ -145,11 +142,12 @@ func (m commitMessageModel) View() string {
 	keyStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.AdaptiveColor{Light: "#FFD700", Dark: "#FFFF00"}).
 		Bold(true)
-	helpText := fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:abort",
+	helpText := fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:regen  %s:abort",
 		keyStyle.Render("CTRL-X"),
 		keyStyle.Render("CTRL-K"),
 		keyStyle.Render("CTRL-Z"),
 		keyStyle.Render("CTRL-Y"),
+		keyStyle.Render("CTRL-R"),
 		keyStyle.Render("ESC"))
 
 	return view + helpText
