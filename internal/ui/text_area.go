@@ -146,10 +146,10 @@ func (m model) View() string {
 		Foreground(lipgloss.AdaptiveColor{Light: "#FFD700", Dark: "#FFFF00"}).
 		Bold(true)
 	helpText := fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:abort",
-		keyStyle.Render("Ctrl-X"),
-		keyStyle.Render("Ctrl-K"),
-		keyStyle.Render("Ctrl-Z"),
-		keyStyle.Render("Ctrl-Y"),
+		keyStyle.Render("CTRL-X"),
+		keyStyle.Render("CTRL-K"),
+		keyStyle.Render("CTRL-Z"),
+		keyStyle.Render("CTRL-Y"),
 		keyStyle.Render("ESC"))
 
 	return view + helpText
