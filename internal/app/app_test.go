@@ -105,7 +105,7 @@ func TestAppRun(t *testing.T) {
 		assert.Equal(t, assert.AnError, err)
 	})
 
-		t.Run("StagedFilesError", func(t *testing.T) {
+	t.Run("StagedFilesError", func(t *testing.T) {
 		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{
 			IsInWorkTreeFunc: func() error { return nil },

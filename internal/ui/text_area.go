@@ -47,16 +47,18 @@ func initialModel(value string) model {
 	ti.SetValue(value)
 	if value == "" {
 		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
+	} else {
+		ti.Placeholder = "Please supply a commit message."
 	}
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ti.BlurredStyle.CursorLine = lipgloss.NewStyle()
 
 	return model{
-		textarea:     ti,
-		history:      NewHistory(value),
-		accepted:     false,
-		err:          nil,
+		textarea: ti,
+		history:  NewHistory(value),
+		accepted: false,
+		err:      nil,
 	}
 }
 
