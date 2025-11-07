@@ -34,6 +34,25 @@ func (c *Client) IsInWorkTree() error {
 	return nil
 }
 
+func (c *Client) StagedFiles() ([]string, error) {
+	result, err := exec.Command(
+		"git",
+		"diff",
+		"--staged",
+		"--name-only",
+	).CombinedOutput()
+
+	if err != nil {
+		return nil, fmt.Errorf("listing staged files failed: %w", err)
+	}
+
+	trimmed := strings.TrimSpace(string(result))
+	if trimmed == "" {
+		return nil, nil
+	}
+	return strings.Split(trimmed, "\n"), nil
+}
+
 func (c *Client) Diff() (string, error) {
 	result, err := exec.Command(
 		"git",

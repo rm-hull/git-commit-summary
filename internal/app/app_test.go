@@ -22,12 +22,17 @@ func (m *mockProvider) Model() string {
 
 type mockGitClient struct {
 	IsInWorkTreeFunc func() error
+	StagedFilesFunc  func() ([]string, error)
 	DiffFunc         func() (string, error)
 	CommitFunc       func(message string) error
 }
 
 func (m *mockGitClient) IsInWorkTree() error {
 	return m.IsInWorkTreeFunc()
+}
+
+func (m *mockGitClient) StagedFiles() ([]string, error) {
+	return m.StagedFilesFunc()
 }
 
 func (m *mockGitClient) Diff() (string, error) {
@@ -100,11 +105,11 @@ func TestAppRun(t *testing.T) {
 		assert.Equal(t, assert.AnError, err)
 	})
 
-	t.Run("DiffError", func(t *testing.T) {
+		t.Run("StagedFilesError", func(t *testing.T) {
 		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{
 			IsInWorkTreeFunc: func() error { return nil },
-			DiffFunc:         func() (string, error) { return "", assert.AnError },
+			StagedFilesFunc:  func() ([]string, error) { return nil, assert.AnError },
 		}
 		uiClient := &mockUIClient{
 			StartSpinnerFunc:  func(message string) {},
@@ -121,7 +126,7 @@ func TestAppRun(t *testing.T) {
 		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{
 			IsInWorkTreeFunc: func() error { return nil },
-			DiffFunc:         func() (string, error) { return "", nil },
+			StagedFilesFunc:  func() ([]string, error) { return nil, nil },
 		}
 		uiClient := &mockUIClient{
 			StartSpinnerFunc:  func(message string) {},
@@ -134,6 +139,24 @@ func TestAppRun(t *testing.T) {
 		assert.EqualError(t, err, "no changes are staged")
 	})
 
+	t.Run("DiffError", func(t *testing.T) {
+		mp := &mockProvider{modelName: "test-model"}
+		gitClient := &mockGitClient{
+			IsInWorkTreeFunc: func() error { return nil },
+			StagedFilesFunc:  func() ([]string, error) { return []string{"hello.txt"}, nil },
+			DiffFunc:         func() (string, error) { return "", assert.AnError },
+		}
+		uiClient := &mockUIClient{
+			StartSpinnerFunc:  func(message string) {},
+			UpdateSpinnerFunc: func(message string) {},
+			StopSpinnerFunc:   func() {},
+		}
+		app := NewApp(mp, gitClient, uiClient, "prompt")
+		err := app.Run(ctx, "")
+		assert.Error(t, err)
+		assert.Equal(t, assert.AnError, err)
+	})
+
 	t.Run("LLMCallError", func(t *testing.T) {
 		mp := &mockProvider{
 			modelName: "test-model",
@@ -141,6 +164,7 @@ func TestAppRun(t *testing.T) {
 		}
 		gitClient := &mockGitClient{
 			IsInWorkTreeFunc: func() error { return nil },
+			StagedFilesFunc:  func() ([]string, error) { return []string{"hello.txt"}, nil },
 			DiffFunc:         func() (string, error) { return "diff output", nil },
 		}
 		uiClient := &mockUIClient{
@@ -161,6 +185,7 @@ func TestAppRun(t *testing.T) {
 		}
 		gitClient := &mockGitClient{
 			IsInWorkTreeFunc: func() error { return nil },
+			StagedFilesFunc:  func() ([]string, error) { return []string{"hello.txt"}, nil },
 			DiffFunc:         func() (string, error) { return "diff output", nil },
 		}
 		uiClient := &mockUIClient{
@@ -182,6 +207,7 @@ func TestAppRun(t *testing.T) {
 		}
 		gitClient := &mockGitClient{
 			IsInWorkTreeFunc: func() error { return nil },
+			StagedFilesFunc:  func() ([]string, error) { return []string{"hello.txt"}, nil },
 			DiffFunc:         func() (string, error) { return "diff output", nil },
 		}
 		uiClient := &mockUIClient{
@@ -202,6 +228,7 @@ func TestAppRun(t *testing.T) {
 		}
 		gitClient := &mockGitClient{
 			IsInWorkTreeFunc: func() error { return nil },
+			StagedFilesFunc:  func() ([]string, error) { return []string{"hello.txt"}, nil },
 			DiffFunc:         func() (string, error) { return "diff output", nil },
 			CommitFunc:       func(message string) error { return assert.AnError },
 		}
@@ -224,6 +251,7 @@ func TestAppRun(t *testing.T) {
 		}
 		gitClient := &mockGitClient{
 			IsInWorkTreeFunc: func() error { return nil },
+			StagedFilesFunc:  func() ([]string, error) { return []string{"hello.txt"}, nil },
 			DiffFunc:         func() (string, error) { return "diff output", nil },
 			CommitFunc:       func(message string) error { return nil },
 		}

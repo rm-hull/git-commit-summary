@@ -34,9 +34,19 @@ func initialModel(value string) model {
 	ti.ShowLineNumbers = false
 	ti.Prompt = ""
 	ti.Focus()
-	ti.SetHeight(strings.Count(value, "\n") + 1)
+
+	minHeight := 2
+	messageLines := strings.Count(value, "\n") + 1
+	if messageLines > minHeight {
+		minHeight = messageLines
+	}
+	ti.SetHeight(minHeight)
+
 	ti.SetWidth(73)
 	ti.SetValue(value)
+	if value == "" {
+		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
+	}
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ti.BlurredStyle.CursorLine = lipgloss.NewStyle()
