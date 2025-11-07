@@ -10,22 +10,22 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func textArea(value string) (string, bool, error) {
+func textArea(value string) (string, Action, error) {
 	p := tea.NewProgram(initialModel(value))
 
 	finalModel, err := p.Run()
 	if err != nil {
-		return "", false, err
+		return "", Abort, err
 	}
 	m := finalModel.(model)
 
-	return m.Value(), m.Accepted(), nil
+	return m.Value(), m.Action(), nil
 }
 
 type model struct {
 	textarea textarea.Model
 	history  *History
-	accepted bool
+	action   Action
 	err      error
 }
 
@@ -57,7 +57,7 @@ func initialModel(value string) model {
 	return model{
 		textarea: ti,
 		history:  NewHistory(value),
-		accepted: false,
+		action:   Abort,
 		err:      nil,
 	}
 }
@@ -66,8 +66,8 @@ func (m model) Value() string {
 	return m.textarea.Value()
 }
 
-func (m model) Accepted() bool {
-	return m.accepted
+func (m model) Action() Action {
+	return m.action
 }
 
 func (m model) Init() tea.Cmd {
@@ -105,12 +105,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case tea.KeyEsc:
-			m.accepted = false
+			m.action = Abort
 			m.textarea.Blur()
 			return m, tea.Quit
 
 		case tea.KeyCtrlX:
-			m.accepted = true
+			m.action = Commit
 			m.textarea.Blur()
 			return m, tea.Quit
 

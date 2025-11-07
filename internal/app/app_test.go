@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/rm-hull/git-commit-summary/internal/ui"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,13 +45,13 @@ func (m *mockGitClient) Commit(message string) error {
 }
 
 type mockUIClient struct {
-	TextAreaFunc      func(value string) (string, bool, error)
+	TextAreaFunc      func(value string) (string, ui.Action, error)
 	StartSpinnerFunc  func(message string)
 	UpdateSpinnerFunc func(message string)
 	StopSpinnerFunc   func()
 }
 
-func (m *mockUIClient) TextArea(value string) (string, bool, error) {
+func (m *mockUIClient) TextArea(value string) (string, ui.Action, error) {
 	return m.TextAreaFunc(value)
 }
 
@@ -189,7 +190,7 @@ func TestAppRun(t *testing.T) {
 			DiffFunc:         func() (string, error) { return "diff output", nil },
 		}
 		uiClient := &mockUIClient{
-			TextAreaFunc:      func(value string) (string, bool, error) { return "", false, assert.AnError },
+			TextAreaFunc:      func(value string) (string, ui.Action, error) { return "", ui.Abort, assert.AnError },
 			StartSpinnerFunc:  func(message string) {},
 			UpdateSpinnerFunc: func(message string) {},
 			StopSpinnerFunc:   func() {},
@@ -211,7 +212,7 @@ func TestAppRun(t *testing.T) {
 			DiffFunc:         func() (string, error) { return "diff output", nil },
 		}
 		uiClient := &mockUIClient{
-			TextAreaFunc:      func(value string) (string, bool, error) { return "", false, nil },
+			TextAreaFunc:      func(value string) (string, ui.Action, error) { return "", ui.Abort, nil },
 			StartSpinnerFunc:  func(message string) {},
 			UpdateSpinnerFunc: func(message string) {},
 			StopSpinnerFunc:   func() {},
@@ -233,7 +234,7 @@ func TestAppRun(t *testing.T) {
 			CommitFunc:       func(message string) error { return assert.AnError },
 		}
 		uiClient := &mockUIClient{
-			TextAreaFunc:      func(value string) (string, bool, error) { return "edited message", true, nil },
+			TextAreaFunc:      func(value string) (string, ui.Action, error) { return "edited message", ui.Commit, nil },
 			StartSpinnerFunc:  func(message string) {},
 			UpdateSpinnerFunc: func(message string) {},
 			StopSpinnerFunc:   func() {},
@@ -256,7 +257,7 @@ func TestAppRun(t *testing.T) {
 			CommitFunc:       func(message string) error { return nil },
 		}
 		uiClient := &mockUIClient{
-			TextAreaFunc:      func(value string) (string, bool, error) { return "edited message", true, nil },
+			TextAreaFunc:      func(value string) (string, ui.Action, error) { return "edited message", ui.Commit, nil },
 			StartSpinnerFunc:  func(message string) {},
 			UpdateSpinnerFunc: func(message string) {},
 			StopSpinnerFunc:   func() {},

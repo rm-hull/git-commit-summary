@@ -7,6 +7,13 @@ import (
 	"github.com/gookit/color"
 )
 
+type Action int
+
+const (
+	Abort Action = iota
+	Commit
+)
+
 type Client struct {
 	spinner *spinner.Spinner
 }
@@ -17,7 +24,7 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) TextArea(value string) (string, bool, error) {
+func (c *Client) TextArea(value string) (string, Action, error) {
 	return textArea(value)
 }
 
