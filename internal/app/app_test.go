@@ -51,7 +51,7 @@ type mockUIClient struct {
 	StopSpinnerFunc   func()
 }
 
-func (m *mockUIClient) TextArea(value string) (string, ui.Action, error) {
+func (m *mockUIClient) CommitMessage(value string) (string, ui.Action, error) {
 	return m.TextAreaFunc(value)
 }
 

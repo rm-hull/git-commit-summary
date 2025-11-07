@@ -24,8 +24,8 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) TextArea(value string) (string, Action, error) {
-	return textArea(value)
+func (c *Client) CommitMessage(value string) (string, Action, error) {
+	return commitMessage(value)
 }
 
 func (c *Client) StartSpinner(message string) {

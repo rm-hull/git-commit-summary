@@ -10,26 +10,26 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func textArea(value string) (string, Action, error) {
-	p := tea.NewProgram(initialModel(value))
+func commitMessage(value string) (string, Action, error) {
+	p := tea.NewProgram(initialCommitMessageModel(value))
 
 	finalModel, err := p.Run()
 	if err != nil {
 		return "", Abort, err
 	}
-	m := finalModel.(model)
+	m := finalModel.(commitMessageModel)
 
 	return m.Value(), m.Action(), nil
 }
 
-type model struct {
+type commitMessageModel struct {
 	textarea textarea.Model
 	history  *History
 	action   Action
 	err      error
 }
 
-func initialModel(value string) model {
+func initialCommitMessageModel(value string) commitMessageModel {
 	ti := textarea.New()
 	ti.CharLimit = 0
 	ti.ShowLineNumbers = false
@@ -54,7 +54,7 @@ func initialModel(value string) model {
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ti.BlurredStyle.CursorLine = lipgloss.NewStyle()
 
-	return model{
+	return commitMessageModel{
 		textarea: ti,
 		history:  NewHistory(value),
 		action:   Abort,
@@ -62,19 +62,19 @@ func initialModel(value string) model {
 	}
 }
 
-func (m model) Value() string {
+func (m commitMessageModel) Value() string {
 	return m.textarea.Value()
 }
 
-func (m model) Action() Action {
+func (m commitMessageModel) Action() Action {
 	return m.action
 }
 
-func (m model) Init() tea.Cmd {
+func (m commitMessageModel) Init() tea.Cmd {
 	return textarea.Blink
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m commitMessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 
@@ -138,7 +138,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m commitMessageModel) View() string {
 	box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
 	view := box.String("Commit message", m.textarea.View())
 
