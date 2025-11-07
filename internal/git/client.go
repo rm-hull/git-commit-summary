@@ -1,11 +1,12 @@
 package git
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 type Client struct{}
@@ -24,7 +25,7 @@ func (c *Client) IsInWorkTree() error {
 
 	if err != nil {
 		fmt.Println(output)
-		return fmt.Errorf("git rev-parse failed: %w", err)
+		return errors.Wrap(err, "git rev-parse failed")
 	}
 
 	if output != "true" {
@@ -43,7 +44,7 @@ func (c *Client) StagedFiles() ([]string, error) {
 	).CombinedOutput()
 
 	if err != nil {
-		return nil, fmt.Errorf("listing staged files failed: %w", err)
+		return nil, errors.Wrap(err, "listing staged files failed")
 	}
 
 	trimmed := strings.TrimSpace(string(result))
@@ -74,7 +75,7 @@ func (c *Client) Diff() (string, error) {
 	).CombinedOutput()
 
 	if err != nil {
-		return "", fmt.Errorf("git diff failed: %w", err)
+		return "", errors.Wrap(err, "git diff failed")
 	}
 	return string(result), nil
 }
@@ -89,10 +90,10 @@ func (c *Client) Commit(message string) error {
 	}()
 
 	if _, err := tmpfile.WriteString(message); err != nil {
-		return fmt.Errorf("git commit failed: %w", err)
+		return errors.Wrap(err, "git commit failed")
 	}
 	if err := tmpfile.Close(); err != nil {
-		return fmt.Errorf("git commit failed: %w", err)
+		return errors.Wrap(err, "git commit failed")
 	}
 
 	// Set up git commit command
@@ -105,7 +106,7 @@ func (c *Client) Commit(message string) error {
 
 	// Run the command
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("git commit failed: %w", err)
+		return errors.Wrap(err, "git commit failed")
 	}
 
 	return nil

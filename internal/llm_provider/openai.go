@@ -2,10 +2,10 @@ package llmprovider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/rm-hull/git-commit-summary/internal/config"
 
+	"github.com/cockroachdb/errors"
 	openai "github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 )
@@ -36,7 +36,7 @@ func (provider *OpenAiProvider) Call(ctx context.Context, systemPrompt, userProm
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to generate content: %w", err)
+		return "", errors.Wrap(err, "failed to generate content")
 	}
 
 	return result.Choices[0].Message.Content, nil

@@ -2,8 +2,8 @@ package llmprovider
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/git-commit-summary/internal/config"
 )
 
@@ -19,6 +19,6 @@ func NewProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
 	case "openai":
 		return NewOpenAiProvider(ctx, cfg)
 	default:
-		return nil, fmt.Errorf("unknown LLM provider: %s", cfg.LLMProvider)
+		return nil, errors.Newf("unknown LLM provider: %s", cfg.LLMProvider)
 	}
 }

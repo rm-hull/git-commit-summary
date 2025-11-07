@@ -2,8 +2,8 @@ package llmprovider
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/git-commit-summary/internal/config"
 	"google.golang.org/genai"
 )
@@ -18,7 +18,7 @@ func NewGoogleProvider(ctx context.Context, cfg *config.Config) (Provider, error
 	// The config package has already loaded it from the .env file.
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize Google client, is GEMINI_API_KEY set? %w", err)
+		return nil, errors.Wrap(err, "failed to initialize Google client, is GEMINI_API_KEY set?")
 	}
 
 	return &GoogleProvider{
@@ -35,7 +35,7 @@ func (gp *GoogleProvider) Call(ctx context.Context, systemPrompt, userPrompt str
 		nil,
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate content: %w", err)
+		return "", errors.Wrap(err, "failed to generate content:")
 	}
 
 	return result.Text(), nil
