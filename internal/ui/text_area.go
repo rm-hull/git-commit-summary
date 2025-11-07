@@ -77,6 +77,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
+		case tea.KeyCtrlK:
+			m.textarea.SetValue("")
+			return m, nil
 		case tea.KeyEsc:
 			m.accepted = false
 			m.textarea.Blur()
@@ -109,8 +112,9 @@ func (m model) View() string {
 	keyStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.AdaptiveColor{Light: "#FFD700", Dark: "#FFFF00"}).
 		Bold(true)
-	helpText := fmt.Sprintf("(%s to commit, %s to abort)",
+	helpText := fmt.Sprintf("(%s to commit, %s to clear, %s to abort)",
 		keyStyle.Render("Ctrl-X"),
+		keyStyle.Render("Ctrl-K"),
 		keyStyle.Render("ESC"))
 
 	return view + helpText
