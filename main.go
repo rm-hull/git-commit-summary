@@ -2,16 +2,15 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
 	"github.com/earthboundkid/versioninfo/v2"
-	"github.com/gookit/color"
 	"github.com/rm-hull/git-commit-summary/internal/app"
 	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/rm-hull/git-commit-summary/internal/git"
-	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
+	"github.com/rm-hull/git-commit-summary/internal/interfaces"
+	"github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	"github.com/rm-hull/git-commit-summary/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +42,10 @@ func main() {
 			handleError(err)
 
 			application := app.NewApp(provider, git.NewClient(), ui.NewClient(), cfg.Prompt)
-			handleError(application.Run(ctx, userMessage))
+			err = application.Run(ctx, userMessage)
+			if err != nil {
+				handleError(err)
+			}
 		},
 	}
 
@@ -56,11 +58,12 @@ func main() {
 
 func handleError(err error) {
 	if err != nil {
-		if errors.Is(err, app.ErrAborted) {
-			color.Println("<fg=red;op=bold>ABORTED!</>")
+		if err.Error() == interfaces.ErrAborted.Error() {
+			fmt.Println(ui.BoldRed.Render("ABORTED!"))
 			os.Exit(0)
 		} else {
-			color.Fprintf(os.Stderr, "<fg=red;op=bold>ERROR:</> %v\n", err)
+			prefix := ui.BoldRed.Render("ERROR:")
+			fmt.Fprintf(os.Stderr, "%s %v\n", prefix, err)
 			os.Exit(1)
 		}
 	}
