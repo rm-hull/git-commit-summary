@@ -10,8 +10,8 @@ import (
 type Action int
 
 const (
-	Commit Action = iota
-	Abort
+	Abort Action = iota
+	Commit
 )
 
 type Client struct {
