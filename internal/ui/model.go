@@ -226,7 +226,7 @@ func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
 	return func() tea.Msg {
 		text := fmt.Sprintf(m.systemPrompt, diff)
 		if userMessage != "" {
-			text += "\n\n" + userMessage
+			text += "\n\n**IMPORTANT:** " + userMessage
 		}
 		resp, err := m.llmProvider.Call(m.ctx, "", text)
 		if err != nil {

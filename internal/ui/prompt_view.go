@@ -55,8 +55,8 @@ func (m promptViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m promptViewModel) View() string {
 	return fmt.Sprintf(
-		"%s\n%s",
+		"%s\n%s\n",
 		m.message,
 		m.textinput.View(),
-	) + "\n"
+	)
 }
