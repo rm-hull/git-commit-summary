@@ -23,14 +23,15 @@ const (
 )
 
 type (
-	gitCheckMsg     []string
-	gitDiffMsg      string
-	llmResultMsg    string
-	commitMsg       string
-	errMsg          struct{ err error }
-	abortMsg        struct{}
-	regenerateMsg   struct{}
-	userResponseMsg string
+	gitCheckMsg          []string
+	gitDiffMsg           string
+	llmResultMsg         string
+	commitMsg            string
+	errMsg               struct{ err error }
+	abortMsg             struct{}
+	regenerateMsg        struct{}
+	cancelRegenPromptMsg struct{}
+	userResponseMsg      string
 )
 
 type Action int
@@ -139,7 +140,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = showRegeneratePrompt
 		m.promptView = initialPromptViewModel(
 			Magenta.Render("Add an optional instruction to help shape regenerating the commit summary:"),
-			"ENTER to confirm, or ESC to abort.",
+			"ENTER to confirm, or ESC to cancel.",
 		)
 
 		return m, m.promptView.Init()
@@ -152,6 +153,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Blue.Render(")"),
 		)
 		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff, string(msg)))
+
+	case cancelRegenPromptMsg:
+		m.state = showCommitView
+		return m, m.commitView.Init()
 
 	case errMsg:
 		m.err = msg.err

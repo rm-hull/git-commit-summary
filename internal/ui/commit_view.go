@@ -29,7 +29,7 @@ func initialCommitViewModel(message string) *commitViewModel {
 	}
 	ti.SetHeight(minHeight)
 
-	ti.SetWidth(73)
+	ti.SetWidth(74)
 	ti.SetValue(message)
 	if message == "" {
 		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
@@ -38,7 +38,6 @@ func initialCommitViewModel(message string) *commitViewModel {
 	}
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
-	ti.BlurredStyle.CursorLine = lipgloss.NewStyle()
 
 	box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
 
@@ -50,6 +49,7 @@ func initialCommitViewModel(message string) *commitViewModel {
 }
 
 func (m *commitViewModel) Init() tea.Cmd {
+	m.textarea.Focus()
 	return textarea.Blink
 }
 

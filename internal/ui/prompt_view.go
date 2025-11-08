@@ -1,9 +1,10 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/gookit/color"
 )
 
 type promptViewModel struct {
@@ -41,7 +42,7 @@ func (m promptViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case tea.KeyCtrlC, tea.KeyEsc:
 			m.textinput.Blur()
-			return m, func() tea.Msg { return abortMsg{} }
+			return m, func() tea.Msg { return cancelRegenPromptMsg{} }
 		}
 
 	case errMsg:
@@ -53,7 +54,7 @@ func (m promptViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m promptViewModel) View() string {
-	return color.Sprintf(
+	return fmt.Sprintf(
 		"%s\n%s",
 		m.message,
 		m.textinput.View(),
