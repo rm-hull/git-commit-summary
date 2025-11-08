@@ -39,6 +39,7 @@ const (
 )
 
 type Model struct {
+	ctx           context.Context
 	state         sessionState
 	llmProvider   llmprovider.Provider
 	gitClient     interfaces.GitClient
@@ -52,8 +53,15 @@ type Model struct {
 	err           error
 }
 
-func initialModel(llmProvider llmprovider.Provider, gitClient interfaces.GitClient, systemPrompt, userMessage string) *Model {
+func initialModel(
+	ctx context.Context,
+	llmProvider llmprovider.Provider,
+	gitClient interfaces.GitClient,
+	systemPrompt string,
+	userMessage string,
+) *Model {
 	return &Model{
+		ctx:          ctx,
 		state:        showSpinner,
 		llmProvider:  llmProvider,
 		gitClient:    gitClient,
@@ -153,7 +161,7 @@ func (m *Model) View() string {
 }
 
 func (m *Model) checkGitStatus() tea.Msg {
-	time.Sleep(1500 * time.Millisecond) // Add a small delay
+	time.Sleep(1000 * time.Millisecond) // Add a small delay
 	if err := m.gitClient.IsInWorkTree(); err != nil {
 		return errMsg{err}
 	}
@@ -175,10 +183,10 @@ func (m *Model) getGitDiff() tea.Msg {
 func (m *Model) generateSummary(diff string) tea.Cmd {
 	return func() tea.Msg {
 		text := fmt.Sprintf(m.systemPrompt, diff)
-		summary, err := m.llmProvider.Call(context.Background(), "", text)
+		resp, err := m.llmProvider.Call(m.ctx, "", text)
 		if err != nil {
 			return errMsg{err}
 		}
-		return llmResultMsg(summary)
+		return llmResultMsg(resp)
 	}
 }

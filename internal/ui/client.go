@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
@@ -14,8 +16,14 @@ func NewClient() *Client {
 	return &Client{}
 }
 
-func (c *Client) Run(llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error {
-	model := initialModel(llmProvider, gitClient, prompt, userMessage)
+func (c *Client) Run(
+	ctx context.Context,
+	llmProvider llmprovider.Provider,
+	gitClient interfaces.GitClient,
+	systemPrompt string,
+	userMessage string,
+) error {
+	model := initialModel(ctx, llmProvider, gitClient, systemPrompt, userMessage)
 	p := tea.NewProgram(model)
 
 	finalModel, err := p.Run()

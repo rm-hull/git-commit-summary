@@ -5,7 +5,7 @@ import (
 
 	"github.com/rm-hull/git-commit-summary/internal/git"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
-	"github.com/rm-hull/git-commit-summary/internal/llm_provider"
+	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	"github.com/rm-hull/git-commit-summary/internal/ui"
 )
 
@@ -15,7 +15,7 @@ type GitClient = interfaces.GitClient
 var _ GitClient = (*git.Client)(nil)
 
 type UIClient interface {
-	Run(llmProvider llmprovider.Provider, gitClient GitClient, prompt, userMessage string) error
+	Run(ctx context.Context, llmProvider llmprovider.Provider, gitClient GitClient, prompt, userMessage string) error
 }
 
 // Verify that ui.Client implements UIClient.
@@ -38,5 +38,5 @@ func NewApp(provider llmprovider.Provider, git GitClient, ui UIClient, prompt st
 }
 
 func (app *App) Run(ctx context.Context, userMessage string) error {
-	return app.ui.Run(app.llmProvider, app.git, app.prompt, userMessage)
+	return app.ui.Run(ctx, app.llmProvider, app.git, app.prompt, userMessage)
 }

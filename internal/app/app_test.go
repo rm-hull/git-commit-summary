@@ -46,11 +46,11 @@ func (m *mockGitClient) Commit(message string) error {
 }
 
 type mockUIClient struct {
-	RunFunc func(llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error
+	RunFunc func(ctx context.Context, llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error
 }
 
-func (m *mockUIClient) Run(llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error {
-	return m.RunFunc(llmProvider, gitClient, prompt, userMessage)
+func (m *mockUIClient) Run(ctx context.Context, llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error {
+	return m.RunFunc(ctx, llmProvider, gitClient, prompt, userMessage)
 }
 
 func TestNewApp(t *testing.T) {
@@ -74,7 +74,7 @@ func TestAppRun(t *testing.T) {
 		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{}
 		uiClient := &mockUIClient{
-			RunFunc: func(llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error {
+			RunFunc: func(ctx context.Context, llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error {
 				return assert.AnError
 			},
 		}
@@ -88,7 +88,7 @@ func TestAppRun(t *testing.T) {
 		mp := &mockProvider{modelName: "test-model"}
 		gitClient := &mockGitClient{}
 		uiClient := &mockUIClient{
-			RunFunc: func(llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error {
+			RunFunc: func(ctx context.Context, llmProvider llmprovider.Provider, gitClient interfaces.GitClient, prompt, userMessage string) error {
 				return nil
 			},
 		}

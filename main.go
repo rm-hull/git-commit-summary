@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cockroachdb/errors"
 	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/rm-hull/git-commit-summary/internal/app"
 	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/rm-hull/git-commit-summary/internal/git"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
-	"github.com/rm-hull/git-commit-summary/internal/llm_provider"
+	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	"github.com/rm-hull/git-commit-summary/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -58,7 +59,7 @@ func main() {
 
 func handleError(err error) {
 	if err != nil {
-		if err.Error() == interfaces.ErrAborted.Error() {
+		if errors.Is(err, interfaces.ErrAborted) {
 			fmt.Println(ui.BoldRed.Render("ABORTED!"))
 			os.Exit(0)
 		} else {
