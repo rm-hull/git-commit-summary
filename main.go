@@ -42,7 +42,7 @@ func main() {
 			provider, err := llmprovider.NewProvider(ctx, cfg)
 			handleError(err)
 
-			application := app.NewApp(provider, git.NewClient(), ui.NewClient(), cfg.Prompt)
+			application := app.NewApp(provider, git.NewClient(), cfg.Prompt)
 			err = application.Run(ctx, userMessage)
 			if err != nil {
 				handleError(err)

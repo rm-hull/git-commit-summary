@@ -43,23 +43,23 @@ const (
 )
 
 type Model struct {
-	ctx           context.Context
-	state         sessionState
-	llmProvider   llmprovider.Provider
-	gitClient     interfaces.GitClient
-	systemPrompt  string
-	userMessage   string
-	diff          string
-	spinner       spinner.Model
-	spinnerMsg    string
-	commitView    tea.Model
-	commitMessage string
-	promptView    tea.Model
-	action        Action
-	err           error
+	ctx            context.Context
+	state          sessionState
+	llmProvider    llmprovider.Provider
+	gitClient      interfaces.GitClient
+	systemPrompt   string
+	userMessage    string
+	diff           string
+	spinner        spinner.Model
+	spinnerMessage string
+	commitView     tea.Model
+	commitMessage  string
+	promptView     tea.Model
+	action         Action
+	err            error
 }
 
-func initialModel(
+func InitialModel(
 	ctx context.Context,
 	llmProvider llmprovider.Provider,
 	gitClient interfaces.GitClient,
@@ -67,15 +67,15 @@ func initialModel(
 	userMessage string,
 ) *Model {
 	return &Model{
-		ctx:          ctx,
-		state:        showSpinner,
-		llmProvider:  llmProvider,
-		gitClient:    gitClient,
-		systemPrompt: systemPrompt,
-		userMessage:  userMessage,
-		spinner:      spinner.New(spinner.WithSpinner(spinner.MiniDot)),
-		spinnerMsg:   Magenta.Render("Running git commands to determine staged changes..."),
-		action:       None,
+		ctx:            ctx,
+		state:          showSpinner,
+		llmProvider:    llmProvider,
+		gitClient:      gitClient,
+		systemPrompt:   systemPrompt,
+		userMessage:    userMessage,
+		spinner:        spinner.New(spinner.WithSpinner(spinner.MiniDot)),
+		spinnerMessage: Magenta.Render("Running git commands to determine staged changes..."),
+		action:         None,
 	}
 }
 
@@ -102,7 +102,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.getGitDiff
 
 	case gitDiffMsg:
-		m.spinnerMsg = fmt.Sprintf("%s%s%s",
+		m.spinnerMessage = fmt.Sprintf("%s%s%s",
 			Blue.Render("Generating commit summary (using: "),
 			BoldBlue.Render(m.llmProvider.Model()),
 			Blue.Render(")"),
@@ -147,7 +147,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case userResponseMsg:
 		m.state = showSpinner
-		m.spinnerMsg = fmt.Sprintf("%s%s%s",
+		m.spinnerMessage = fmt.Sprintf("%s%s%s",
 			Blue.Render("Re-generating commit summary (using: "),
 			BoldBlue.Render(m.llmProvider.Model()),
 			Blue.Render(")"),
@@ -182,7 +182,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) View() string {
 	switch m.state {
 	case showSpinner:
-		return m.spinner.View() + " " + m.spinnerMsg
+		return m.spinner.View() + " " + m.spinnerMessage
 	case showCommitView:
 		return m.commitView.View() + m.helpText()
 	case showRegeneratePrompt:
@@ -234,4 +234,16 @@ func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
 		}
 		return llmResultMsg(resp)
 	}
+}
+
+func (m *Model) Err() error {
+	return m.err
+}
+
+func (m *Model) Action() Action {
+	return m.action
+}
+
+func (m *Model) CommitMessage() string {
+	return m.commitMessage
 }
