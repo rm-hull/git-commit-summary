@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Delta456/box-cli-maker/v2"
@@ -13,9 +12,10 @@ import (
 type commitViewModel struct {
 	textarea textarea.Model
 	history  *History
+	box      *box.Box
 }
 
-func newCommitViewModel(message string) *commitViewModel {
+func initialCommitViewModel(message string) *commitViewModel {
 	ti := textarea.New()
 	ti.CharLimit = 0
 	ti.ShowLineNumbers = false
@@ -29,7 +29,7 @@ func newCommitViewModel(message string) *commitViewModel {
 	}
 	ti.SetHeight(minHeight)
 
-	ti.SetWidth(73)
+	ti.SetWidth(74)
 	ti.SetValue(message)
 	if message == "" {
 		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
@@ -38,15 +38,18 @@ func newCommitViewModel(message string) *commitViewModel {
 	}
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
-	ti.BlurredStyle.CursorLine = lipgloss.NewStyle()
+
+	box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
 
 	return &commitViewModel{
 		textarea: ti,
 		history:  NewHistory(message),
+		box:      &box,
 	}
 }
 
 func (m *commitViewModel) Init() tea.Cmd {
+	m.textarea.Focus()
 	return textarea.Blink
 }
 
@@ -87,6 +90,10 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Blur()
 			return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
 
+		case tea.KeyCtrlR:
+			m.textarea.Blur()
+			return m, func() tea.Msg { return regenerateMsg{} }
+
 		default:
 			if !m.textarea.Focused() {
 				cmd = m.textarea.Focus()
@@ -110,18 +117,5 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *commitViewModel) View() string {
-	box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
-	view := box.String("Commit message", m.textarea.View())
-
-	keyStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.AdaptiveColor{Light: "#FFD700", Dark: "#FFFF00"}).
-		Bold(true)
-	helpText := fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:abort",
-		keyStyle.Render("CTRL-X"),
-		keyStyle.Render("CTRL-K"),
-		keyStyle.Render("CTRL-Z"),
-		keyStyle.Render("CTRL-Y"),
-		keyStyle.Render("ESC"))
-
-	return view + helpText
+	return m.box.String("Commit message", m.textarea.View())
 }

@@ -19,15 +19,19 @@ type sessionState int
 const (
 	showSpinner sessionState = iota
 	showCommitView
+	showRegeneratePrompt
 )
 
 type (
-	gitCheckMsg  []string
-	gitDiffMsg   string
-	llmResultMsg string
-	commitMsg    string
-	errMsg       struct{ err error }
-	abortMsg     struct{}
+	gitCheckMsg          []string
+	gitDiffMsg           string
+	llmResultMsg         string
+	commitMsg            string
+	errMsg               struct{ err error }
+	abortMsg             struct{}
+	regenerateMsg        struct{}
+	cancelRegenPromptMsg struct{}
+	userResponseMsg      string
 )
 
 type Action int
@@ -45,10 +49,12 @@ type Model struct {
 	gitClient     interfaces.GitClient
 	systemPrompt  string
 	userMessage   string
+	diff          string
 	spinner       spinner.Model
 	spinnerMsg    string
 	commitView    tea.Model
 	commitMessage string
+	promptView    tea.Model
 	action        Action
 	err           error
 }
@@ -93,7 +99,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = errors.New("no changes are staged")
 			return m, tea.Quit
 		}
-		m.spinnerMsg = Blue.Render(" Generating diff...")
 		return m, m.getGitDiff
 
 	case gitDiffMsg:
@@ -102,7 +107,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			BoldBlue.Render(m.llmProvider.Model()),
 			Blue.Render(")"),
 		)
-		return m, m.generateSummary(string(msg))
+		m.diff = string(msg)
+		return m, m.generateSummary(m.diff, "")
 
 	case llmResultMsg:
 		m.state = showCommitView
@@ -122,13 +128,35 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		commitMessage = strings.ReplaceAll(commitMessage, "\n\n\n", "\n\n")
-		m.commitView = newCommitViewModel(commitMessage)
+		m.commitView = initialCommitViewModel(commitMessage)
 		return m, m.commitView.Init()
 
 	case commitMsg:
 		m.action = Commit
 		m.commitMessage = string(msg)
 		return m, tea.Quit
+
+	case regenerateMsg:
+		m.state = showRegeneratePrompt
+		m.promptView = initialPromptViewModel(
+			Magenta.Render("Add an optional instruction to help shape regenerating the commit summary:"),
+			"ENTER to confirm, or ESC to cancel.",
+		)
+
+		return m, m.promptView.Init()
+
+	case userResponseMsg:
+		m.state = showSpinner
+		m.spinnerMsg = fmt.Sprintf("%s%s%s",
+			Blue.Render("Re-generating commit summary (using: "),
+			BoldBlue.Render(m.llmProvider.Model()),
+			Blue.Render(")"),
+		)
+		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff, string(msg)))
+
+	case cancelRegenPromptMsg:
+		m.state = showCommitView
+		return m, m.commitView.Init()
 
 	case errMsg:
 		m.err = msg.err
@@ -145,6 +173,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinner, cmd = m.spinner.Update(msg)
 	case showCommitView:
 		m.commitView, cmd = m.commitView.Update(msg)
+	case showRegeneratePrompt:
+		m.promptView, cmd = m.promptView.Update(msg)
 	}
 	return m, cmd
 }
@@ -154,10 +184,22 @@ func (m *Model) View() string {
 	case showSpinner:
 		return m.spinner.View() + " " + m.spinnerMsg
 	case showCommitView:
-		return m.commitView.View()
+		return m.commitView.View() + m.helpText()
+	case showRegeneratePrompt:
+		return m.commitView.View() + m.promptView.View()
 	default:
 		return ""
 	}
+}
+
+func (m *Model) helpText() string {
+	return fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:regen  %s:abort",
+		BoldYellow.Render("CTRL-X"),
+		BoldYellow.Render("CTRL-K"),
+		BoldYellow.Render("CTRL-Z"),
+		BoldYellow.Render("CTRL-Y"),
+		BoldYellow.Render("CTRL-R"),
+		BoldYellow.Render("ESC"))
 }
 
 func (m *Model) checkGitStatus() tea.Msg {
@@ -180,9 +222,12 @@ func (m *Model) getGitDiff() tea.Msg {
 	return gitDiffMsg(diff)
 }
 
-func (m *Model) generateSummary(diff string) tea.Cmd {
+func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
 	return func() tea.Msg {
 		text := fmt.Sprintf(m.systemPrompt, diff)
+		if userMessage != "" {
+			text += "\n\n**IMPORTANT:** " + userMessage
+		}
 		resp, err := m.llmProvider.Call(m.ctx, "", text)
 		if err != nil {
 			return errMsg{err}

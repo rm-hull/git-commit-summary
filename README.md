@@ -81,18 +81,18 @@ Once installed, check that the executable is on the $PATH, with `git-commit-summ
 
     ```
     $ git commit-summary
-    ╭ Commit message ───────────────────────────────────────────────────────────╮
-    │ feat: Implement Undo/Redo functionality                                   │
-    │                                                                           │
-    │ Adds history management to the text input component, allowing             │
-    │ users to undo and redo changes using keyboard shortcuts.                  │
-    │                                                                           │
-    │ *   Uses `Ctrl-Z` for undo operations.                                    │
-    │ *   Uses `Ctrl-Y` for redo operations.                                    │
-    │ *   Introduces the `History` struct (`internal/ui/history.go`)            │
-    │     to manage the state stack.                                            │
-    ╰───────────────────────────────────────────────────────────────────────────╯
-    CTRL-X:commit  CTRL-K:clear  CTRL-Z:undo  CTRL-Y:redo  ESC:abort
+    ╭ Commit message ────────────────────────────────────────────────────────────╮
+    │ feat: Implement Undo/Redo functionality                                    │
+    │                                                                            │
+    │ Adds history management to the text input component, allowing              │
+    │ users to undo and redo changes using keyboard shortcuts.                   │
+    │                                                                            │
+    │ *   Uses `Ctrl-Z` for undo operations.                                     │
+    │ *   Uses `Ctrl-Y` for redo operations.                                     │
+    │ *   Introduces the `History` struct (`internal/ui/history.go`)             │
+    │     to manage the state stack.                                             │
+    ╰────────────────────────────────────────────────────────────────────────────╯
+    CTRL-X:commit  CTRL-K:clear  CTRL-Z:undo  CTRL-Y:redo  CTRL-R:regen  ESC:abort
     ```
 
 ## Flags
