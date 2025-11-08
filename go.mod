@@ -4,11 +4,9 @@ go 1.25.3
 
 require (
 	github.com/adrg/xdg v0.5.3
-	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
-	github.com/gookit/color v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
@@ -32,6 +30,7 @@ require (
 	github.com/galactixx/ansiwalker v1.0.0 // indirect
 	github.com/getsentry/sentry-go v0.36.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/gookit/color v1.6.0 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -63,7 +62,6 @@ require (
 	github.com/Delta456/box-cli-maker/v2 v2.3.0
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/cockroachdb/errors v1.12.0
-	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/galactixx/stringwrap v1.0.4
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -73,7 +71,6 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.7 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/openai/openai-go/v3 v3.8.1
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

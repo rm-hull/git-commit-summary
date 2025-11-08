@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Delta456/box-cli-maker/v2"
@@ -10,26 +9,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func commitMessage(value string) (string, Action, error) {
-	p := tea.NewProgram(initialCommitMessageModel(value))
-
-	finalModel, err := p.Run()
-	if err != nil {
-		return "", Abort, err
-	}
-	m := finalModel.(commitMessageModel)
-
-	return m.textarea.Value(), m.action, nil
-}
-
-type commitMessageModel struct {
+type commitViewModel struct {
 	textarea textarea.Model
 	history  *History
-	action   Action
-	err      error
+	box      *box.Box
 }
 
-func initialCommitMessageModel(value string) commitMessageModel {
+func initialCommitViewModel(message string) *commitViewModel {
 	ti := textarea.New()
 	ti.CharLimit = 0
 	ti.ShowLineNumbers = false
@@ -37,15 +23,15 @@ func initialCommitMessageModel(value string) commitMessageModel {
 	ti.Focus()
 
 	minHeight := 2
-	messageLines := strings.Count(value, "\n") + 1
+	messageLines := strings.Count(message, "\n") + 1
 	if messageLines > minHeight {
 		minHeight = messageLines
 	}
 	ti.SetHeight(minHeight)
 
 	ti.SetWidth(73)
-	ti.SetValue(value)
-	if value == "" {
+	ti.SetValue(message)
+	if message == "" {
 		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
 	} else {
 		ti.Placeholder = "Please supply a commit message."
@@ -54,23 +40,23 @@ func initialCommitMessageModel(value string) commitMessageModel {
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ti.BlurredStyle.CursorLine = lipgloss.NewStyle()
 
-	return commitMessageModel{
+	box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
+
+	return &commitViewModel{
 		textarea: ti,
-		history:  NewHistory(value),
-		action:   Abort,
-		err:      nil,
+		history:  NewHistory(message),
+		box:      &box,
 	}
 }
 
-func (m commitMessageModel) Init() tea.Cmd {
+func (m *commitViewModel) Init() tea.Cmd {
 	return textarea.Blink
 }
 
-func (m commitMessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 
-	// Store the value before the update to track changes.
 	oldValue := m.textarea.Value()
 
 	switch msg := msg.(type) {
@@ -96,20 +82,17 @@ func (m commitMessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.SetValue("")
 			return m, nil
 
-		case tea.KeyEsc:
-			m.action = Abort
+		case tea.KeyEsc, tea.KeyCtrlC:
 			m.textarea.Blur()
-			return m, tea.Quit
+			return m, func() tea.Msg { return abortMsg{} }
 
 		case tea.KeyCtrlX:
-			m.action = Commit
 			m.textarea.Blur()
-			return m, tea.Quit
+			return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
 
 		case tea.KeyCtrlR:
-			m.action = Regenerate
 			m.textarea.Blur()
-			return m, tea.Quit
+			return m, func() tea.Msg { return regenerateMsg{} }
 
 		default:
 			if !m.textarea.Focused() {
@@ -118,15 +101,13 @@ func (m commitMessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-	case error:
-		m.err = msg
-		return m, nil
+	case errMsg: // Use errMsg from model.go
+		return m, tea.Quit
 	}
 
 	m.textarea, cmd = m.textarea.Update(msg)
 	cmds = append(cmds, cmd)
 
-	// After the update, check if the value has changed.
 	newValue := m.textarea.Value()
 	if oldValue != newValue {
 		m.history.Add(newValue)
@@ -135,20 +116,6 @@ func (m commitMessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m commitMessageModel) View() string {
-	box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
-	view := box.String("Commit message", m.textarea.View())
-
-	keyStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.AdaptiveColor{Light: "#FFD700", Dark: "#FFFF00"}).
-		Bold(true)
-	helpText := fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:regen  %s:abort",
-		keyStyle.Render("CTRL-X"),
-		keyStyle.Render("CTRL-K"),
-		keyStyle.Render("CTRL-Z"),
-		keyStyle.Render("CTRL-Y"),
-		keyStyle.Render("CTRL-R"),
-		keyStyle.Render("ESC"))
-
-	return view + helpText
+func (m *commitViewModel) View() string {
+	return m.box.String("Commit message", m.textarea.View())
 }
