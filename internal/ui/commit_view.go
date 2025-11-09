@@ -16,6 +16,7 @@ type commitViewModel struct {
 	textarea textarea.Model
 	viewport viewport.Model
 	history  *History
+	boxStyle lipgloss.Style
 	preview  bool
 	helpText bool
 	renderer *glamour.TermRenderer
@@ -60,6 +61,9 @@ func initialCommitViewModel(message string) *commitViewModel {
 		textarea: ta,
 		viewport: vp,
 		history:  NewHistory(message),
+		boxStyle: lipgloss.NewStyle().
+			BorderForeground(lipgloss.Color("6")). // Cyan
+			Padding(0, 1),
 		preview:  false,
 		helpText: true,
 		renderer: renderer,
@@ -182,10 +186,8 @@ func (m *commitViewModel) View() string {
 	titleBorder.Top = title + strings.Repeat(
 		"─", m.textarea.Width()-lipgloss.Width(title)+2) // +2 is to accommodate for horizontal padding
 
-	return lipgloss.NewStyle().
-		BorderForeground(lipgloss.Color("6")). // Cyan
+	return m.boxStyle.
 		BorderStyle(titleBorder).
-		Padding(0, 1).
 		Render(view) + "\n" + m.helpTextView()
 }
 
