@@ -300,15 +300,36 @@ type mockTeaModel struct {
 
 func (m *mockTeaModel) Init() tea.Cmd {
 	args := m.Called()
-	return args.Get(0).(tea.Cmd)
+	if len(args) > 0 {
+		if cmd, ok := args.Get(0).(tea.Cmd); ok {
+			return cmd
+		}
+	}
+	return nil
 }
 
 func (m *mockTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	args := m.Called(msg)
-	return args.Get(0).(tea.Model), args.Get(1).(tea.Cmd)
+	var model tea.Model = m
+	var cmd tea.Cmd
+
+	if len(args) > 0 {
+		if m, ok := args.Get(0).(tea.Model); ok {
+			model = m
+		}
+	}
+	if len(args) > 1 {
+		if c, ok := args.Get(1).(tea.Cmd); ok {
+			cmd = c
+		}
+	}
+	return model, cmd
 }
 
 func (m *mockTeaModel) View() string {
 	args := m.Called()
-	return args.String(0)
+	if len(args) > 0 {
+		return args.String(0)
+	}
+	return ""
 }
