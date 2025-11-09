@@ -107,16 +107,13 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.helpText = false
 			m.textarea.Blur()
 			return m, func() tea.Msg { return abortMsg{} }
-		}
 
-		if m.preview {
-			m.viewport, cmd = m.viewport.Update(msg)
-			cmds = append(cmds, cmd)
-			return m, tea.Batch(cmds...)
-		}
-
-		switch msg.Type {
 		case tea.KeyCtrlP:
+			if m.preview {
+				m.preview = false
+				m.textarea.Focus()
+				return m, nil
+			}
 			m.preview = true
 			m.textarea.Blur()
 			out, err := m.renderer.Render(m.textarea.Value())
@@ -128,6 +125,15 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 
+		}
+
+		if m.preview {
+			m.viewport, cmd = m.viewport.Update(msg)
+			cmds = append(cmds, cmd)
+			return m, tea.Batch(cmds...)
+		}
+
+		switch msg.Type {
 		case tea.KeyCtrlZ:
 			if value, ok := m.history.Undo(); ok {
 				m.textarea.SetValue(value)
