@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
@@ -200,8 +201,9 @@ func TestModel_Update(t *testing.T) {
 		updatedModel, cmd := m.Update(regenerateMsg{})
 
 		assert.Equal(t, showRegeneratePrompt, updatedModel.(*Model).state)
-		assert.NotNil(t, updatedModel.(*Model).promptView) // promptView should be initialized
-		assert.IsType(t, (tea.Cmd)(nil), cmd)              // Should return m.promptView.Init()
+		assert.NotNil(t, updatedModel.(*Model).promptView)
+		assert.NotNil(t, cmd)
+		assert.IsType(t, textinput.Blink(), cmd())
 	})
 
 	t.Run("userResponseMsg", func(t *testing.T) {
