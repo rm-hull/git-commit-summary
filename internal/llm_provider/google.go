@@ -27,10 +27,10 @@ func NewGoogleProvider(ctx context.Context, cfg *config.Config) (Provider, error
 	}, nil
 }
 
-func (gp *GoogleProvider) Call(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
-	result, err := gp.client.Models.GenerateContent(
+func (provider *GoogleProvider) Call(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	result, err := provider.client.Models.GenerateContent(
 		ctx,
-		gp.model,
+		provider.model,
 		genai.Text(userPrompt),
 		nil,
 	)
@@ -41,6 +41,6 @@ func (gp *GoogleProvider) Call(ctx context.Context, systemPrompt, userPrompt str
 	return result.Text(), nil
 }
 
-func (gp *GoogleProvider) Model() string {
-	return gp.model
+func (provider *GoogleProvider) Model() string {
+	return provider.model
 }
