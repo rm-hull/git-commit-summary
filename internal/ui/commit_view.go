@@ -3,7 +3,6 @@ package ui
 import (
 	"strings"
 
-	"github.com/Delta456/box-cli-maker/v2"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -12,7 +11,7 @@ import (
 type commitViewModel struct {
 	textarea textarea.Model
 	history  *History
-	box      *box.Box
+	boxStyle lipgloss.Style
 }
 
 func initialCommitViewModel(message string) *commitViewModel {
@@ -39,12 +38,18 @@ func initialCommitViewModel(message string) *commitViewModel {
 
 	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
 
-	box := box.New(box.Config{Px: 1, Py: 0, Type: "Round", Color: "Cyan", TitlePos: "Top"})
+	title := " Commit message "
+	titleBorder := lipgloss.RoundedBorder()
+	titleBorder.Top = title + strings.Repeat(
+		"─", ti.Width()-lipgloss.Width(title)+2) // +2 is to accommodate for horizontal padding
 
 	return &commitViewModel{
 		textarea: ti,
 		history:  NewHistory(message),
-		box:      &box,
+		boxStyle: lipgloss.NewStyle().
+			BorderStyle(titleBorder).
+			BorderForeground(lipgloss.Color("6")). // Cyan
+			Padding(0, 1),
 	}
 }
 
@@ -117,5 +122,5 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *commitViewModel) View() string {
-	return m.box.String("Commit message", m.textarea.View())
+	return m.boxStyle.Render(m.textarea.View()) + "\n"
 }
