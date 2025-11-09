@@ -120,15 +120,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Swerve a bug in https://github.com/galactixx/stringwrap/pull/1
 		if commitMessage != "" {
-			var err error
-			commitMessage, _, err = stringwrap.StringWrap(commitMessage, 72, 4, false)
-			if err != nil {
-				m.err = err
+			commitMessage, _, m.err = stringwrap.StringWrap(commitMessage, 72, 4, false)
+			if m.err != nil {
 				return m, tea.Quit
 			}
 		}
 		commitMessage = strings.ReplaceAll(commitMessage, "\n\n\n", "\n\n")
-		m.commitView = initialCommitViewModel(commitMessage)
+		m.commitView, m.err = initialCommitViewModel(commitMessage)
+		if m.err != nil {
+			return m, tea.Quit
+		}
 		return m, m.commitView.Init()
 
 	case commitMsg:
@@ -184,22 +185,12 @@ func (m *Model) View() string {
 	case showSpinner:
 		return m.spinner.View() + " " + m.spinnerMessage
 	case showCommitView:
-		return m.commitView.View() + m.helpText()
+		return m.commitView.View()
 	case showRegeneratePrompt:
 		return m.commitView.View() + m.promptView.View()
 	default:
 		return ""
 	}
-}
-
-func (m *Model) helpText() string {
-	return fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:regen  %s:abort",
-		BoldYellow.Render("CTRL-X"),
-		BoldYellow.Render("CTRL-K"),
-		BoldYellow.Render("CTRL-Z"),
-		BoldYellow.Render("CTRL-Y"),
-		BoldYellow.Render("CTRL-R"),
-		BoldYellow.Render("ESC"))
 }
 
 func (m *Model) checkGitStatus() tea.Msg {
