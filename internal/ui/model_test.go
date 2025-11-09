@@ -86,7 +86,7 @@ func TestModel_Update(t *testing.T) {
 
 		// Mock the sub-model's Update method
 		mockCommitView := new(mockTeaModel)
-		mockCommitView.On("Update", mock.Anything).Return(mockCommitView, (tea.Cmd)(nil))
+		mockCommitView.On("Update", tea.KeyMsg{Type: tea.KeyCtrlC}).Return(mockCommitView, (tea.Cmd)(nil))
 		m.commitView = mockCommitView
 
 		updatedModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyCtrlC})
@@ -257,8 +257,8 @@ func TestModel_Update(t *testing.T) {
 		// Spinner's Update method is tested by charmbracelet/bubbles,
 		// here we just ensure it's called and returns its cmd.
 		// We can't easily mock spinner.Model directly, so we'll check the cmd.
-		updatedModel, cmd := m.Update(spinner.TickMsg{})
-		assert.NotNil(t, updatedModel)
+		_, cmd := m.Update(spinner.TickMsg{})
+		assert.NotNil(t, cmd)
 		assert.IsType(t, spinner.TickMsg{}, cmd())
 	})
 
