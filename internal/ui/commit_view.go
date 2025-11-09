@@ -110,19 +110,18 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case tea.KeyCtrlP:
 			if m.preview {
-				m.preview = false
 				m.textarea.Focus()
-				return m, nil
-			}
-			m.preview = true
-			m.textarea.Blur()
-			out, err := m.renderer.Render(m.textarea.Value())
-			if err != nil {
-				message := fmt.Sprintf("%s:\n%v", BoldRed.Render("Error rendering preview:"), err)
-				m.viewport.SetContent(message)
 			} else {
-				m.viewport.SetContent(strings.TrimSpace(out))
+				m.textarea.Blur()
+				out, err := m.renderer.Render(m.textarea.Value())
+				if err != nil {
+					message := fmt.Sprintf("%s:\n%v", BoldRed.Render("Error rendering preview:"), err)
+					m.viewport.SetContent(message)
+				} else {
+					m.viewport.SetContent(strings.TrimSpace(out))
+				}
 			}
+			m.preview = !m.preview
 			return m, nil
 
 		}
