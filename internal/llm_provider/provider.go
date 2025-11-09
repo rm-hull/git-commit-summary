@@ -14,6 +14,8 @@ type Provider interface {
 
 func NewProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
 	switch cfg.LLMProvider {
+	case "test":
+		return NewTestDummy(ctx, cfg)
 	case "google":
 		return NewGoogleProvider(ctx, cfg)
 	case "openai":
