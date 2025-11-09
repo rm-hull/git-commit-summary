@@ -21,12 +21,15 @@ func initialCommitViewModel(message string) *commitViewModel {
 	ti.Prompt = ""
 	ti.Focus()
 
-	minHeight := 2
+	height := 2
 	messageLines := strings.Count(message, "\n") + 1
-	if messageLines > minHeight {
-		minHeight = messageLines
+	if height < messageLines {
+		height = messageLines
 	}
-	ti.SetHeight(minHeight)
+	if height > 15 {
+		height = 15
+	}
+	ti.SetHeight(height)
 
 	ti.SetWidth(74)
 	ti.SetValue(message)
