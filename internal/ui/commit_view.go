@@ -99,6 +99,11 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.textarea.Blur()
 				return m, func() tea.Msg { return regenerateMsg{} }
 
+			case tea.KeyCtrlX:
+				m.helpText = false
+				m.textarea.Blur()
+				return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
+
 			default:
 				m.viewport, cmd = m.viewport.Update(msg)
 				cmds = append(cmds, cmd)
@@ -140,6 +145,7 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, func() tea.Msg { return abortMsg{} }
 
 		case tea.KeyCtrlX:
+			m.helpText = false
 			m.textarea.Blur()
 			return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
 
