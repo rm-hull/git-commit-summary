@@ -87,31 +87,31 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.preview {
-			switch msg.Type {
-			case tea.KeyCtrlP, tea.KeyEsc:
+		switch msg.Type {
+		case tea.KeyCtrlX:
+			m.helpText = false
+			m.textarea.Blur()
+			return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
+
+		case tea.KeyCtrlR:
+			m.helpText = false
+			m.textarea.Blur()
+			return m, func() tea.Msg { return regenerateMsg{} }
+
+		case tea.KeyCtrlC, tea.KeyEsc:
+			if m.preview && msg.Type == tea.KeyEsc {
 				m.preview = false
 				m.textarea.Focus()
-
-			case tea.KeyCtrlC:
-				m.helpText = false
-				m.textarea.Blur()
-				return m, func() tea.Msg { return abortMsg{} }
-
-			case tea.KeyCtrlR:
-				m.helpText = false
-				m.textarea.Blur()
-				return m, func() tea.Msg { return regenerateMsg{} }
-
-			case tea.KeyCtrlX:
-				m.helpText = false
-				m.textarea.Blur()
-				return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
-
-			default:
-				m.viewport, cmd = m.viewport.Update(msg)
-				cmds = append(cmds, cmd)
+				return m, nil
 			}
+			m.helpText = false
+			m.textarea.Blur()
+			return m, func() tea.Msg { return abortMsg{} }
+		}
+
+		if m.preview {
+			m.viewport, cmd = m.viewport.Update(msg)
+			cmds = append(cmds, cmd)
 			return m, tea.Batch(cmds...)
 		}
 
@@ -147,21 +147,6 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.history.Add("")
 			m.textarea.SetValue("")
 			return m, nil
-
-		case tea.KeyEsc, tea.KeyCtrlC:
-			m.helpText = false
-			m.textarea.Blur()
-			return m, func() tea.Msg { return abortMsg{} }
-
-		case tea.KeyCtrlX:
-			m.helpText = false
-			m.textarea.Blur()
-			return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
-
-		case tea.KeyCtrlR:
-			m.helpText = false
-			m.textarea.Blur()
-			return m, func() tea.Msg { return regenerateMsg{} }
 
 		default:
 			if !m.textarea.Focused() {
