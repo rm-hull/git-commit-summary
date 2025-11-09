@@ -16,18 +16,16 @@ type commitViewModel struct {
 	textarea textarea.Model
 	viewport viewport.Model
 	history  *History
-	boxStyle lipgloss.Style
 	preview  bool
 	helpText bool
 	renderer *glamour.TermRenderer
 }
 
 func initialCommitViewModel(message string) *commitViewModel {
-	ti := textarea.New()
-	ti.CharLimit = 0
-	ti.ShowLineNumbers = false
-	ti.Prompt = ""
-	ti.Focus()
+	ta := textarea.New()
+	ta.CharLimit = 0
+	ta.ShowLineNumbers = false
+	ta.Prompt = ""
 
 	height := 2
 	messageLines := strings.Count(message, "\n") + 1
@@ -37,33 +35,31 @@ func initialCommitViewModel(message string) *commitViewModel {
 	if height > 15 {
 		height = 15
 	}
-	ti.SetHeight(minHeight)
-	ti.SetWidth(72 + 2) // +2 is to accommodate for horizontal padding
-	ti.SetValue(message)
+	ta.SetHeight(height)
+	ta.SetWidth(72 + 2) // +2 is to accommodate for horizontal padding
+	ta.SetValue(message)
 	if message == "" {
-		ti.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
+		ta.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
 	} else {
-		ti.Placeholder = "Please supply a commit message."
+		ta.Placeholder = "Please supply a commit message."
 	}
 
-	ti.FocusedStyle.CursorLine = lipgloss.NewStyle()
+	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
 
-	vp := viewport.New(ti.Width(), ti.Height())
+	vp := viewport.New(ta.Width(), ta.Height())
 
-	auto := styles.DarkStyleConfig
-	auto.Document.Margin = uintPtr(0)
+	customStyle := styles.DarkStyleConfig
+	customStyle.Document.Margin = uintPtr(0)
+	customStyle.H2.BlockSuffix = ""
 	renderer, _ := glamour.NewTermRenderer(
 		glamour.WithPreservedNewLines(),
-		glamour.WithStyles(auto),
+		glamour.WithStyles(customStyle),
 	)
 
 	return &commitViewModel{
-		textarea: ti,
+		textarea: ta,
 		viewport: vp,
 		history:  NewHistory(message),
-		boxStyle: lipgloss.NewStyle().
-			BorderForeground(lipgloss.Color("6")). // Cyan
-			Padding(0, 1),
 		preview:  false,
 		helpText: true,
 		renderer: renderer,
@@ -93,6 +89,11 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.helpText = false
 				m.textarea.Blur()
 				return m, func() tea.Msg { return abortMsg{} }
+
+			case tea.KeyCtrlR:
+				m.helpText = false
+				m.textarea.Blur()
+				return m, func() tea.Msg { return regenerateMsg{} }
 
 			default:
 				m.viewport, cmd = m.viewport.Update(msg)
@@ -181,22 +182,35 @@ func (m *commitViewModel) View() string {
 	titleBorder.Top = title + strings.Repeat(
 		"─", m.textarea.Width()-lipgloss.Width(title)+2) // +2 is to accommodate for horizontal padding
 
-	return m.boxStyle.
+	return lipgloss.NewStyle().
+		BorderForeground(lipgloss.Color("6")). // Cyan
 		BorderStyle(titleBorder).
-		Render(view) + m.helpTextView()
+		Padding(0, 1).
+		Render(view) + "\n" + m.helpTextView()
 }
 
 func (m *commitViewModel) helpTextView() string {
-	if m.helpText {
-		return fmt.Sprintf("\n%s:commit %s:clear %s:undo %s:regen %s:preview %s:abort",
+	if !m.helpText {
+		return ""
+	}
+
+	if m.preview {
+		return fmt.Sprintf("%s:commit %s:clear %s:undo %s:regen %s:editor  %s:back",
 			BoldYellow.Render("CTRL+X"),
-			BoldYellow.Render("CTRL+K"),
-			BoldYellow.Render("CTRL+Z"),
+			Strikethrough.Render("CTRL+K"),
+			Strikethrough.Render("CTRL+Z"),
 			BoldYellow.Render("CTRL+R"),
 			BoldYellow.Render("CTRL+P"),
 			BoldYellow.Render("ESC"))
 	}
-	return ""
+
+	return fmt.Sprintf("%s:commit %s:clear %s:undo %s:regen %s:preview %s:abort",
+		BoldYellow.Render("CTRL+X"),
+		BoldYellow.Render("CTRL+K"),
+		BoldYellow.Render("CTRL+Z"),
+		BoldYellow.Render("CTRL+R"),
+		BoldYellow.Render("CTRL+P"),
+		BoldYellow.Render("ESC"))
 }
 
 func uintPtr(v uint) *uint { return &v }

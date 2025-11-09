@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
 	github.com/joho/godotenv v1.5.1
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.1 
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/genai v1.34.0
 )
