@@ -184,22 +184,12 @@ func (m *Model) View() string {
 	case showSpinner:
 		return m.spinner.View() + " " + m.spinnerMessage
 	case showCommitView:
-		return m.commitView.View() + m.helpText()
+		return m.commitView.View()
 	case showRegeneratePrompt:
 		return m.commitView.View() + m.promptView.View()
 	default:
 		return ""
 	}
-}
-
-func (m *Model) helpText() string {
-	return fmt.Sprintf("%s:commit  %s:clear  %s:undo  %s:redo  %s:regen  %s:abort",
-		BoldYellow.Render("CTRL-X"),
-		BoldYellow.Render("CTRL-K"),
-		BoldYellow.Render("CTRL-Z"),
-		BoldYellow.Render("CTRL-Y"),
-		BoldYellow.Render("CTRL-R"),
-		BoldYellow.Render("ESC"))
 }
 
 func (m *Model) checkGitStatus() tea.Msg {

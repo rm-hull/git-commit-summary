@@ -92,7 +92,7 @@ Once installed, check that the executable is on the $PATH, with `git-commit-summ
     │ *   Introduces the `History` struct (`internal/ui/history.go`)             │
     │     to manage the state stack.                                             │
     ╰────────────────────────────────────────────────────────────────────────────╯
-    CTRL-X:commit  CTRL-K:clear  CTRL-Z:undo  CTRL-Y:redo  CTRL-R:regen  ESC:abort
+    CTRL+X:commit CTRL+K:clear CTRL+Z:undo CTRL+R:regen CTRL+P:preview ESC:abort
     ```
 
 ## Flags
