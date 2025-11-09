@@ -147,18 +147,13 @@ func TestModel_Update(t *testing.T) {
 
 		m.userMessage = userMsg // Set user message for this test case
 
-		mockCommitView := new(mockTeaModel)
-		// Only expect Init to be called by Update. View is called by Model.View()
-		mockCommitView.On("Init").Return(textarea.Blink).Once()
-		m.commitView = mockCommitView
-
 		updatedModel, cmd := m.Update(llmResultMsg(llmResult))
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
 		// Assert that the commitView is set, but not its content directly from Update
 		assert.NotNil(t, updatedModel.(*Model).commitView)
-		assert.IsType(t, (tea.Cmd)(nil), cmd)
-		// mockCommitView.AssertExpectations(t)
+		assert.NotNil(t, cmd)
+		assert.IsType(t, textarea.Blink(), cmd())
 	})
 
 	t.Run("llmResultMsg - without user message", func(t *testing.T) {
@@ -167,18 +162,13 @@ func TestModel_Update(t *testing.T) {
 		llmResult := "This is a summary from LLM."
 		m.userMessage = "" // Ensure no user message
 
-		mockCommitView := new(mockTeaModel)
-		// Only expect Init to be called by Update. View is called by Model.View()
-		mockCommitView.On("Init").Return(textarea.Blink).Once()
-		m.commitView = mockCommitView
-
 		updatedModel, cmd := m.Update(llmResultMsg(llmResult))
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
 		// Assert that the commitView is set, but not its content directly from Update
 		assert.NotNil(t, updatedModel.(*Model).commitView)
 		assert.NotNil(t, cmd)
-		// mockCommitView.AssertExpectations(t)
+		assert.IsType(t, textarea.Blink(), cmd())
 	})
 
 	t.Run("commitMsg", func(t *testing.T) {
