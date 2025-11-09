@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/glamour/styles"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/cockroachdb/errors"
 )
 
 type commitViewModel struct {
@@ -22,7 +23,7 @@ type commitViewModel struct {
 	renderer *glamour.TermRenderer
 }
 
-func initialCommitViewModel(message string) *commitViewModel {
+func initialCommitViewModel(message string) (*commitViewModel, error) {
 	ta := textarea.New()
 	ta.CharLimit = 0
 	ta.ShowLineNumbers = false
@@ -52,10 +53,13 @@ func initialCommitViewModel(message string) *commitViewModel {
 	customStyle := styles.DarkStyleConfig
 	customStyle.Document.Margin = uintPtr(0)
 	customStyle.H2.BlockSuffix = ""
-	renderer, _ := glamour.NewTermRenderer(
+	renderer, err := glamour.NewTermRenderer(
 		glamour.WithPreservedNewLines(),
 		glamour.WithStyles(customStyle),
 	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create glamour renderer")
+	}
 
 	return &commitViewModel{
 		textarea: ta,
@@ -67,7 +71,7 @@ func initialCommitViewModel(message string) *commitViewModel {
 		preview:  false,
 		helpText: true,
 		renderer: renderer,
-	}
+	}, nil
 }
 
 func (m *commitViewModel) Init() tea.Cmd {
