@@ -47,25 +47,27 @@ func Load() (*Config, error) {
 
 	if cfg.LLMProvider == "" {
 		cfg.LLMProvider = "google"
-		cfg.Model = "gemini-2.5-flash-preview-09-2025"
 	}
 
 	switch cfg.LLMProvider {
 	case "google":
 		cfg.APIKey = os.Getenv("GEMINI_API_KEY")
 		cfg.Model = os.Getenv("GEMINI_MODEL")
+		if cfg.Model == "" {
+			cfg.Model = "gemini-2.5-flash-preview-09-2025"
+		}
 	case "openai":
 		cfg.APIKey = os.Getenv("OPENAI_API_KEY")
 		cfg.Model = os.Getenv("OPENAI_MODEL")
+		if cfg.Model == "" {
+			cfg.Model = "gpt-4o"
+		}
 	case "llama.cpp":
 		cfg.APIKey = os.Getenv("LLAMACPP_API_KEY")
 		cfg.BaseURL = os.Getenv("LLAMACPP_BASE_URL")
 		cfg.Model = os.Getenv("LLAMACPP_MODEL")
 	}
 
-	if cfg.LLMProvider == "google" && cfg.Model == "" {
-		cfg.Model = "gemini-2.5-flash-preview-09-2025"
-	}
 	return cfg, nil
 }
 
@@ -95,7 +97,7 @@ func (c *Config) Save() error {
 		})
 	case "llama.cpp":
 		return updateProperties(configPath, map[string]string{
-			"LLM_PROVIDER":      "openai",
+			"LLM_PROVIDER":      "llama.cpp",
 			"LLAMACPP_API_KEY":  c.APIKey,
 			"LLAMACPP_MODEL":    c.Model,
 			"LLAMACPP_BASE_URL": c.BaseURL,

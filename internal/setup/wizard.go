@@ -33,17 +33,6 @@ func Run(cfg *config.Config) (*config.Config, error) {
 		}
 	}
 
-	// Set default values if they are empty
-	if cfg.LLMProvider == "google" && cfg.Model == "" {
-		cfg.Model = "gemini-2.5-flash-preview-09-2025"
-	}
-	if cfg.LLMProvider == "openai" && cfg.Model == "" {
-		cfg.Model = "gpt-4o"
-	}
-	if cfg.LLMProvider == "llama.cpp" && cfg.Model == "" {
-		cfg.Model = "gemma3"
-	}
-
 	return cfg, nil
 }
 
