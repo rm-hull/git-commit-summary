@@ -25,11 +25,7 @@ func main() {
 		fmt.Printf("Configuration is not valid, running setup wizard...\n%v\n", err)
 		newCfg, err := setup.Run(cfg)
 		if err != nil {
-			if errors.Is(err, huh.ErrAborted) {
-				handleError(interfaces.ErrAborted)
-			} else {
-				handleError(errors.Wrap(err, "failed to run setup wizard"))
-			}
+			handleError(errors.Wrap(err, "failed to run setup wizard"))
 		}
 		if err := newCfg.Save(); err != nil {
 			handleError(errors.Wrap(err, "failed to save new configuration"))

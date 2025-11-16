@@ -2,7 +2,9 @@ package setup
 
 import (
 	"github.com/charmbracelet/huh"
+	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/git-commit-summary/internal/config"
+	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 )
 
 func Run(cfg *config.Config) (*config.Config, error) {
@@ -24,7 +26,11 @@ func Run(cfg *config.Config) (*config.Config, error) {
 
 	err := form.Run()
 	if err != nil {
-		return nil, err
+		if errors.Is(err, huh.ErrUserAborted) {
+			return nil, interfaces.ErrAborted
+		} else {
+			return nil, err
+		}
 	}
 
 	// Set default values if they are empty
