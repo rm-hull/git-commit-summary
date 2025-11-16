@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/adrg/xdg"
@@ -157,10 +158,16 @@ func updateProperties(configPath string, props map[string]string) error {
 	}
 
 	// Append any keys in props missing from the file (default to quoted form)
-	for k, v := range props {
+	var newKeys []string
+	for k := range props {
 		if !updated[k] {
-			out = append(out, fmt.Sprintf(`%s="%s"`, k, v))
+			newKeys = append(newKeys, k)
 		}
+	}
+	sort.Strings(newKeys) // Sort the new keys alphabetically
+
+	for _, k := range newKeys {
+		out = append(out, fmt.Sprintf(`%s="%s"`, k, props[k]))
 	}
 
 	// Ensure directory exists
