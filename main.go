@@ -22,8 +22,8 @@ func main() {
 	handleError(err)
 
 	if err := cfg.Validate(); err != nil {
-		fmt.Println("Configuration is not valid, running setup wizard...")
-		newCfg, err := setup.Run()
+		fmt.Printf("Configuration is not valid, running setup wizard...\n%v\n", err)
+		newCfg, err := setup.Run(cfg)
 		if err != nil {
 			handleError(errors.Wrap(err, "failed to run setup wizard"))
 		}

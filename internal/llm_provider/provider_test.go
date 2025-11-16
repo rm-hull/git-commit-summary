@@ -13,7 +13,7 @@ func TestNewProvider(t *testing.T) {
 		t.Setenv("GEMINI_API_KEY", "dummy-gemini-key")
 		cfg := &config.Config{
 			LLMProvider: "google",
-			Gemini:      config.GeminiConfig{Model: "gemini-test-model"},
+			Model:       "gemini-test-model",
 		}
 		provider, err := NewProvider(context.Background(), cfg)
 		assert.NoError(t, err)
@@ -25,7 +25,7 @@ func TestNewProvider(t *testing.T) {
 		t.Setenv("OPENAI_API_KEY", "dummy-openai-key")
 		cfg := &config.Config{
 			LLMProvider: "openai",
-			OpenAI:      config.OpenAIConfig{Model: "openai-test-model"},
+			Model:       "openai-test-model",
 		}
 		provider, err := NewProvider(context.Background(), cfg)
 		assert.NoError(t, err)

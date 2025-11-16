@@ -23,7 +23,7 @@ func NewGoogleProvider(ctx context.Context, cfg *config.Config) (Provider, error
 
 	return &GoogleProvider{
 		client: client,
-		model:  cfg.Gemini.Model,
+		model:  cfg.Model,
 	}, nil
 }
 
