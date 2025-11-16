@@ -170,5 +170,5 @@ func updateProperties(configPath string, props map[string]string) error {
 
 	// Write new content
 	buf := strings.Join(out, "\n") + "\n"
-	return os.WriteFile(configPath, []byte(buf), 0o644)
+	return os.WriteFile(configPath, []byte(buf), 0o600)
 }
