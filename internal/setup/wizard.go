@@ -8,15 +8,22 @@ import (
 )
 
 func Run(cfg *config.Config) (*config.Config, error) {
+
+	options := []huh.Option[string]{
+		huh.NewOption("Google (Gemini)", "google"),
+		huh.NewOption("OpenAI", "openai"),
+		huh.NewOption("Llama.cpp", "llama.cpp"),
+	}
+
+	if cfg.IsTestMode() {
+		options = append(options, huh.NewOption("Test", "test"))
+	}
+
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewSelect[string]().
 				Title("Select LLM Provider").
-				Options(
-					huh.NewOption("Google (Gemini)", "google"),
-					huh.NewOption("OpenAI", "openai"),
-					huh.NewOption("Llama.cpp", "llama.cpp"),
-				).
+				Options(options...).
 				Value(&cfg.LLMProvider),
 		),
 		geminiGroup(cfg),

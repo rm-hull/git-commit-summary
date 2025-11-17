@@ -21,7 +21,7 @@ func main() {
 	cfg, err := config.Load()
 	handleError(err)
 
-	if err := cfg.Validate(); err != nil {
+	if err := cfg.Validate(); err != nil || cfg.IsTestMode() {
 		newCfg, err := setup.Run(cfg)
 		if err != nil {
 			handleError(errors.Wrap(err, "failed to run setup wizard"))

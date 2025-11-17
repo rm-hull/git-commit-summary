@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/rm-hull/git-commit-summary/internal/config"
 )
 
 //go:embed test/example_commit_message.md
@@ -15,7 +14,7 @@ var stockResponse string
 
 type TestDummyProvider struct{}
 
-func NewTestDummy(ctx context.Context, cfg *config.Config) (*TestDummyProvider, error) {
+func NewTestDummy(ctx context.Context) (*TestDummyProvider, error) {
 	return &TestDummyProvider{}, nil
 }
 

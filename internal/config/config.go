@@ -22,11 +22,12 @@ import (
 var prompt string
 
 type Config struct {
-	LLMProvider string `validate:"required,oneof=google openai llama.cpp"`
-	APIKey      string `validate:"required"`
-	Model       string `validate:"required"`
+	LLMProvider string `validate:"required,oneof=google openai llama.cpp test"`
+	APIKey      string `validate:"required_unless=LLMProvider test"`
+	Model       string `validate:"required_unless=LLMProvider test"`
 	BaseURL     string `validate:"required_if=LLMProvider llama.cpp"`
 	Prompt      string
+	validate    *validator.Validate
 }
 
 func Load() (*Config, error) {
@@ -43,6 +44,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		LLMProvider: os.Getenv("LLM_PROVIDER"),
 		Prompt:      prompt,
+		validate:    validator.New(),
 	}
 
 	if cfg.LLMProvider == "" {
@@ -71,39 +73,46 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-func (c *Config) Validate() error {
-	validate := validator.New()
-	return validate.Struct(c)
+func (cfg *Config) IsTestMode() bool {
+	return cfg.LLMProvider == "test"
 }
 
-func (c *Config) Save() error {
+func (cfg *Config) Validate() error {
+	return cfg.validate.Struct(cfg)
+}
+
+func (cfg *Config) Save() error {
 	configPath, err := xdg.ConfigFile("git-commit-summary/config.env")
 	if err != nil {
 		return err
 	}
 
-	switch c.LLMProvider {
+	switch cfg.LLMProvider {
 	case "google":
 		return updateProperties(configPath, map[string]string{
 			"LLM_PROVIDER":   "google",
-			"GEMINI_API_KEY": c.APIKey,
-			"GEMINI_MODEL":   c.Model,
+			"GEMINI_API_KEY": cfg.APIKey,
+			"GEMINI_MODEL":   cfg.Model,
 		})
 	case "openai":
 		return updateProperties(configPath, map[string]string{
 			"LLM_PROVIDER":   "openai",
-			"OPENAI_API_KEY": c.APIKey,
-			"OPENAI_MODEL":   c.Model,
+			"OPENAI_API_KEY": cfg.APIKey,
+			"OPENAI_MODEL":   cfg.Model,
 		})
 	case "llama.cpp":
 		return updateProperties(configPath, map[string]string{
 			"LLM_PROVIDER":      "llama.cpp",
-			"LLAMACPP_API_KEY":  c.APIKey,
-			"LLAMACPP_MODEL":    c.Model,
-			"LLAMACPP_BASE_URL": c.BaseURL,
+			"LLAMACPP_API_KEY":  cfg.APIKey,
+			"LLAMACPP_MODEL":    cfg.Model,
+			"LLAMACPP_BASE_URL": cfg.BaseURL,
+		})
+	case "test":
+		return updateProperties(configPath, map[string]string{
+			"LLM_PROVIDER": "test",
 		})
 	default:
-		return errors.New("unknown provider")
+		return errors.Newf("unknown LLM provider: %s", cfg.LLMProvider)
 	}
 }
 
