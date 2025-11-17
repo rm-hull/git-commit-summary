@@ -150,10 +150,13 @@ func updateProperties(configPath string, props map[string]string) error {
 		}
 
 		key := m[1]
+		oldVal := m[2]
 
 		// Check if this key should be updated
 		if newVal, ok := props[key]; ok {
-			out = append(out, "# "+line)
+			if oldVal != newVal {
+				out = append(out, "# "+line)
+			}
 			out = append(out, fmt.Sprintf(`%s="%s"`, key, newVal))
 			updated[key] = true
 		} else {
@@ -168,13 +171,12 @@ func updateProperties(configPath string, props map[string]string) error {
 			newKeys = append(newKeys, k)
 		}
 	}
-	sort.Strings(newKeys) // Sort the new keys alphabetically
+	sort.Strings(newKeys)
 
 	for _, k := range newKeys {
 		out = append(out, fmt.Sprintf(`%s="%s"`, k, props[k]))
 	}
 
-	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		return err
 	}

@@ -68,6 +68,20 @@ COMMENT_LINE=some_comment
 			expectError: false,
 		},
 		{
+			name: "doesnt overwrite values if new value is the same",
+			initialContent: `KEY1="old_value1"
+KEY2=old_value2
+COMMENT_LINE=some_comment
+`,
+			props: map[string]string{"KEY1": "old_value1", "KEY2": "new_value2"},
+			expectedContent: `KEY1="old_value1"
+# KEY2=old_value2
+KEY2="new_value2"
+COMMENT_LINE=some_comment
+`,
+			expectError: false,
+		},
+		{
 			name: "existing file, add new and update existing",
 			initialContent: `EXISTING_KEY="existing_value"
 # A comment
