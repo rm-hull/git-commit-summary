@@ -1,6 +1,8 @@
 package setup
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/huh"
 	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/git-commit-summary/internal/config"
@@ -8,6 +10,8 @@ import (
 )
 
 func Run(cfg *config.Config) (*config.Config, error) {
+
+	var confirm bool
 
 	options := []huh.Option[string]{
 		huh.NewOption("Google (Gemini)", "google"),
@@ -30,7 +34,19 @@ func Run(cfg *config.Config) (*config.Config, error) {
 		openaiGroup(cfg),
 		llamacppGroup(cfg),
 		// TODO: add invisible fields that does form level validation
-		// TODO: add another group with a summary and a Yes/No confirmation
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Confirm overwrite settings?").
+				Affirmative("Yes").
+				Negative("No").
+				Value(&confirm).
+				DescriptionFunc(func() string {
+					return fmt.Sprintf(
+						"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)",
+						cfg.LLMProvider, cfg.APIKey, cfg.Model)
+				}, cfg,
+				),
+		),
 	)
 
 	err := form.Run()
@@ -40,6 +56,10 @@ func Run(cfg *config.Config) (*config.Config, error) {
 		} else {
 			return nil, err
 		}
+	}
+
+	if !confirm {
+		return nil, interfaces.ErrAborted
 	}
 
 	return cfg, nil
