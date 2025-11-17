@@ -29,6 +29,8 @@ func Run(cfg *config.Config) (*config.Config, error) {
 		geminiGroup(cfg),
 		openaiGroup(cfg),
 		llamacppGroup(cfg),
+		// TODO: add invisible fields that does form level validation
+		// TODO: add another group with a summary and a Yes/No confirmation
 	)
 
 	err := form.Run()
