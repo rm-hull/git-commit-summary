@@ -59,8 +59,10 @@ KEY2=old_value2
 COMMENT_LINE=some_comment
 `,
 			props: map[string]string{"KEY1": "new_value1", "KEY2": "new_value2"},
-			expectedContent: `KEY1="new_value1"
-KEY2=new_value2
+			expectedContent: `# KEY1="old_value1"
+KEY1="new_value1"
+# KEY2=old_value2
+KEY2="new_value2"
 COMMENT_LINE=some_comment
 `,
 			expectError: false,
@@ -71,7 +73,8 @@ COMMENT_LINE=some_comment
 # A comment
 `,
 			props: map[string]string{"EXISTING_KEY": "updated_value", "NEW_KEY": "new_value"},
-			expectedContent: `EXISTING_KEY="updated_value"
+			expectedContent: `# EXISTING_KEY="existing_value"
+EXISTING_KEY="updated_value"
 # A comment
 NEW_KEY="new_value"
 `,
@@ -87,7 +90,8 @@ ANOTHER_VAR="hello world"
 `,
 			props: map[string]string{"SOME_VAR": "456", "NEW_VAR": "new_val"},
 			expectedContent: `# This is a comment
-SOME_VAR=456
+# SOME_VAR=123
+SOME_VAR="456"
 ANOTHER_VAR="hello world"
 
 # Another comment block
@@ -101,8 +105,10 @@ NEW_VAR="new_val"
 UNQUOTED_KEY=unquoted_old
 `,
 			props: map[string]string{"QUOTED_KEY": "quoted_new", "UNQUOTED_KEY": "unquoted_new", "NEW_KEY": "new_val"},
-			expectedContent: `QUOTED_KEY="quoted_new"
-UNQUOTED_KEY=unquoted_new
+			expectedContent: `# QUOTED_KEY="quoted_old"
+QUOTED_KEY="quoted_new"
+# UNQUOTED_KEY=unquoted_old
+UNQUOTED_KEY="unquoted_new"
 NEW_KEY="new_val"
 `,
 			expectError: false,
@@ -121,8 +127,10 @@ NEW_KEY="new_val"
 KEY2=value_with_underscores
 `,
 			props: map[string]string{"KEY1": "new value with spaces", "KEY2": "new_value-with-hyphens"},
-			expectedContent: `KEY1="new value with spaces"
-KEY2=new_value-with-hyphens
+			expectedContent: `# KEY1="value with spaces"
+KEY1="new value with spaces"
+# KEY2=value_with_underscores
+KEY2="new_value-with-hyphens"
 `,
 			expectError: false,
 		},

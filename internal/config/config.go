@@ -151,17 +151,10 @@ func updateProperties(configPath string, props map[string]string) error {
 
 		key := m[1]
 
-		// m[2] is the quoted value (if present)
-		// m[3] is the unquoted value (if present)
-		quotedOriginal := m[2] != ""
-
 		// Check if this key should be updated
 		if newVal, ok := props[key]; ok {
-			if quotedOriginal {
-				out = append(out, fmt.Sprintf(`%s="%s"`, key, newVal))
-			} else {
-				out = append(out, fmt.Sprintf(`%s=%s`, key, newVal))
-			}
+			out = append(out, "# "+line)
+			out = append(out, fmt.Sprintf(`%s="%s"`, key, newVal))
 			updated[key] = true
 		} else {
 			out = append(out, line)
