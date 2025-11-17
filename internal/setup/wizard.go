@@ -2,9 +2,11 @@ package setup
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/cockroachdb/errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 )
@@ -33,20 +35,8 @@ func Run(cfg *config.Config) (*config.Config, error) {
 		geminiGroup(cfg),
 		openaiGroup(cfg),
 		llamacppGroup(cfg),
-		// TODO: add invisible fields that does form level validation
-		huh.NewGroup(
-			huh.NewConfirm().
-				Title("Confirm overwrite settings?").
-				Affirmative("Yes").
-				Negative("No").
-				Value(&confirm).
-				DescriptionFunc(func() string {
-					return fmt.Sprintf(
-						"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)",
-						cfg.LLMProvider, cfg.APIKey, cfg.Model)
-				}, cfg,
-				),
-		),
+		validationGroup(cfg),
+		submitGroup(cfg, &confirm),
 	)
 
 	err := form.Run()
@@ -67,11 +57,8 @@ func Run(cfg *config.Config) (*config.Config, error) {
 
 func geminiGroup(cfg *config.Config) *huh.Group {
 	return huh.NewGroup(
-		huh.NewInput().
-			Title("Gemini API Key").
-			Value(&cfg.APIKey),
 		huh.NewSelect[string]().
-			Title("Model").
+			Title("Google Model").
 			Value(&cfg.Model).
 			Options(
 				huh.NewOption("Gemini 2.5 Pro", "gemini-2.5-pro"),
@@ -80,6 +67,9 @@ func geminiGroup(cfg *config.Config) *huh.Group {
 				huh.NewOption("Gemini 2.5 Flash (Preview 09-2025)", "gemini-2.5-flash-preview-09-2025"),
 				huh.NewOption("Gemini Flash (latest)", "gemini-flash-latest"),
 			),
+		huh.NewInput().
+			Title("API Key").
+			Value(&cfg.APIKey),
 	).WithHideFunc(func() bool {
 		return cfg.LLMProvider != "google"
 	})
@@ -87,11 +77,8 @@ func geminiGroup(cfg *config.Config) *huh.Group {
 
 func openaiGroup(cfg *config.Config) *huh.Group {
 	return huh.NewGroup(
-		huh.NewInput().
-			Title("OpenAI API Key").
-			Value(&cfg.APIKey),
 		huh.NewSelect[string]().
-			Title("Model").
+			Title("OpenAI Model").
 			Value(&cfg.Model).
 			Options(
 				huh.NewOption("GPT 5.1", "gpt-5.1"),
@@ -101,6 +88,9 @@ func openaiGroup(cfg *config.Config) *huh.Group {
 				huh.NewOption("ChatGPT 4o latest", "chatgpt-4o-latest"),
 				huh.NewOption("o3", "o3"),
 			),
+		huh.NewInput().
+			Title("API Key").
+			Value(&cfg.APIKey),
 	).WithHideFunc(func() bool {
 		return cfg.LLMProvider != "openai"
 	})
@@ -108,17 +98,59 @@ func openaiGroup(cfg *config.Config) *huh.Group {
 
 func llamacppGroup(cfg *config.Config) *huh.Group {
 	return huh.NewGroup(
-		huh.NewInput().
-			Title("Llama.cpp API Key").
-			Value(&cfg.APIKey),
-		huh.NewInput().
-			Title("Model").
+		huh.NewSelect[string]().
+			Title("Llama.CPP Model").
 			Value(&cfg.Model).
-			Placeholder("gemma3"),
+			Options(
+				huh.NewOption("Deepseek R3", "deepseek-r3"),
+				huh.NewOption("Gemma 3", "gemma-3"),
+				huh.NewOption("Microsoft Phi", "ms-phi"),
+				huh.NewOption("Llama-3b", "llama-3b"),
+			),
+		huh.NewInput().
+			Title("API Key").
+			Value(&cfg.APIKey),
 		huh.NewInput().
 			Title("Base URL").
 			Value(&cfg.BaseURL),
 	).WithHideFunc(func() bool {
 		return cfg.LLMProvider != "llama.cpp"
+	})
+}
+
+func submitGroup(cfg *config.Config, confirm *bool) *huh.Group {
+	return huh.NewGroup(
+		huh.NewConfirm().
+			Title("Confirm overwrite settings?").
+			Affirmative("Yes").
+			Negative("No").
+			Value(confirm).
+			DescriptionFunc(func() string {
+				return fmt.Sprintf(
+					"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)",
+					cfg.LLMProvider, cfg.APIKey, cfg.Model)
+			}, cfg),
+	).WithHideFunc(func() bool {
+		return cfg.Validate() != nil
+	})
+}
+
+func validationGroup(cfg *config.Config) *huh.Group {
+	return huh.NewGroup(
+		huh.NewNote().
+			Title("The following fields are required:").
+			DescriptionFunc(func() string {
+				parts := make([]string, 0)
+				if err := cfg.Validate(); err != nil {
+					if ve, ok := err.(validator.ValidationErrors); ok {
+						for _, err := range ve {
+							parts = append(parts, fmt.Sprintf("  - %s", err.Field()))
+						}
+					}
+				}
+				return fmt.Sprintf("%s\n\nGo back and correct these issues", strings.Join(parts, "\n"))
+			}, cfg),
+	).WithHideFunc(func() bool {
+		return cfg.Validate() == nil
 	})
 }
