@@ -61,6 +61,7 @@ func geminiGroup(cfg *config.Config) *huh.Group {
 			Title("Google Model").
 			Value(&cfg.Model).
 			Options(
+				huh.NewOption("Gemini 3 Pro (Preview)", "gemini-3-pro-preview"),
 				huh.NewOption("Gemini 2.5 Pro", "gemini-2.5-pro"),
 				huh.NewOption("Gemini 2.5 Flash", "gemini-2.5-flash"),
 				huh.NewOption("Gemini 2.5 Flash-Lite", "gemini-2.5-flash-lite"),
@@ -102,10 +103,15 @@ func llamacppGroup(cfg *config.Config) *huh.Group {
 			Title("Llama.CPP Model").
 			Value(&cfg.Model).
 			Options(
-				huh.NewOption("Deepseek R3", "deepseek-r3"),
-				huh.NewOption("Gemma 3", "gemma-3"),
-				huh.NewOption("Microsoft Phi", "ms-phi"),
-				huh.NewOption("Llama-3b", "llama-3b"),
+				huh.NewOption("Qwen2.5-Coder-7B-Instruct-Q4_K_M", "Qwen2.5-Coder-7B-Instruct-Q4_K_M"),
+				huh.NewOption("DeepSeek-R1-Distill-Qwen-7B-Q6_K", "DeepSeek-R1-Distill-Qwen-7B-Q6_K"),
+				huh.NewOption("Meta-Llama-3.1-8B-Instruct-Q6_K", "Meta-Llama-3.1-8B-Instruct-Q6_K"),
+				huh.NewOption("Meta-Llama-3.1-8B-Instruct-Q4_K_M", "Meta-Llama-3.1-8B-Instruct-Q4_K_M"),
+				huh.NewOption("Phi-4-mini-instruct-Q4_K_M", "Phi-4-mini-instruct-Q4_K_M"),
+				huh.NewOption("gemma-3-12b-it-Q4_K_M", "gemma-3-12b-it-Q4_K_M"),
+				huh.NewOption("gemma-3-4b-it-Q8_0", "gemma-3-4b-it-Q8_0"),
+				huh.NewOption("gemma-3-12b-it-q4_0", "gemma-3-12b-it-q4_0"),
+				huh.NewOption("gemma-3-4b-it-q4_0", "gemma-3-4b-it-q4_0"),
 			),
 		huh.NewInput().
 			Title("API Key").
