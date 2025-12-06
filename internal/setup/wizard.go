@@ -60,14 +60,7 @@ func geminiGroup(cfg *config.Config) *huh.Group {
 		huh.NewSelect[string]().
 			Title("Google Model").
 			Value(&cfg.Model).
-			Options(
-				huh.NewOption("Gemini 3 Pro (Preview)", "gemini-3-pro-preview"),
-				huh.NewOption("Gemini 2.5 Pro", "gemini-2.5-pro"),
-				huh.NewOption("Gemini 2.5 Flash", "gemini-2.5-flash"),
-				huh.NewOption("Gemini 2.5 Flash-Lite", "gemini-2.5-flash-lite"),
-				huh.NewOption("Gemini 2.5 Flash (Preview 09-2025)", "gemini-2.5-flash-preview-09-2025"),
-				huh.NewOption("Gemini Flash (latest)", "gemini-flash-latest"),
-			),
+			Options(options(cfg, "google")...),
 		huh.NewInput().
 			Title("API Key").
 			Value(&cfg.APIKey),
@@ -81,14 +74,7 @@ func openaiGroup(cfg *config.Config) *huh.Group {
 		huh.NewSelect[string]().
 			Title("OpenAI Model").
 			Value(&cfg.Model).
-			Options(
-				huh.NewOption("GPT 5.1", "gpt-5.1"),
-				huh.NewOption("GPT 5.1 mini", "gpt-5.1-mini"),
-				huh.NewOption("GPT 5.0 nano", "gpt-5.0-nano"),
-				huh.NewOption("GPT 4.1", "gpt-4.1"),
-				huh.NewOption("ChatGPT 4o latest", "chatgpt-4o-latest"),
-				huh.NewOption("o3", "o3"),
-			),
+			Options(options(cfg, "openai")...),
 		huh.NewInput().
 			Title("API Key").
 			Value(&cfg.APIKey),
@@ -102,17 +88,7 @@ func llamacppGroup(cfg *config.Config) *huh.Group {
 		huh.NewSelect[string]().
 			Title("Llama.CPP Model").
 			Value(&cfg.Model).
-			Options(
-				huh.NewOption("Qwen2.5-Coder-7B-Instruct-Q4_K_M", "Qwen2.5-Coder-7B-Instruct-Q4_K_M"),
-				huh.NewOption("DeepSeek-R1-Distill-Qwen-7B-Q6_K", "DeepSeek-R1-Distill-Qwen-7B-Q6_K"),
-				huh.NewOption("Meta-Llama-3.1-8B-Instruct-Q6_K", "Meta-Llama-3.1-8B-Instruct-Q6_K"),
-				huh.NewOption("Meta-Llama-3.1-8B-Instruct-Q4_K_M", "Meta-Llama-3.1-8B-Instruct-Q4_K_M"),
-				huh.NewOption("Phi-4-mini-instruct-Q4_K_M", "Phi-4-mini-instruct-Q4_K_M"),
-				huh.NewOption("gemma-3-12b-it-Q4_K_M", "gemma-3-12b-it-Q4_K_M"),
-				huh.NewOption("gemma-3-4b-it-Q8_0", "gemma-3-4b-it-Q8_0"),
-				huh.NewOption("gemma-3-12b-it-q4_0", "gemma-3-12b-it-q4_0"),
-				huh.NewOption("gemma-3-4b-it-q4_0", "gemma-3-4b-it-q4_0"),
-			),
+			Options(options(cfg, "llama.cpp")...),
 		huh.NewInput().
 			Title("API Key").
 			Value(&cfg.APIKey),
@@ -159,4 +135,19 @@ func validationGroup(cfg *config.Config) *huh.Group {
 	).WithHideFunc(func() bool {
 		return cfg.Validate() == nil
 	})
+}
+
+func options(cfg *config.Config, provider string) []huh.Option[string] {
+
+	options := make([]huh.Option[string], 0, 10)
+
+	for _, opt := range cfg.Models.Providers[provider] {
+		name := opt.Name
+		if name == "" {
+			name = opt.Model
+		}
+		options = append(options, huh.NewOption(name, opt.Model))
+	}
+
+	return options
 }

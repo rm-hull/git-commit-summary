@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/adrg/xdg"
 	"github.com/cockroachdb/errors"
@@ -21,11 +23,24 @@ import (
 //go:embed prompt.md
 var prompt string
 
+//go:embed models.json
+var models_raw []byte
+
+type Models struct {
+	LastUpdated *time.Time `json:"last_updated"`
+	Providers   map[string][]struct {
+		Name        string `json:"name,omitempty"`
+		Description string `json:"description,omitempty"`
+		Model       string `json:"model"`
+	} `json:"providers"`
+}
+
 type Config struct {
 	LLMProvider string `validate:"required,oneof=google openai llama.cpp test"`
 	APIKey      string `validate:"required_unless=LLMProvider test"`
 	Model       string `validate:"required_unless=LLMProvider test"`
 	BaseURL     string `validate:"required_if=LLMProvider llama.cpp"`
+	Models      Models
 	Prompt      string
 	validate    *validator.Validate
 }
@@ -45,6 +60,11 @@ func Load() (*Config, error) {
 		LLMProvider: os.Getenv("LLM_PROVIDER"),
 		Prompt:      prompt,
 		validate:    validator.New(),
+	}
+
+	err = json.Unmarshal(models_raw, &cfg.Models)
+	if err != nil {
+		return nil, err
 	}
 
 	if cfg.LLMProvider == "" {
