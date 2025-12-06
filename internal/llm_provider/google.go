@@ -14,16 +14,14 @@ type GoogleProvider struct {
 }
 
 func NewGoogleProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
-	// The genai library automatically uses the GEMINI_API_KEY environment variable.
-	// The config package has already loaded it from the .env file.
-	client, err := genai.NewClient(ctx, nil)
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.APIKey})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize Google client, is GEMINI_API_KEY set?")
+		return nil, errors.Wrap(err, "failed to initialize Google client")
 	}
 
 	return &GoogleProvider{
 		client: client,
-		model:  cfg.Gemini.Model,
+		model:  cfg.Model,
 	}, nil
 }
 

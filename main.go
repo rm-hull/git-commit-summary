@@ -12,6 +12,7 @@ import (
 	"github.com/rm-hull/git-commit-summary/internal/git"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
+	"github.com/rm-hull/git-commit-summary/internal/setup"
 	"github.com/rm-hull/git-commit-summary/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -19,6 +20,17 @@ import (
 func main() {
 	cfg, err := config.Load()
 	handleError(err)
+
+	if err := cfg.Validate(); err != nil || cfg.IsTestMode() {
+		newCfg, err := setup.Run(cfg)
+		if err != nil {
+			handleError(errors.Wrap(err, "failed to run setup wizard"))
+		}
+		if err := newCfg.Save(); err != nil {
+			handleError(errors.Wrap(err, "failed to save new configuration"))
+		}
+		cfg = newCfg
+	}
 
 	var userMessage string
 	var llmProvider string

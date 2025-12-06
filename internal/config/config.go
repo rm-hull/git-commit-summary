@@ -1,32 +1,48 @@
 package config
 
 import (
+	"bufio"
+	"bytes"
 	_ "embed"
+	"encoding/json"
+	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+	"time"
 
 	"github.com/adrg/xdg"
+	"github.com/cockroachdb/errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
 //go:embed prompt.md
 var prompt string
 
-type GeminiConfig struct {
-	APIKey string
-	Model  string
-}
+//go:embed models.json
+var models_raw []byte
 
-type OpenAIConfig struct {
-	APIKey  string
-	Model   string
-	BaseURL string
+type Models struct {
+	LastUpdated *time.Time `json:"last_updated"`
+	Providers   map[string][]struct {
+		Name        string `json:"name,omitempty"`
+		Description string `json:"description,omitempty"`
+		Model       string `json:"model"`
+	} `json:"providers"`
 }
 
 type Config struct {
-	LLMProvider string
+	LLMProvider string `validate:"required,oneof=google openai llama.cpp test"`
+	APIKey      string `validate:"required_unless=LLMProvider test"`
+	Model       string `validate:"required_unless=LLMProvider test"`
+	BaseURL     string `validate:"required_if=LLMProvider llama.cpp"`
+	Models      Models
 	Prompt      string
-	Gemini      GeminiConfig
-	OpenAI      OpenAIConfig
+	validate    *validator.Validate
 }
 
 func Load() (*Config, error) {
@@ -43,28 +59,152 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		LLMProvider: os.Getenv("LLM_PROVIDER"),
 		Prompt:      prompt,
-		Gemini: GeminiConfig{
-			APIKey: os.Getenv("GEMINI_API_KEY"),
-			Model:  os.Getenv("GEMINI_MODEL"),
-		},
-		OpenAI: OpenAIConfig{
-			APIKey:  os.Getenv("OPENAI_API_KEY"),
-			BaseURL: os.Getenv("OPENAI_BASE_URL"),
-			Model:   os.Getenv("OPENAI_MODEL"),
-		},
+		validate:    validator.New(),
+	}
+
+	err = json.Unmarshal(models_raw, &cfg.Models)
+	if err != nil {
+		return nil, err
 	}
 
 	if cfg.LLMProvider == "" {
 		cfg.LLMProvider = "google"
 	}
 
-	if cfg.Gemini.Model == "" {
-		cfg.Gemini.Model = "gemini-2.5-flash-preview-09-2025"
-	}
-
-	if cfg.OpenAI.Model == "" {
-		cfg.OpenAI.Model = "gpt-4o"
+	switch cfg.LLMProvider {
+	case "google":
+		cfg.APIKey = os.Getenv("GEMINI_API_KEY")
+		cfg.Model = os.Getenv("GEMINI_MODEL")
+		if cfg.Model == "" {
+			cfg.Model = "gemini-2.5-flash-preview-09-2025"
+		}
+	case "openai":
+		cfg.APIKey = os.Getenv("OPENAI_API_KEY")
+		cfg.Model = os.Getenv("OPENAI_MODEL")
+		if cfg.Model == "" {
+			cfg.Model = "gpt-4o"
+		}
+	case "llama.cpp":
+		cfg.APIKey = os.Getenv("LLAMACPP_API_KEY")
+		cfg.BaseURL = os.Getenv("LLAMACPP_BASE_URL")
+		cfg.Model = os.Getenv("LLAMACPP_MODEL")
 	}
 
 	return cfg, nil
+}
+
+func (cfg *Config) IsTestMode() bool {
+	return cfg.LLMProvider == "test"
+}
+
+func (cfg *Config) Validate() error {
+	return cfg.validate.Struct(cfg)
+}
+
+func (cfg *Config) Save() error {
+	configPath, err := xdg.ConfigFile("git-commit-summary/config.env")
+	if err != nil {
+		return err
+	}
+
+	switch cfg.LLMProvider {
+	case "google":
+		return updateProperties(configPath, map[string]string{
+			"LLM_PROVIDER":   "google",
+			"GEMINI_API_KEY": cfg.APIKey,
+			"GEMINI_MODEL":   cfg.Model,
+		})
+	case "openai":
+		return updateProperties(configPath, map[string]string{
+			"LLM_PROVIDER":   "openai",
+			"OPENAI_API_KEY": cfg.APIKey,
+			"OPENAI_MODEL":   cfg.Model,
+		})
+	case "llama.cpp":
+		return updateProperties(configPath, map[string]string{
+			"LLM_PROVIDER":      "llama.cpp",
+			"LLAMACPP_API_KEY":  cfg.APIKey,
+			"LLAMACPP_MODEL":    cfg.Model,
+			"LLAMACPP_BASE_URL": cfg.BaseURL,
+		})
+	case "test":
+		return updateProperties(configPath, map[string]string{
+			"LLM_PROVIDER": "test",
+		})
+	default:
+		return errors.Newf("unknown LLM provider: %s", cfg.LLMProvider)
+	}
+}
+
+func updateProperties(configPath string, props map[string]string) error {
+	// Read existing file if present.
+	original := []string{}
+	data, err := os.ReadFile(configPath)
+	if err == nil {
+		scanner := bufio.NewScanner(bytes.NewReader(data))
+		for scanner.Scan() {
+			original = append(original, scanner.Text())
+		}
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+
+	updated := map[string]bool{}
+	out := make([]string, 0, len(original))
+
+	// Matches:
+	//   KEY="VALUE"
+	//   KEY=VALUE
+	// Captures:
+	//   1: KEY
+	//   2: VALUE (raw, potentially quoted)
+	re := regexp.MustCompile(`^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)$`)
+
+	for _, line := range original {
+		m := re.FindStringSubmatch(line)
+		if m == nil {
+			// Keep raw/unknown lines
+			out = append(out, line)
+			continue
+		}
+
+		key := m[1]
+		val := strings.TrimSpace(m[2])
+		oldVal := val
+		if len(val) >= 2 && strings.HasPrefix(val, "\"") && strings.HasSuffix(val, "\"") {
+			oldVal = val[1 : len(val)-1]
+		}
+
+		// Check if this key should be updated
+		if newVal, ok := props[key]; ok {
+			if oldVal != newVal {
+				out = append(out, "# "+line)
+			}
+			out = append(out, fmt.Sprintf(`%s="%s"`, key, newVal))
+			updated[key] = true
+		} else {
+			out = append(out, line)
+		}
+	}
+
+	// Append any keys in props missing from the file (default to quoted form)
+	var newKeys []string
+	for k := range props {
+		if !updated[k] {
+			newKeys = append(newKeys, k)
+		}
+	}
+	sort.Strings(newKeys)
+
+	for _, k := range newKeys {
+		out = append(out, fmt.Sprintf(`%s="%s"`, k, props[k]))
+	}
+
+	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
+		return err
+	}
+
+	// Write new content
+	buf := strings.Join(out, "\n") + "\n"
+	return os.WriteFile(configPath, []byte(buf), 0o600)
 }

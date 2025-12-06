@@ -17,12 +17,12 @@ type OpenAiProvider struct {
 
 func NewOpenAiProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
 	client := openai.NewClient(
-		option.WithAPIKey(cfg.OpenAI.APIKey),
-		option.WithBaseURL(cfg.OpenAI.BaseURL))
+		option.WithAPIKey(cfg.APIKey),
+		option.WithBaseURL(cfg.BaseURL))
 
 	return &OpenAiProvider{
 		client: &client,
-		model:  cfg.OpenAI.Model,
+		model:  cfg.Model,
 	}, nil
 }
 
