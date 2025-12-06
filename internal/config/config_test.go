@@ -44,6 +44,17 @@ func Test_updateProperties(t *testing.T) {
 		expectError     bool
 	}{
 		{
+			name: "handle empty quoted strings",
+			initialContent: `KEY1=""
+KEY2=
+`,
+			props: map[string]string{"KEY1": "", "KEY2": ""},
+			expectedContent: `KEY1=""
+KEY2=""
+`,
+			expectError: false,
+		},
+		{
 			name:           "empty file, add new properties",
 			initialContent: "",
 			props:          map[string]string{"KEY1": "value1", "KEY2": "value2"},

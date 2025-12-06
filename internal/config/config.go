@@ -157,9 +157,8 @@ func updateProperties(configPath string, props map[string]string) error {
 	//   KEY=VALUE
 	// Captures:
 	//   1: KEY
-	//   2: VALUE (inside quotes or unquoted)
-	//   3: quote type = `"` or empty if unquoted
-	re := regexp.MustCompile(`^\s*([A-Za-z_][A-Za-z0-9_]*)=(?:"(.*)"|(.*))\s*$`)
+	//   2: VALUE (raw, potentially quoted)
+	re := regexp.MustCompile(`^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)$`)
 
 	for _, line := range original {
 		m := re.FindStringSubmatch(line)
@@ -170,7 +169,11 @@ func updateProperties(configPath string, props map[string]string) error {
 		}
 
 		key := m[1]
-		oldVal := m[2]
+		val := strings.TrimSpace(m[2])
+		oldVal := val
+		if len(val) >= 2 && strings.HasPrefix(val, "\"") && strings.HasSuffix(val, "\"") {
+			oldVal = val[1 : len(val)-1]
+		}
 
 		// Check if this key should be updated
 		if newVal, ok := props[key]; ok {
