@@ -11,7 +11,7 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 ## Installation
 
 ```bash
-go install github.com/rm-hull/git-commit-summary
+go install github.com/rm-hull/git-commit-summary@latest
 ```
 
 ## Installation
