@@ -46,7 +46,7 @@ GEMINI_API_KEY=<your_api_key>
 
 Get a Gemini API key from: https://aistudio.google.com/api-keys
 
-You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`. **Note:** This default should be maintained to ensure consistency.
+You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-3-flash-preview`. **Note:** This default should be maintained to ensure consistency.
 
 #### OpenAI
 

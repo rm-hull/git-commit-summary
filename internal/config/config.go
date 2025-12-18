@@ -76,7 +76,7 @@ func Load() (*Config, error) {
 		cfg.APIKey = os.Getenv("GEMINI_API_KEY")
 		cfg.Model = os.Getenv("GEMINI_MODEL")
 		if cfg.Model == "" {
-			cfg.Model = "gemini-2.5-flash-preview-09-2025"
+			cfg.Model = "gemini-3-flash-preview"
 		}
 	case "openai":
 		cfg.APIKey = os.Getenv("OPENAI_API_KEY")

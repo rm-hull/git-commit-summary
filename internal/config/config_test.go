@@ -17,7 +17,7 @@ func TestLoad(t *testing.T) {
 		cfg, err := Load()
 		assert.NoError(t, err)
 		assert.Equal(t, "google", cfg.LLMProvider)
-		assert.Equal(t, "gemini-2.5-flash-preview-09-2025", cfg.Model)
+		assert.Equal(t, "gemini-3-flash-preview", cfg.Model)
 		assert.NotEmpty(t, cfg.Prompt)
 	})
 
