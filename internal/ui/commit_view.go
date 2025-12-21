@@ -88,7 +88,7 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
-		case tea.KeyCtrlX:
+		case tea.KeyCtrlA:
 			m.helpText = false
 			m.textarea.Blur()
 			return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
@@ -98,7 +98,7 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Blur()
 			return m, func() tea.Msg { return regenerateMsg{} }
 
-		case tea.KeyCtrlC, tea.KeyEsc:
+		case tea.KeyEsc:
 			if m.preview && msg.Type == tea.KeyEsc {
 				m.preview = false
 				m.textarea.Focus()
@@ -203,7 +203,7 @@ func (m *commitViewModel) helpTextView() string {
 
 	if m.preview {
 		return fmt.Sprintf("%s:commit %s:clear %s:undo %s:regen %s:editor  %s:back",
-			BoldYellow.Render("CTRL+X"),
+			BoldYellow.Render("CTRL+A"),
 			Strikethrough.Render("CTRL+K"),
 			Strikethrough.Render("CTRL+Z"),
 			BoldYellow.Render("CTRL+R"),
@@ -212,7 +212,7 @@ func (m *commitViewModel) helpTextView() string {
 	}
 
 	return fmt.Sprintf("%s:commit %s:clear %s:undo %s:regen %s:preview %s:abort",
-		BoldYellow.Render("CTRL+X"),
+		BoldYellow.Render("CTRL+A"),
 		BoldYellow.Render("CTRL+K"),
 		BoldYellow.Render("CTRL+Z"),
 		BoldYellow.Render("CTRL+R"),
