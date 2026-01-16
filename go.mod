@@ -12,7 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/genai v1.41.1
+	google.golang.org/genai v1.42.0
 )
 
 require (
