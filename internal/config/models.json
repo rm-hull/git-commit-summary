@@ -1,7 +1,11 @@
 {
-    "last_updated": "2025-12-06T15:10:00Z",
+    "last_updated": "2026-02-21T14:52:00Z",
     "providers": {
         "google": [
+            {
+                "name": "Gemini 3.1 Pro (Preview)",
+                "model": "gemini-3.1-pro-preview"
+            },
             {
                 "name": "Gemini 3 Pro (Preview)",
                 "model": "gemini-3-pro-preview"
@@ -15,10 +19,6 @@
             {
                 "name": "Gemini 2.5 Flash-Lite",
                 "model": "gemini-2.5-flash-lite"
-            },
-            {
-                "name": "Gemini 2.5 Flash (Preview 09-2025)",
-                "model": "gemini-2.5-flash-preview-09-2025"
             },
             { "name": "Gemini Flash (latest)", "model": "gemini-flash-latest" }
         ],
