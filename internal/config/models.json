@@ -3,15 +3,20 @@
     "providers": {
         "google": [
             {
-                "name": "Gemini 3.1 Pro (Preview)",
+                "name": "Gemini 3.1 Pro Preview",
                 "model": "gemini-3.1-pro-preview"
             },
             {
-                "name": "Gemini 3 Pro (Preview)",
-                "model": "gemini-3-pro-preview"
+                "name": "Gemini 3.1 Flash Lite Preview",
+                "model": "gemini-3.1-flash-lite-preview"
             },
             {
-                "name": "Gemini 3 Flash (Preview)",
+                "name": "Gemini 3 Pro Preview",
+                "model": "gemini-3-pro-preview",
+                "deprecated": true
+            },
+            {
+                "name": "Gemini 3 Flash Preview",
                 "model": "gemini-3-flash-preview"
             },
             { "name": "Gemini 2.5 Pro", "model": "gemini-2.5-pro" },
@@ -23,7 +28,9 @@
             { "name": "Gemini Flash (latest)", "model": "gemini-flash-latest" }
         ],
         "openai": [
-            { "name": "GPT 5.1", "model": "gpt-5.1" },
+            { "name": "GPT 5.4", "model": "gpt-5.4" },
+            { "name": "GPT 5.2 Pro", "model": "gpt-5.2-pro" },
+            { "name": "GPT 5.2", "model": "gpt-5.2" },
             { "name": "GPT 5.1 mini", "model": "gpt-5.1-mini" },
             { "name": "GPT 5.0 nano", "model": "gpt-5.0-nano" },
             { "name": "GPT 4.1", "model": "gpt-4.1" },
