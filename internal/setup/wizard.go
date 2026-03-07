@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/cockroachdb/errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
+	"github.com/rm-hull/git-commit-summary/internal/ui"
 )
 
 func Run(cfg *config.Config) (*config.Config, error) {
@@ -149,8 +149,7 @@ func options(cfg *config.Config, provider string) []huh.Option[string] {
 		}
 
 		if opt.Deprecated {
-			deprecatedStyle := lipgloss.NewStyle().Faint(true).Strikethrough(true)
-			name = deprecatedStyle.Render(name) + " (deprecated)"
+			name = ui.Strikethrough.Render(name) + " (deprecated)"
 		}
 		options = append(options, huh.NewOption(name, opt.Model))
 	}

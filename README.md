@@ -4,9 +4,9 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 
 ## Features
 
--   **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
--   **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
--   **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
+- **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
+- **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
+- **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
 
 ## Installation
 
@@ -19,9 +19,10 @@ go install github.com/rm-hull/git-commit-summary@latest
 ### Set up your API key
 
 `git-commit-summary` is XDG compliant, meaning it looks for its configuration file in a standard location. Create a `config.env` file in your XDG config home directory, e.g. on:
-* **Linux**: `~/.config/git-commit-summary/config.env`,
-* **MacOS**: `~/Library/Application Support/git-config-summary/config.env`, or
-* **Windows**: `%USERPROFILE%\.config\git-commit-summary\config.env`.
+
+- **Linux**: `~/.config/git-commit-summary/config.env`,
+- **MacOS**: `~/Library/Application Support/git-config-summary/config.env`, or
+- **Windows**: `%USERPROFILE%\.config\git-commit-summary\config.env`.
 
 You can configure the LLM provider by setting the `LLM_PROVIDER` environment variable. The supported providers are `google` (default) and `openai`.
 
@@ -97,10 +98,11 @@ Once installed, check that the executable is on the $PATH, with `git-commit-summ
 
 ## Flags
 
-| Flag             | Shorthand | Description                                                                                                                                      |
-| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `--version`      | `-v`      | Display version information                                                                                                                      |
-| `--message`      | `-m`      | Append a message to the commit summary                                                                                                           |
+| Flag             | Shorthand | Description                                        |
+| ---------------- | --------- | -------------------------------------------------- |
+| `--version`      | `-v`      | Display version                                    |
+| `--setup-wizard` | _n/a_     | Run setup wizard                                   |
+| `--message`      | `-m`      | Append a message to the commit summary             |
 | `--llm-provider` | _n/a_     | Use the specific LLM provider: supported values are currently only **google** & **openai**. Overrides the `LLM_PROVIDER` environmental variable. |
 
 ## Aliases
