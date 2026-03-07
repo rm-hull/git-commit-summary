@@ -32,6 +32,7 @@ type Models struct {
 		Name        string `json:"name,omitempty"`
 		Description string `json:"description,omitempty"`
 		Model       string `json:"model"`
+		Deprecated  bool   `json:"deprecated"`
 	} `json:"providers"`
 }
 

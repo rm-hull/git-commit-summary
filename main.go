@@ -21,17 +21,6 @@ func main() {
 	cfg, err := config.Load()
 	handleError(err)
 
-	if err := cfg.Validate(); err != nil || cfg.IsTestMode() {
-		newCfg, err := setup.Run(cfg)
-		if err != nil {
-			handleError(errors.Wrap(err, "failed to run setup wizard"))
-		}
-		if err := newCfg.Save(); err != nil {
-			handleError(errors.Wrap(err, "failed to save new configuration"))
-		}
-		cfg = newCfg
-	}
-
 	var userMessage string
 	var llmProvider string
 
@@ -45,8 +34,19 @@ func main() {
 				os.Exit(0)
 			}
 
+			err := cfg.Validate()
 			if cmd.Flags().Changed("llm-provider") {
 				cfg.LLMProvider = llmProvider
+			}
+			if err != nil || cfg.IsTestMode() {
+				newCfg, err := setup.Run(cfg)
+				if err != nil {
+					handleError(errors.Wrap(err, "failed to run setup wizard"))
+				}
+				if err := newCfg.Save(); err != nil {
+					handleError(errors.Wrap(err, "failed to save new configuration"))
+				}
+				cfg = newCfg
 			}
 
 			ctx := context.Background()

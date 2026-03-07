@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/cockroachdb/errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/rm-hull/git-commit-summary/internal/config"
@@ -145,6 +146,11 @@ func options(cfg *config.Config, provider string) []huh.Option[string] {
 		name := opt.Name
 		if name == "" {
 			name = opt.Model
+		}
+
+		if opt.Deprecated {
+			deprecatedStyle := lipgloss.NewStyle().Faint(true).Strikethrough(true)
+			name = deprecatedStyle.Render(name) + " (deprecated)"
 		}
 		options = append(options, huh.NewOption(name, opt.Model))
 	}
