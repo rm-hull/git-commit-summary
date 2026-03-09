@@ -78,7 +78,7 @@ require (
 	cloud.google.com/go/auth v0.18.2 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	github.com/charmbracelet/bubbles v1.0.0
-	github.com/charmbracelet/glamour v0.10.0
+	github.com/charmbracelet/glamour v1.0.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/galactixx/stringwrap v1.0.4
