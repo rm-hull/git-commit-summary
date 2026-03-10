@@ -16,7 +16,7 @@ This project is a Go application that automatically generates commit summaries u
 
 ## Prerequisites
 
--   Go 1.25 or higher
+-   Go 1.26 or higher
 -   A valid API key for your chosen LLM provider (Gemini or OpenAI).
 
 ## Building
