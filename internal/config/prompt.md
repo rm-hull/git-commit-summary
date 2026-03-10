@@ -8,8 +8,8 @@ Always start with one of these verbs: feat, fix, chore, docs, style, refactor, t
 -   Use markdown for emphasis (code blocks, bold, links) if they adds value.
 -   You can use bullet points.
 -   Wrap description lines at max 72 characters: Do **NOT** exceed 72 characters per line.
--   If the pull request is complex and you think sequence, entity relationship or component
-    diagrams would help explain the changes, include one or more mermaid diagrams in markdown
+-   If the pull request is complex and you think that a sequence diagram (or entity relationship
+    diagram) would help explain the changes, include one or more mermaid diagrams in markdown
     format.
 -   There is no need to mention: "Note: This commit message is concise and follows the
     conventional commit message format...."
