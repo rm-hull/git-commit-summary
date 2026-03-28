@@ -7,6 +7,8 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 - **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
 - **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
 - **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
+- **Multiple LLM Providers:** Supports Google Gemini, OpenAI, OpenRouter, and local Llama.cpp instances.
+- **Setup Wizard:** Easy configuration with an interactive setup wizard.
 
 ## Installation
 
@@ -14,104 +16,85 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 go install github.com/rm-hull/git-commit-summary@latest
 ```
 
-## Installation
+Ensure that the executable is on your `$PATH`. You can verify this by running `git-commit-summary --version`.
 
-### Set up your API key
+## Setup
 
-`git-commit-summary` is XDG compliant, meaning it looks for its configuration file in a standard location. Create a `config.env` file in your XDG config home directory, e.g. on:
+The easiest way to configure `git-commit-summary` is by using the built-in setup wizard:
 
-- **Linux**: `~/.config/git-commit-summary/config.env`,
-- **MacOS**: `~/Library/Application Support/git-config-summary/config.env`, or
-- **Windows**: `%USERPROFILE%\.config\git-commit-summary\config.env`.
-
-You can configure the LLM provider by setting the `LLM_PROVIDER` environment variable. The supported providers are `google` (default) and `openai`.
-
-For local development or repository-specific overrides, you can still create a `.env` file in your git repository root.
-
-For more information on the XDG Base Directory Specification, see: [https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
-
-#### Google
-
-Add your Gemini API key to the `config.env` file:
-
-```
-GEMINI_API_KEY=<your_api_key>
+```bash
+git commit-summary --setup-wizard
 ```
 
-Get an API key from: https://aistudio.google.com/api-keys
+This will guide you through selecting an LLM provider, choosing a model, and entering your API key. The configuration is stored in an XDG-compliant location (e.g., `~/.config/git-commit-summary/config.env`).
 
-You can also optionally set the `GEMINI_MODEL` environment variable to specify which model to use. The default is `gemini-2.5-flash-preview-09-2025`.
+### Manual Configuration
 
-#### OpenAI
+If you prefer to configure the tool manually, you can create or edit the `config.env` file in your XDG config home directory:
 
-Add your OpenAI API key to the `config.env` file:
+- **Linux**: `~/.config/git-commit-summary/config.env`
+- **MacOS**: `~/Library/Application Support/git-commit-summary/config.env`
+- **Windows**: `%USERPROFILE%\.config\git-commit-summary\config.env`
+
+You can also use a `.env` file in your git repository root for project-specific overrides.
+
+#### Supported Providers
+
+| Provider | Environment Variables |
+| :--- | :--- |
+| **Google Gemini** | `LLM_PROVIDER="google"`, `GEMINI_API_KEY`, `GEMINI_MODEL` (default: `gemini-3-flash-preview`) |
+| **OpenAI** | `LLM_PROVIDER="openai"`, `OPENAI_API_KEY`, `OPENAI_MODEL` (default: `gpt-4o`) |
+| **OpenRouter** | `LLM_PROVIDER="openrouter"`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` |
+| **Llama.cpp** | `LLM_PROVIDER="llama.cpp"`, `LLAMACPP_BASE_URL`, `LLAMACPP_MODEL`, `LLAMACPP_API_KEY` (if required) |
+
+#### Local Llama.cpp Example
+
+To point to a local [llama.cpp](https://github.com/ggml-org/llama.cpp) service, use the following config:
 
 ```
-OPENAI_API_KEY=<your_api_key>
-```
-
-You can also optionally set the `OPENAI_MODEL` environment variable to specify which model to se. Note, if no model is selected, `gpt-4o` is used as the default.
-
-Additionally, you can also set `OPENAI_BASE_URL` - this is especially useful if you want to point to a local [llama.cpp](https://github.com/ggml-org/llama.cpp) service. For example, you may use the following config:
-
-```
-LLM_PROVIDER="openai"
-OPENAI_BASE_URL="http://localhost:8080/v1"
-OPENAI_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
+LLM_PROVIDER="llama.cpp"
+LLAMACPP_BASE_URL="http://localhost:8080/v1"
+LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 ```
 
 ## Usage
 
-Once installed, check that the executable is on the $PATH, with `git-commit-summary --version`. Then, as part of your development workflow
-
 1.  **Stage your changes:**
-
     ```bash
     git add <files>
     ```
 
 2.  **Run the tool:**
-
     ```bash
     git commit-summary
     ```
 
 3.  **Confirm the commit:**
-
-    The tool will display the generated commit summary and ask for your confirmation. Note that it is possible to amend the message, if necessary. Type `CTRL-X` to accept and commit, or `ESC` to abort.
-
-    ```
-    $ git commit-summary
-    ╭ Commit message ────────────────────────────────────────────────────────────╮
-    │ feat: Implement Undo/Redo functionality                                    │
-    │                                                                            │
-    │ Adds history management to the text input component, allowing              │
-    │ users to undo and redo changes using keyboard shortcuts.                   │
-    │                                                                            │
-    │ *   Uses `Ctrl-Z` for undo operations.                                     │
-    │ *   Uses `Ctrl-Y` for redo operations.                                     │
-    │ *   Introduces the `History` struct (`internal/ui/history.go`)             │
-    │     to manage the state stack.                                             │
-    ╰────────────────────────────────────────────────────────────────────────────╯
-    CTRL+X:commit CTRL+K:clear CTRL+Z:undo CTRL+R:regen CTRL+P:preview ESC:abort
-    ```
+    The tool will display the generated commit summary. Use the following shortcuts to interact with it:
+    - `CTRL+X`: Accept and commit
+    - `CTRL+R`: Regenerate the message
+    - `CTRL+K`: Clear the message
+    - `CTRL+P`: Toggle preview mode
+    - `ESC`: Abort
 
 ## Flags
 
-| Flag             | Shorthand | Description                                        |
-| ---------------- | --------- | -------------------------------------------------- |
-| `--version`      | `-v`      | Display version                                    |
-| `--setup-wizard` | _n/a_     | Run setup wizard                                   |
-| `--message`      | `-m`      | Append a message to the commit summary             |
-| `--llm-provider` | _n/a_     | Use the specific LLM provider: supported values are currently only **google** & **openai**. Overrides the `LLM_PROVIDER` environmental variable. |
+| Flag | Shorthand | Description |
+| :--- | :--- | :--- |
+| `--version` | `-v` | Display version |
+| `--setup-wizard` | | Run the interactive setup wizard |
+| `--message` | `-m` | Append a message to the commit summary |
+| `--llm-provider` | | Override the `LLM_PROVIDER` environment variable |
 
-## Aliases
+## Git Alias
 
-If you want to use a shorter command, you can add an alias to your `~/.gitconfig` file. For example, to use `git cs` as a shorthand for `git commit-summary`, you can run the following command:
+Add an alias to your `~/.gitconfig` for faster access:
 
 ```bash
 git config --global alias.cs commit-summary
 ```
+
+Now you can just run `git cs`.
 
 ## License
 
