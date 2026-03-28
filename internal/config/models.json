@@ -47,6 +47,14 @@
                 "model": "meta-llama/llama-3.3-70b-instruct:free"
             },
             {
+                "name": "MiniMax: MiniMax M2.5",
+                "model": "minimax/minimax-m2.5:free"
+            },
+            {
+                "name": "Nous: Hermes 3 405B Instruct",
+                "model": "nousresearch/hermes-3-llama-3.1-405b:free"
+            },
+            {
                 "name": "NVIDIA: Nemotron 3 Super",
                 "model": "nvidia/nemotron-3-super-120b-a12b:free"
             },
@@ -55,8 +63,16 @@
                 "model": "openai/gpt-oss-120b:free"
             },
             {
+                "name": "OpenAI: gpt-oss-20b",
+                "model": "openai/gpt-oss-20b:free"
+            },
+            {
                 "name": "Qwen3 Coder 480B A35B",
                 "model": "qwen/qwen3-coder:free"
+            },
+            {
+                "name": "Z.ai: GLM 4.5 Air",
+                "model": "z-ai/glm-4.5-air:free"
             }
         ],
         "llama.cpp": [
