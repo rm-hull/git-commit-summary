@@ -22,6 +22,8 @@ func NewProvider(ctx context.Context, cfg *config.Config) (Provider, error) {
 		fallthrough
 	case "llama.cpp":
 		return NewOpenAiProvider(ctx, cfg)
+	case "openrouter":
+		return NewOpenRouterProvider(ctx, cfg)
 	default:
 		return nil, errors.Newf("unknown LLM provider: %s", cfg.LLMProvider)
 	}

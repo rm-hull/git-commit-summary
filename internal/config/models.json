@@ -37,6 +37,28 @@
             { "name": "ChatGPT 4o latest", "model": "chatgpt-4o-latest" },
             { "name": "o3", "model": "o3" }
         ],
+        "openrouter": [
+            {
+                "name": "Google: Gemma 3 27B",
+                "model": "google/gemma-3-27b-it:free"
+            },
+            {
+                "name": "Meta: Llama 3.3 70B Instruct",
+                "model": "meta-llama/llama-3.3-70b-instruct:free"
+            },
+            {
+                "name": "NVIDIA: Nemotron 3 Super",
+                "model": "nvidia/nemotron-3-super-120b-a12b:free"
+            },
+            {
+                "name": "OpenAI: gpt-oss-120b",
+                "model": "openai/gpt-oss-120b:free"
+            },
+            {
+                "name": "Qwen3 Coder 480B A35B",
+                "model": "qwen/qwen3-coder:free"
+            }
+        ],
         "llama.cpp": [
             { "model": "Qwen2.5-Coder-7B-Instruct-Q4_K_M" },
             { "model": "DeepSeek-R1-Distill-Qwen-7B-Q6_K" },

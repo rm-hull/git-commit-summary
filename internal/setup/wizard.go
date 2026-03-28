@@ -19,6 +19,7 @@ func Run(cfg *config.Config) (*config.Config, error) {
 	options := []huh.Option[string]{
 		huh.NewOption("Google (Gemini)", "google"),
 		huh.NewOption("OpenAI", "openai"),
+		huh.NewOption("OpenRouter", "openrouter"),
 		huh.NewOption("Llama.cpp", "llama.cpp"),
 	}
 
@@ -35,6 +36,7 @@ func Run(cfg *config.Config) (*config.Config, error) {
 		),
 		geminiGroup(cfg),
 		openaiGroup(cfg),
+		openrouterGroup(cfg),
 		llamacppGroup(cfg),
 		validationGroup(cfg),
 		submitGroup(cfg, &confirm),
@@ -81,6 +83,20 @@ func openaiGroup(cfg *config.Config) *huh.Group {
 			Value(&cfg.APIKey),
 	).WithHideFunc(func() bool {
 		return cfg.LLMProvider != "openai"
+	})
+}
+
+func openrouterGroup(cfg *config.Config) *huh.Group {
+	return huh.NewGroup(
+		huh.NewSelect[string]().
+			Title("OpenRouter Model").
+			Value(&cfg.Model).
+			Options(options(cfg, "openrouter")...),
+		huh.NewInput().
+			Title("API Key").
+			Value(&cfg.APIKey),
+	).WithHideFunc(func() bool {
+		return cfg.LLMProvider != "openrouter"
 	})
 }
 
