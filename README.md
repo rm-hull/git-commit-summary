@@ -71,9 +71,9 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 
 3.  **Confirm the commit:**
     The tool will display the generated commit summary. Use the following shortcuts to interact with it:
-    - `CTRL+X`: Accept and commit
-    - `CTRL+R`: Regenerate the message
-    - `CTRL+K`: Clear the message
+    - `CTRL+A`: Accept and commit
+    - `CTRL+R`: Reprompt & regenerate the commit message
+    - `CTRL+K`: Clear the generated commit message
     - `CTRL+P`: Toggle preview mode
     - `ESC`: Abort
 
