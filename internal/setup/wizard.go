@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
+	"github.com/rm-hull/git-commit-summary/internal/ui"
 )
 
 func Run(cfg *config.Config) (*config.Config, error) {
@@ -18,6 +19,7 @@ func Run(cfg *config.Config) (*config.Config, error) {
 	options := []huh.Option[string]{
 		huh.NewOption("Google (Gemini)", "google"),
 		huh.NewOption("OpenAI", "openai"),
+		huh.NewOption("OpenRouter", "openrouter"),
 		huh.NewOption("Llama.cpp", "llama.cpp"),
 	}
 
@@ -34,6 +36,7 @@ func Run(cfg *config.Config) (*config.Config, error) {
 		),
 		geminiGroup(cfg),
 		openaiGroup(cfg),
+		openrouterGroup(cfg),
 		llamacppGroup(cfg),
 		validationGroup(cfg),
 		submitGroup(cfg, &confirm),
@@ -80,6 +83,20 @@ func openaiGroup(cfg *config.Config) *huh.Group {
 			Value(&cfg.APIKey),
 	).WithHideFunc(func() bool {
 		return cfg.LLMProvider != "openai"
+	})
+}
+
+func openrouterGroup(cfg *config.Config) *huh.Group {
+	return huh.NewGroup(
+		huh.NewSelect[string]().
+			Title("OpenRouter Model").
+			Value(&cfg.Model).
+			Options(options(cfg, "openrouter")...),
+		huh.NewInput().
+			Title("API Key").
+			Value(&cfg.APIKey),
+	).WithHideFunc(func() bool {
+		return cfg.LLMProvider != "openrouter"
 	})
 }
 
@@ -145,6 +162,10 @@ func options(cfg *config.Config, provider string) []huh.Option[string] {
 		name := opt.Name
 		if name == "" {
 			name = opt.Model
+		}
+
+		if opt.Deprecated {
+			name = ui.Strikethrough.Render(name) + " (deprecated)"
 		}
 		options = append(options, huh.NewOption(name, opt.Model))
 	}

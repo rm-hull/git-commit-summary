@@ -21,32 +21,38 @@ func main() {
 	cfg, err := config.Load()
 	handleError(err)
 
-	if err := cfg.Validate(); err != nil || cfg.IsTestMode() {
-		newCfg, err := setup.Run(cfg)
-		if err != nil {
-			handleError(errors.Wrap(err, "failed to run setup wizard"))
-		}
-		if err := newCfg.Save(); err != nil {
-			handleError(errors.Wrap(err, "failed to save new configuration"))
-		}
-		cfg = newCfg
-	}
-
 	var userMessage string
 	var llmProvider string
+	var runSetupWizard *bool
+	var showVersion *bool
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
 		Short: "Generate a commit summary using Gemini or OpenAI",
 		Run: func(cmd *cobra.Command, args []string) {
-			version, _ := cmd.Flags().GetBool("version")
-			if version {
+			if *showVersion {
 				fmt.Println(versioninfo.Short())
 				os.Exit(0)
 			}
 
+			err := cfg.Validate()
 			if cmd.Flags().Changed("llm-provider") {
 				cfg.LLMProvider = llmProvider
+			}
+			if err != nil || cfg.IsTestMode() || *runSetupWizard {
+				newCfg, err := setup.Run(cfg)
+				if err != nil {
+					handleError(errors.Wrap(err, "failed to run setup wizard"))
+				}
+				if err := newCfg.Save(); err != nil {
+					handleError(errors.Wrap(err, "failed to save new configuration"))
+				}
+				cfg = newCfg
+			}
+
+			if *runSetupWizard {
+				fmt.Println(ui.BoldGreen.Render("SETTINGS SAVED."))
+				os.Exit(0)
 			}
 
 			ctx := context.Background()
@@ -62,9 +68,10 @@ func main() {
 		},
 	}
 
-	rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
+	showVersion = rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
+	runSetupWizard = rootCmd.PersistentFlags().Bool("setup-wizard", false, "Run setup wizard")
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
-	rootCmd.PersistentFlags().StringVarP(&llmProvider, "llm-provider", "", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
+	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 
 	_ = rootCmd.Execute()
 }

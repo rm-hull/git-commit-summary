@@ -32,11 +32,12 @@ type Models struct {
 		Name        string `json:"name,omitempty"`
 		Description string `json:"description,omitempty"`
 		Model       string `json:"model"`
+		Deprecated  bool   `json:"deprecated"`
 	} `json:"providers"`
 }
 
 type Config struct {
-	LLMProvider string `validate:"required,oneof=google openai llama.cpp test"`
+	LLMProvider string `validate:"required,oneof=google openai llama.cpp openrouter test"`
 	APIKey      string `validate:"required_unless=LLMProvider test"`
 	Model       string `validate:"required_unless=LLMProvider test"`
 	BaseURL     string `validate:"required_if=LLMProvider llama.cpp"`
@@ -84,6 +85,12 @@ func Load() (*Config, error) {
 		if cfg.Model == "" {
 			cfg.Model = "gpt-4o"
 		}
+	case "openrouter":
+		cfg.APIKey = os.Getenv("OPENROUTER_API_KEY")
+		cfg.Model = os.Getenv("OPENROUTER_MODEL")
+		if cfg.Model == "" {
+			cfg.Model = "qwen/qwen3-coder:free"
+		}
 	case "llama.cpp":
 		cfg.APIKey = os.Getenv("LLAMACPP_API_KEY")
 		cfg.BaseURL = os.Getenv("LLAMACPP_BASE_URL")
@@ -119,6 +126,12 @@ func (cfg *Config) Save() error {
 			"LLM_PROVIDER":   "openai",
 			"OPENAI_API_KEY": cfg.APIKey,
 			"OPENAI_MODEL":   cfg.Model,
+		})
+	case "openrouter":
+		return updateProperties(configPath, map[string]string{
+			"LLM_PROVIDER":       "openrouter",
+			"OPENROUTER_API_KEY": cfg.APIKey,
+			"OPENROUTER_MODEL":   cfg.Model,
 		})
 	case "llama.cpp":
 		return updateProperties(configPath, map[string]string{

@@ -1,13 +1,22 @@
 {
-    "last_updated": "2025-12-06T15:10:00Z",
+    "last_updated": "2026-02-21T14:52:00Z",
     "providers": {
         "google": [
             {
-                "name": "Gemini 3 Pro (Preview)",
-                "model": "gemini-3-pro-preview"
+                "name": "Gemini 3.1 Pro Preview",
+                "model": "gemini-3.1-pro-preview"
             },
             {
-                "name": "Gemini 3 Flash (Preview)",
+                "name": "Gemini 3.1 Flash Lite",
+                "model": "gemini-3.1-flash-lite"
+            },
+            {
+                "name": "Gemini 3 Pro Preview",
+                "model": "gemini-3-pro-preview",
+                "deprecated": true
+            },
+            {
+                "name": "Gemini 3 Flash Preview",
                 "model": "gemini-3-flash-preview"
             },
             { "name": "Gemini 2.5 Pro", "model": "gemini-2.5-pro" },
@@ -16,19 +25,55 @@
                 "name": "Gemini 2.5 Flash-Lite",
                 "model": "gemini-2.5-flash-lite"
             },
-            {
-                "name": "Gemini 2.5 Flash (Preview 09-2025)",
-                "model": "gemini-2.5-flash-preview-09-2025"
-            },
             { "name": "Gemini Flash (latest)", "model": "gemini-flash-latest" }
         ],
         "openai": [
-            { "name": "GPT 5.1", "model": "gpt-5.1" },
+            { "name": "GPT 5.4", "model": "gpt-5.4" },
+            { "name": "GPT 5.2 Pro", "model": "gpt-5.2-pro" },
+            { "name": "GPT 5.2", "model": "gpt-5.2" },
             { "name": "GPT 5.1 mini", "model": "gpt-5.1-mini" },
             { "name": "GPT 5.0 nano", "model": "gpt-5.0-nano" },
             { "name": "GPT 4.1", "model": "gpt-4.1" },
             { "name": "ChatGPT 4o latest", "model": "chatgpt-4o-latest" },
             { "name": "o3", "model": "o3" }
+        ],
+        "openrouter": [
+            {
+                "name": "Google: Gemma 3 27B",
+                "model": "google/gemma-3-27b-it:free"
+            },
+            {
+                "name": "Meta: Llama 3.3 70B Instruct",
+                "model": "meta-llama/llama-3.3-70b-instruct:free"
+            },
+            {
+                "name": "MiniMax: MiniMax M2.5",
+                "model": "minimax/minimax-m2.5:free"
+            },
+            {
+                "name": "Nous: Hermes 3 405B Instruct",
+                "model": "nousresearch/hermes-3-llama-3.1-405b:free"
+            },
+            {
+                "name": "NVIDIA: Nemotron 3 Super",
+                "model": "nvidia/nemotron-3-super-120b-a12b:free"
+            },
+            {
+                "name": "OpenAI: gpt-oss-120b",
+                "model": "openai/gpt-oss-120b:free"
+            },
+            {
+                "name": "OpenAI: gpt-oss-20b",
+                "model": "openai/gpt-oss-20b:free"
+            },
+            {
+                "name": "Qwen3 Coder 480B A35B",
+                "model": "qwen/qwen3-coder:free"
+            },
+            {
+                "name": "Z.ai: GLM 4.5 Air",
+                "model": "z-ai/glm-4.5-air:free"
+            }
         ],
         "llama.cpp": [
             { "model": "Qwen2.5-Coder-7B-Instruct-Q4_K_M" },
