@@ -96,7 +96,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case gitCheckMsg:
 		if len(msg) == 0 {
-			m.err = errors.New("no changes are staged")
+			m.err = errors.New("no changes detected")
 			return m, tea.Quit
 		}
 		return m, m.getGitDiff
