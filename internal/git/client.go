@@ -9,10 +9,14 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-type Client struct{}
+type Client struct {
+	addAll bool
+}
 
-func NewClient() *Client {
-	return &Client{}
+func NewClient(addAll bool) *Client {
+	return &Client{
+		addAll: addAll,
+	}
 }
 
 func (c *Client) IsInWorkTree() error {
@@ -35,16 +39,17 @@ func (c *Client) IsInWorkTree() error {
 	return nil
 }
 
-func (c *Client) StagedFiles() ([]string, error) {
-	result, err := exec.Command(
-		"git",
-		"diff",
-		"--staged",
-		"--name-only",
-	).CombinedOutput()
+func (c *Client) ModifiedFiles() ([]string, error) {
+	args := []string{"diff", "--name-only"}
+	if c.addAll {
+		args = append(args, "HEAD")
+	} else {
+		args = append(args, "--staged")
+	}
 
+	result, err := exec.Command("git", args...).CombinedOutput()
 	if err != nil {
-		return nil, errors.Wrap(err, "listing staged files failed")
+		return nil, errors.Wrap(err, "listing modified files failed")
 	}
 
 	trimmed := strings.TrimSpace(string(result))
@@ -55,13 +60,20 @@ func (c *Client) StagedFiles() ([]string, error) {
 }
 
 func (c *Client) Diff() (string, error) {
-	result, err := exec.Command(
-		"git",
+	args := []string{
 		"--no-pager",
 		"diff",
 		"--no-ext-diff",
 		"--no-textconv",
-		"--staged",
+	}
+
+	if c.addAll {
+		args = append(args, "HEAD")
+	} else {
+		args = append(args, "--staged")
+	}
+
+	args = append(args,
 		"--diff-filter=ACMRTUXBD",
 		"--",                 // separates options from pathspecs
 		".",                  // include everything under the repo root
@@ -72,8 +84,9 @@ func (c *Client) Diff() (string, error) {
 		":(exclude)**/target/**",
 		":(exclude)**/out/**",
 		":(exclude)go.sum",
-	).CombinedOutput()
+	)
 
+	result, err := exec.Command("git", args...).CombinedOutput()
 	if err != nil {
 		return "", errors.Wrap(err, "git diff failed")
 	}
@@ -97,7 +110,13 @@ func (c *Client) Commit(message string) error {
 	}
 
 	// Set up git commit command
-	cmd := exec.Command("git", "commit", "-F", tmpfile.Name())
+	args := []string{"commit"}
+	if c.addAll {
+		args = append(args, "-a")
+	}
+	args = append(args, "-F", tmpfile.Name())
+
+	cmd := exec.Command("git", args...)
 
 	// Connect stdout/stderr of git to our program’s stdout/stderr
 	cmd.Stdout = os.Stdout
