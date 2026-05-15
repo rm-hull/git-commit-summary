@@ -57,6 +57,7 @@ type Model struct {
 	promptView     tea.Model
 	action         Action
 	err            error
+	yolo           bool
 }
 
 func InitialModel(
@@ -65,6 +66,7 @@ func InitialModel(
 	gitClient interfaces.GitClient,
 	systemPrompt string,
 	userMessage string,
+	yolo bool,
 ) *Model {
 	return &Model{
 		ctx:            ctx,
@@ -76,6 +78,7 @@ func InitialModel(
 		spinner:        spinner.New(spinner.WithSpinner(spinner.MiniDot)),
 		spinnerMessage: Magenta.Render("Running git commands to determine modified files..."),
 		action:         None,
+		yolo:           yolo,
 	}
 }
 
@@ -111,7 +114,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.generateSummary(m.diff, "")
 
 	case llmResultMsg:
-		m.state = showCommitView
 		commitMessage := string(msg)
 		if m.userMessage != "" {
 			// append the user supplied message
@@ -126,6 +128,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		commitMessage = strings.ReplaceAll(commitMessage, "\n\n\n", "\n\n")
+
+		if m.yolo {
+			if commitMessage == "" {
+				m.err = errors.New("failed to generate a commit summary")
+				return m, tea.Quit
+			}
+			m.action = Commit
+			m.commitMessage = commitMessage
+			return m, tea.Quit
+		}
+
+		m.state = showCommitView
 		m.commitView, m.err = initialCommitViewModel(commitMessage)
 		if m.err != nil {
 			return m, tea.Quit
@@ -185,8 +199,14 @@ func (m *Model) View() string {
 	case showSpinner:
 		return m.spinner.View() + " " + m.spinnerMessage
 	case showCommitView:
+		if m.commitView == nil {
+			return m.spinner.View() + " " + m.spinnerMessage
+		}
 		return m.commitView.View()
 	case showRegeneratePrompt:
+		if m.commitView == nil || m.promptView == nil {
+			return m.spinner.View() + " " + m.spinnerMessage
+		}
 		return m.commitView.View() + m.promptView.View()
 	default:
 		return ""

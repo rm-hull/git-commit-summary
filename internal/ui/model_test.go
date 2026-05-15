@@ -66,7 +66,7 @@ func TestModel_Update(t *testing.T) {
 		// Explicitly use the types to avoid "imported and not used" warnings
 		var _ interfaces.GitClient = mockGit
 		var _ llmprovider.Provider = mockLLM
-		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message")
+		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", false)
 	}
 
 	t.Run("tea.KeyMsg - CtrlC in showSpinner state", func(t *testing.T) {
@@ -290,6 +290,26 @@ func TestModel_Update(t *testing.T) {
 		assert.NotNil(t, updatedModel)
 		assert.Nil(t, cmd) // Mock returns nil cmd
 		mockPromptView.AssertCalled(t, "Update", testMsg)
+	})
+
+	t.Run("llmResultMsg - YOLO mode", func(t *testing.T) {
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", true)
+		updatedModel, cmd := m.Update(llmResultMsg("commit summary"))
+
+		assert.Equal(t, Commit, updatedModel.(*Model).action)
+		assert.Contains(t, updatedModel.(*Model).commitMessage, "commit summary")
+		assert.NotNil(t, cmd)
+		assert.IsType(t, tea.QuitMsg{}, cmd())
+	})
+
+	t.Run("llmResultMsg - YOLO mode - empty summary", func(t *testing.T) {
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "", true)
+		updatedModel, cmd := m.Update(llmResultMsg(""))
+
+		assert.NotNil(t, updatedModel.(*Model).err)
+		assert.Equal(t, "failed to generate a commit summary", updatedModel.(*Model).err.Error())
+		assert.NotNil(t, cmd)
+		assert.IsType(t, tea.QuitMsg{}, cmd())
 	})
 }
 
