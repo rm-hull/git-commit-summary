@@ -10,12 +10,12 @@ import (
 )
 
 type Client struct {
-	AddAll bool
+	addAll bool
 }
 
 func NewClient(addAll bool) *Client {
 	return &Client{
-		AddAll: addAll,
+		addAll: addAll,
 	}
 }
 
@@ -41,7 +41,7 @@ func (c *Client) IsInWorkTree() error {
 
 func (c *Client) ModifiedFiles() ([]string, error) {
 	args := []string{"diff", "--name-only"}
-	if c.AddAll {
+	if c.addAll {
 		args = append(args, "HEAD")
 	} else {
 		args = append(args, "--staged")
@@ -67,7 +67,7 @@ func (c *Client) Diff() (string, error) {
 		"--no-textconv",
 	}
 
-	if c.AddAll {
+	if c.addAll {
 		args = append(args, "HEAD")
 	} else {
 		args = append(args, "--staged")
@@ -111,7 +111,7 @@ func (c *Client) Commit(message string) error {
 
 	// Set up git commit command
 	args := []string{"commit"}
-	if c.AddAll {
+	if c.addAll {
 		args = append(args, "-a")
 	}
 	args = append(args, "-F", tmpfile.Name())
