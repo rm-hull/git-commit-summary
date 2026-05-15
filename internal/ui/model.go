@@ -74,7 +74,7 @@ func InitialModel(
 		systemPrompt:   systemPrompt,
 		userMessage:    userMessage,
 		spinner:        spinner.New(spinner.WithSpinner(spinner.MiniDot)),
-		spinnerMessage: Magenta.Render("Running git commands to determine modified changes..."),
+		spinnerMessage: Magenta.Render("Running git commands to determine modified files..."),
 		action:         None,
 	}
 }
