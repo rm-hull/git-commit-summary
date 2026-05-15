@@ -25,6 +25,7 @@ func main() {
 	var llmProvider string
 	var runSetupWizard *bool
 	var showVersion *bool
+	var yoloMode *bool
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
@@ -61,7 +62,7 @@ func main() {
 			handleError(err)
 
 			application := app.NewApp(provider, git.NewClient(), cfg.Prompt)
-			err = application.Run(ctx, userMessage)
+			err = application.Run(ctx, userMessage, *yoloMode)
 			if err != nil {
 				handleError(err)
 			}
@@ -70,6 +71,7 @@ func main() {
 
 	showVersion = rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
 	runSetupWizard = rootCmd.PersistentFlags().Bool("setup-wizard", false, "Run setup wizard")
+	yoloMode = rootCmd.PersistentFlags().Bool("yolo", false, "Commit immediately without asking for confirmation")
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 

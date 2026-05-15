@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cockroachdb/errors"
@@ -28,8 +29,8 @@ func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt stri
 	}
 }
 
-func (app *App) Run(ctx context.Context, userMessage string) error {
-	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage)
+func (app *App) Run(ctx context.Context, userMessage string, yolo bool) error {
+	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, yolo)
 	p := tea.NewProgram(model)
 
 	finalModel, err := p.Run()
@@ -51,6 +52,11 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 	}
 
 	if m.Action() == ui.Commit {
+		if yolo {
+			fmt.Println(ui.BoldGreen.Render("COMMIT MESSAGE:"))
+			fmt.Println(m.CommitMessage())
+			fmt.Println()
+		}
 		err = app.git.Commit(m.CommitMessage())
 		if err != nil {
 			return err
