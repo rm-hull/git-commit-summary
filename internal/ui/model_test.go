@@ -41,7 +41,7 @@ func (m *MockGitClient) IsInWorkTree() error {
 	return args.Error(0)
 }
 
-func (m *MockGitClient) StagedFiles() ([]string, error) {
+func (m *MockGitClient) ModifiedFiles() ([]string, error) {
 	args := m.Called()
 	return args.Get(0).([]string), args.Error(1)
 }

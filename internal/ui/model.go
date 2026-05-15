@@ -76,7 +76,7 @@ func InitialModel(
 		systemPrompt:   systemPrompt,
 		userMessage:    userMessage,
 		spinner:        spinner.New(spinner.WithSpinner(spinner.MiniDot)),
-		spinnerMessage: Magenta.Render("Running git commands to determine staged changes..."),
+		spinnerMessage: Magenta.Render("Running git commands to determine modified files..."),
 		action:         None,
 		yolo:           yolo,
 	}
@@ -99,7 +99,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case gitCheckMsg:
 		if len(msg) == 0 {
-			m.err = errors.New("no changes are staged")
+			m.err = errors.New("no changes detected")
 			return m, tea.Quit
 		}
 		return m, m.getGitDiff
@@ -214,11 +214,11 @@ func (m *Model) checkGitStatus() tea.Msg {
 	if err := m.gitClient.IsInWorkTree(); err != nil {
 		return errMsg{err}
 	}
-	stagedFiles, err := m.gitClient.StagedFiles()
+	modifiedFiles, err := m.gitClient.ModifiedFiles()
 	if err != nil {
 		return errMsg{err}
 	}
-	return gitCheckMsg(stagedFiles)
+	return gitCheckMsg(modifiedFiles)
 }
 
 func (m *Model) getGitDiff() tea.Msg {

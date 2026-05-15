@@ -61,7 +61,8 @@ func main() {
 			provider, err := llmprovider.NewProvider(ctx, cfg)
 			handleError(err)
 
-			application := app.NewApp(provider, git.NewClient(), cfg.Prompt)
+			addAll, _ := cmd.Flags().GetBool("all")
+			application := app.NewApp(provider, git.NewClient(addAll), cfg.Prompt)
 			err = application.Run(ctx, userMessage, *yoloMode)
 			if err != nil {
 				handleError(err)
@@ -74,6 +75,7 @@ func main() {
 	yoloMode = rootCmd.PersistentFlags().Bool("yolo", false, "Commit immediately without asking for confirmation")
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
+	rootCmd.PersistentFlags().BoolP("all", "a", false, "Add all tracked files to the commit")
 
 	_ = rootCmd.Execute()
 }
