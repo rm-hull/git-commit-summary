@@ -130,6 +130,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		commitMessage = strings.ReplaceAll(commitMessage, "\n\n\n", "\n\n")
 
 		if m.yolo {
+			if commitMessage == "" {
+				m.err = errors.New("failed to generate a commit summary")
+				return m, tea.Quit
+			}
 			m.action = Commit
 			m.commitMessage = commitMessage
 			return m, tea.Quit

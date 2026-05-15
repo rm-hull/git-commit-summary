@@ -301,6 +301,16 @@ func TestModel_Update(t *testing.T) {
 		assert.NotNil(t, cmd)
 		assert.IsType(t, tea.QuitMsg{}, cmd())
 	})
+
+	t.Run("llmResultMsg - YOLO mode - empty summary", func(t *testing.T) {
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "", true)
+		updatedModel, cmd := m.Update(llmResultMsg(""))
+
+		assert.NotNil(t, updatedModel.(*Model).err)
+		assert.Equal(t, "failed to generate a commit summary", updatedModel.(*Model).err.Error())
+		assert.NotNil(t, cmd)
+		assert.IsType(t, tea.QuitMsg{}, cmd())
+	})
 }
 
 // mockTeaModel is a generic mock for tea.Model interface
