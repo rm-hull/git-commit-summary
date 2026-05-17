@@ -25,7 +25,10 @@ const (
 type (
 	gitCheckMsg          []string
 	gitDiffMsg           string
-	llmResultMsg         string
+	llmResultMsg         struct {
+		content  string
+		duration time.Duration
+	}
 	commitMsg            string
 	errMsg               struct{ err error }
 	abortMsg             struct{}
@@ -114,7 +117,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.generateSummary(m.diff, "")
 
 	case llmResultMsg:
-		commitMessage := string(msg)
+		commitMessage := msg.content
 		if m.userMessage != "" {
 			// append the user supplied message
 			commitMessage = fmt.Sprintf("%s\n\n%s", commitMessage, m.userMessage)
@@ -140,7 +143,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.state = showCommitView
-		m.commitView, m.err = initialCommitViewModel(commitMessage)
+		m.commitView, m.err = initialCommitViewModel(commitMessage, msg.duration)
 		if m.err != nil {
 			return m, tea.Quit
 		}
@@ -239,11 +242,13 @@ func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
 		if userMessage != "" {
 			text += "\n\n**IMPORTANT:** " + userMessage
 		}
+		start := time.Now()
 		resp, err := m.llmProvider.Call(m.ctx, "", text)
+		duration := time.Since(start)
 		if err != nil {
 			return errMsg{err}
 		}
-		return llmResultMsg(resp)
+		return llmResultMsg{content: resp, duration: duration}
 	}
 }
 
