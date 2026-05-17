@@ -42,6 +42,10 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 	ta.SetHeight(height)
 	ta.SetWidth(72 + 2) // +2 is to accommodate for horizontal padding
 	ta.SetValue(message)
+	for ta.Line() > 0 {
+		ta.CursorUp()
+	}
+	ta.CursorStart()
 	if message == "" {
 		ta.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
 	} else {
