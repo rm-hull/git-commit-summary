@@ -47,13 +47,21 @@ func (app *App) Run(ctx context.Context, userMessage string, yolo bool) error {
 		return m.Err()
 	}
 
+	// If a newer version was detected at startup, notify now (after UI completes)
+	if latest := m.LatestVersion(); latest != "" {
+		fmt.Printf("%s: New version (%s) of %s is available\n",
+			ui.Blue.Bold(true).Render("NOTICE"),
+			latest,
+			ui.WhiteBold.Render("git-commit-summary"))
+	}
+
 	if m.Action() == ui.Abort {
 		return interfaces.ErrAborted
 	}
 
 	if m.Action() == ui.Commit {
 		if yolo {
-			fmt.Println(ui.BoldGreen.Render("COMMIT MESSAGE:"))
+			fmt.Println(ui.Green.Bold(true).Render("COMMIT MESSAGE:"))
 			fmt.Println(m.CommitMessage())
 			fmt.Println()
 		}

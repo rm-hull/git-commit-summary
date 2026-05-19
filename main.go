@@ -53,7 +53,7 @@ func main() {
 			}
 
 			if *runSetupWizard {
-				fmt.Println(ui.BoldGreen.Render("SETTINGS SAVED."))
+				fmt.Println(ui.Green.Bold(true).Render("SETTINGS SAVED."))
 				os.Exit(0)
 			}
 

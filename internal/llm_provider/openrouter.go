@@ -3,9 +3,9 @@ package llmprovider
 import (
 	"context"
 
-	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/cockroachdb/errors"
 	openrouter "github.com/revrost/go-openrouter"
+	"github.com/rm-hull/git-commit-summary/internal/config"
 )
 
 type OpenRouterProvider struct {
