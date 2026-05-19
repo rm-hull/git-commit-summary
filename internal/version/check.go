@@ -46,7 +46,7 @@ func CheckLatest(currentVersion string) (string, error) {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", err
+		return "", errors.Errorf("unexpected status code: %s", resp.Status)
 	}
 
 	var latest latestResponse
