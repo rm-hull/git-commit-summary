@@ -9,9 +9,11 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cockroachdb/errors"
+	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/galactixx/stringwrap"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
+	versionpkg "github.com/rm-hull/git-commit-summary/internal/version"
 )
 
 type sessionState int
@@ -23,9 +25,9 @@ const (
 )
 
 type (
-	gitCheckMsg          []string
-	gitDiffMsg           string
-	llmResultMsg         struct {
+	gitCheckMsg  []string
+	gitDiffMsg   string
+	llmResultMsg struct {
 		content  string
 		duration time.Duration
 	}
@@ -55,6 +57,7 @@ type Model struct {
 	diff           string
 	spinner        spinner.Model
 	spinnerMessage string
+	latestVersion  string
 	commitView     tea.Model
 	commitMessage  string
 	promptView     tea.Model
@@ -79,14 +82,14 @@ func InitialModel(
 		systemPrompt:   systemPrompt,
 		userMessage:    userMessage,
 		spinner:        spinner.New(spinner.WithSpinner(spinner.MiniDot)),
-		spinnerMessage: Magenta.Render("Running git commands to determine modified files..."),
+		spinnerMessage: Magenta.Render("Checking whether a newer version exists..."),
 		action:         None,
 		yolo:           yolo,
 	}
 }
 
 func (m *Model) Init() tea.Cmd {
-	return tea.Batch(m.spinner.Tick, m.checkGitStatus)
+	return tea.Batch(m.spinner.Tick, m.checkLatestVersion)
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -110,7 +113,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case gitDiffMsg:
 		m.spinnerMessage = fmt.Sprintf("%s%s%s",
 			Blue.Render("Generating commit summary (using: "),
-			BoldBlue.Render(m.llmProvider.Model()),
+			Blue.Bold(true).Underline(true).Render(m.llmProvider.Model()),
 			Blue.Render(")"),
 		)
 		m.diff = string(msg)
@@ -167,7 +170,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = showSpinner
 		m.spinnerMessage = fmt.Sprintf("%s%s%s",
 			Blue.Render("Re-generating commit summary (using: "),
-			BoldBlue.Render(m.llmProvider.Model()),
+			Blue.Bold(true).Underline(true).Render(m.llmProvider.Model()),
 			Blue.Render(")"),
 		)
 		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff, string(msg)))
@@ -183,6 +186,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case abortMsg:
 		m.action = Abort
 		return m, tea.Quit
+
+	case latestVersionMsg:
+		m.latestVersion = string(msg)
+		m.spinnerMessage = Magenta.Render("Running git commands to determine modified files...")
+		return m, m.checkGitStatus
 	}
 
 	var cmd tea.Cmd
@@ -196,6 +204,20 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	return m, cmd
 }
+
+type latestVersionMsg string
+
+func (m *Model) checkLatestVersion() tea.Msg {
+	time.Sleep(500 * time.Millisecond) // Add a small delay
+	latest, _ := versionpkg.CheckLatest(versioninfo.Short())
+	return latestVersionMsg(latest)
+}
+
+func (m *Model) LatestVersion() string {
+	return m.latestVersion
+}
+
+// LatestVersionMsg is handled above to chain into git checks
 
 func (m *Model) View() string {
 	switch m.state {
@@ -217,7 +239,7 @@ func (m *Model) View() string {
 }
 
 func (m *Model) checkGitStatus() tea.Msg {
-	time.Sleep(1000 * time.Millisecond) // Add a small delay
+	time.Sleep(500 * time.Millisecond) // Add a small delay
 	if err := m.gitClient.IsInWorkTree(); err != nil {
 		return errMsg{err}
 	}
