@@ -45,8 +45,8 @@ func (app *App) Run(ctx context.Context, userMessage string, yolo bool) error {
 
 	// If a newer version was detected at startup, notify now (after UI completes)
 	if latest := m.LatestVersion(); latest != "" {
-		fmt.Printf("%s: New version (%s) of %s is available\n",
-			ui.Blue.Bold(true).Render("NOTICE"),
+		fmt.Printf("%s new version (%s) of %s is available\n",
+			ui.Blue.Bold(true).Render("NOTICE:"),
 			latest,
 			ui.WhiteBold.Render("git-commit-summary"))
 	}
