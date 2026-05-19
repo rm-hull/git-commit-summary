@@ -43,16 +43,16 @@ func (app *App) Run(ctx context.Context, userMessage string, yolo bool) error {
 		return errors.New("failed to cast model to *ui.Model")
 	}
 
-	if m.Err() != nil {
-		return m.Err()
-	}
-
 	// If a newer version was detected at startup, notify now (after UI completes)
 	if latest := m.LatestVersion(); latest != "" {
 		fmt.Printf("%s: New version (%s) of %s is available\n",
 			ui.Blue.Bold(true).Render("NOTICE"),
 			latest,
 			ui.WhiteBold.Render("git-commit-summary"))
+	}
+
+	if m.Err() != nil {
+		return m.Err()
 	}
 
 	if m.Action() == ui.Abort {
