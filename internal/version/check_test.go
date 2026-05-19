@@ -9,8 +9,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func setupLatestTestServer(t *testing.T, handler http.HandlerFunc) *httptest.Server {
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
+
+	oldURL := latestURL
+	oldClient := httpClient
+	latestURL = server.URL
+	httpClient = http.Client{Transport: http.DefaultTransport}
+	t.Cleanup(func() {
+		latestURL = oldURL
+		httpClient = oldClient
+	})
+
+	return server
+}
+
 func TestCheckLatestReturnsLatestWhenNewer(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	setupLatestTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		body, err := json.Marshal(LatestResponse{
 			Version: "v0.2.0",
@@ -25,16 +41,6 @@ func TestCheckLatestReturnsLatestWhenNewer(t *testing.T) {
 		require.NoError(t, err)
 		_, _ = w.Write(body)
 	}))
-	defer server.Close()
-
-	oldURL := latestURL
-	oldClient := httpClient
-	latestURL = server.URL
-	httpClient = http.Client{Transport: http.DefaultTransport}
-	defer func() {
-		latestURL = oldURL
-		httpClient = oldClient
-	}()
 
 	latest, err := CheckLatest("0.1.0")
 	require.NoError(t, err)
@@ -42,7 +48,7 @@ func TestCheckLatestReturnsLatestWhenNewer(t *testing.T) {
 }
 
 func TestCheckLatestReturnsEmptyWhenUpToDate(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	setupLatestTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		body, err := json.Marshal(LatestResponse{
 			Version: "v1.0.0",
@@ -57,16 +63,6 @@ func TestCheckLatestReturnsEmptyWhenUpToDate(t *testing.T) {
 		require.NoError(t, err)
 		_, _ = w.Write(body)
 	}))
-	defer server.Close()
-
-	oldURL := latestURL
-	oldClient := httpClient
-	latestURL = server.URL
-	httpClient = http.Client{Transport: http.DefaultTransport}
-	defer func() {
-		latestURL = oldURL
-		httpClient = oldClient
-	}()
 
 	latest, err := CheckLatest("1.0.0")
 	require.NoError(t, err)
@@ -80,19 +76,9 @@ func TestCheckLatestReturnsEmptyForDevel(t *testing.T) {
 }
 
 func TestCheckLatestReturnsErrorOnBadStatus(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	setupLatestTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
-	defer server.Close()
-
-	oldURL := latestURL
-	oldClient := httpClient
-	latestURL = server.URL
-	httpClient = http.Client{Transport: http.DefaultTransport}
-	defer func() {
-		latestURL = oldURL
-		httpClient = oldClient
-	}()
 
 	_, err := CheckLatest("0.1.0")
 	require.Error(t, err)
