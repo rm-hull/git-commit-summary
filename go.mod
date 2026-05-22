@@ -12,7 +12,8 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/genai v1.57.0
+	golang.org/x/mod v0.36.0
+	google.golang.org/genai v1.58.0
 )
 
 require (
@@ -69,7 +70,6 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yuin/goldmark v1.8.2 // indirect
 	github.com/yuin/goldmark-emoji v1.0.6 // indirect
-	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/term v0.43.0 // indirect
 	google.golang.org/api v0.280.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
