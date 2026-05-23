@@ -21,12 +21,11 @@ func NewOpenRouterProvider(ctx context.Context, cfg *config.Config) (Provider, e
 }
 
 func (provider *OpenRouterProvider) Call(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
-	messages := []openrouter.ChatCompletionMessage{
-		openrouter.UserMessage(userPrompt),
-	}
+	var messages []openrouter.ChatCompletionMessage
 	if systemPrompt != "" {
-		messages = append([]openrouter.ChatCompletionMessage{openrouter.SystemMessage(systemPrompt)}, messages...)
+		messages = append(messages, openrouter.SystemMessage(systemPrompt))
 	}
+	messages = append(messages, openrouter.UserMessage(userPrompt))
 
 	result, err := provider.client.CreateChatCompletion(ctx, openrouter.ChatCompletionRequest{
 		Model:    provider.model,
