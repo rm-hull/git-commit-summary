@@ -154,9 +154,6 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case tea.KeyCtrlX:
-			if !m.textarea.Focused() {
-				m.textarea.Focus()
-			}
 			if m.textarea.Value() == "" {
 				return m, nil
 			}
@@ -174,7 +171,9 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.textarea.SetValue(newVal)
 				m.history.Add(newVal)
 
-				if lineIdx >= len(lines) {
+				if len(lines) == 0 {
+					lineIdx = 0
+				} else if lineIdx >= len(lines) {
 					lineIdx = len(lines) - 1
 				}
 
@@ -183,8 +182,6 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				for m.textarea.Line() > lineIdx {
 					m.textarea.CursorUp()
 				}
-				// Force a redraw
-				m.textarea.Focus()
 			}
 
 			return m, nil
