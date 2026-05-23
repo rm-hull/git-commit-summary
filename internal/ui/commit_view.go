@@ -297,5 +297,4 @@ func (m *commitViewModel) commitLint(msg string) string {
 	return ""
 }
 
-//go:fix inline
 func uintPtr(v uint) *uint { return new(v) }
