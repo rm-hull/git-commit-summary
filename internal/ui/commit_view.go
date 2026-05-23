@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -150,6 +151,39 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if value, ok := m.history.Redo(); ok {
 				m.textarea.SetValue(value)
 			}
+			return m, nil
+
+		case tea.KeyCtrlX:
+			if m.textarea.Value() == "" {
+				return m, nil
+			}
+			lines := strings.Split(m.textarea.Value(), "\n")
+			lineIdx := m.textarea.Line()
+			if lineIdx < len(lines) {
+				cutLine := lines[lineIdx] + "\n"
+				err := clipboard.WriteAll(cutLine)
+				if err != nil {
+					return m, func() tea.Msg { return errMsg{err} }
+				}
+
+				lines = append(lines[:lineIdx], lines[lineIdx+1:]...)
+				newVal := strings.Join(lines, "\n")
+				m.textarea.SetValue(newVal)
+				m.history.Add(newVal)
+
+				if len(lines) == 0 {
+					lineIdx = 0
+				} else if lineIdx >= len(lines) {
+					lineIdx = len(lines) - 1
+				}
+
+				// Restore cursor position to the desired line
+				m.textarea.CursorStart()
+				for m.textarea.Line() > lineIdx {
+					m.textarea.CursorUp()
+				}
+			}
+
 			return m, nil
 
 		case tea.KeyCtrlK:
