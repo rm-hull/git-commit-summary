@@ -283,11 +283,11 @@ func (m *commitViewModel) commitLint(msg string) string {
 
 	lines := strings.Split(msg, "\n")
 	for idx, line := range lines {
-		if idx == 0 && len(line) > 50 {
+		if idx == 0 && lipgloss.Width(line) > 50 {
 			return "subject line should be no more than 50 chars"
 		}
 
-		if len(line) > 72 {
+		if lipgloss.Width(line) > 72 {
 			return fmt.Sprintf("line %d should be no more than 72 chars", idx+1)
 		}
 	}
