@@ -27,13 +27,17 @@ func NewOpenAiProvider(ctx context.Context, cfg *config.Config) (Provider, error
 }
 
 func (provider *OpenAiProvider) Call(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	messages := []openai.ChatCompletionMessageParamUnion{
+		openai.UserMessage(userPrompt),
+	}
+	if systemPrompt != "" {
+		messages = append([]openai.ChatCompletionMessageParamUnion{openai.SystemMessage(systemPrompt)}, messages...)
+	}
+
 	result, err := provider.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Temperature: openai.Float(0.1),
 		Model:       provider.model,
-		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.SystemMessage(systemPrompt),
-			openai.UserMessage(userPrompt),
-		},
+		Messages:    messages,
 	})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to generate content")
