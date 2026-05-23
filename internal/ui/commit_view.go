@@ -13,17 +13,20 @@ import (
 	"github.com/charmbracelet/glamour/styles"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/cockroachdb/errors"
+	"github.com/leodido/go-conventionalcommits"
+	"github.com/leodido/go-conventionalcommits/parser"
 )
 
 type commitViewModel struct {
-	textarea textarea.Model
-	viewport viewport.Model
-	history  *History
-	boxStyle lipgloss.Style
-	preview  bool
-	helpText bool
-	duration time.Duration
-	renderer *glamour.TermRenderer
+	textarea     textarea.Model
+	viewport     viewport.Model
+	history      *History
+	boxStyle     lipgloss.Style
+	preview      bool
+	helpText     bool
+	duration     time.Duration
+	renderer     *glamour.TermRenderer
+	commitParser conventionalcommits.Machine
 }
 
 func initialCommitViewModel(message string, duration time.Duration) (*commitViewModel, error) {
@@ -75,10 +78,11 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 		boxStyle: lipgloss.NewStyle().
 			BorderForeground(lipgloss.Color("6")). // Cyan
 			Padding(0, 1),
-		preview:  false,
-		helpText: true,
-		duration: duration,
-		renderer: renderer,
+		preview:      false,
+		helpText:     true,
+		duration:     duration,
+		renderer:     renderer,
+		commitParser: parser.NewMachine(parser.WithTypes(conventionalcommits.TypesConventional)),
 	}, nil
 }
 
@@ -237,6 +241,14 @@ func (m *commitViewModel) View() string {
 	titleBorder.Top = title + strings.Repeat(
 		"─", m.textarea.Width()-lipgloss.Width(title)-lipgloss.Width(durationStr)+2) + durationStr
 
+	if lintErr := m.commitLint(m.textarea.Value()); lintErr != "" {
+		padding := m.textarea.Width() - lipgloss.Width(lintErr)
+		if padding < 0 {
+			padding = 0
+		}
+		titleBorder.Bottom = strings.Repeat("─", padding) + lintErr
+	}
+
 	return m.boxStyle.
 		BorderStyle(titleBorder).
 		Render(view) + "\n" + m.helpTextView()
@@ -266,4 +278,23 @@ func (m *commitViewModel) helpTextView() string {
 		BoldYellow.Render("ESC"))
 }
 
-func uintPtr(v uint) *uint { return &v }
+func (m *commitViewModel) commitLint(msg string) string {
+	_, err := m.commitParser.Parse([]byte(msg))
+	if err != nil {
+		return strings.TrimSpace(strings.Split(err.Error(), ": col=")[0])
+	}
+
+	lines := strings.Split(msg, "\n")
+	for idx, line := range lines {
+		if idx == 0 && lipgloss.Width(line) > 50 {
+			return "subject line should be no more than 50 chars"
+		}
+
+		if lipgloss.Width(line) > 72 {
+			return fmt.Sprintf("line %d should be no more than 72 chars", idx+1)
+		}
+	}
+	return ""
+}
+
+func uintPtr(v uint) *uint { return new(v) }
