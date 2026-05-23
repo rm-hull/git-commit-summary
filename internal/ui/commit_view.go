@@ -242,8 +242,11 @@ func (m *commitViewModel) View() string {
 		"─", m.textarea.Width()-lipgloss.Width(title)-lipgloss.Width(durationStr)+2) + durationStr
 
 	if lintErr := m.commitLint(m.textarea.Value()); lintErr != "" {
-		titleBorder.Bottom = strings.Repeat(
-			"─", m.textarea.Width()-lipgloss.Width(lintErr)) + lintErr
+		padding := m.textarea.Width() - lipgloss.Width(lintErr)
+		if padding < 0 {
+			padding = 0
+		}
+		titleBorder.Bottom = strings.Repeat("─", padding) + lintErr
 	}
 
 	return m.boxStyle.
