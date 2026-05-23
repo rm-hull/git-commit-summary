@@ -74,6 +74,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
     - `CTRL+A`: Accept and commit
     - `CTRL+R`: Reprompt & regenerate the commit message
     - `CTRL+K`: Clear the generated commit message
+    - `CTRL+X`: Cut line and copy to clipboard
     - `CTRL+P`: Toggle preview mode
     - `ESC`: Abort
 
