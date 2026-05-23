@@ -154,14 +154,20 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case tea.KeyCtrlX:
+			if !m.textarea.Focused() {
+				m.textarea.Focus()
+			}
 			if m.textarea.Value() == "" {
 				return m, nil
 			}
 			lines := strings.Split(m.textarea.Value(), "\n")
 			lineIdx := m.textarea.Line()
 			if lineIdx < len(lines) {
-				cutLine := lines[lineIdx]
-				_ = clipboard.WriteAll(cutLine)
+				cutLine := lines[lineIdx] + "\n"
+				err := clipboard.WriteAll(cutLine)
+				if err != nil {
+					return m, func() tea.Msg { return errMsg{err} }
+				}
 
 				lines = append(lines[:lineIdx], lines[lineIdx+1:]...)
 				newVal := strings.Join(lines, "\n")
@@ -172,14 +178,13 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					lineIdx = len(lines) - 1
 				}
 
-				// this is wrong: set cursor only affects the current line
-				if lineIdx >= 0 {
-					offset := 0
-					for i := 0; i < lineIdx; i++ {
-						offset += len(lines[i]) + 1
-					}
-					m.textarea.SetCursor(offset)
+				// Restore cursor position to the desired line
+				m.textarea.CursorStart()
+				for m.textarea.Line() > lineIdx {
+					m.textarea.CursorUp()
 				}
+				// Force a redraw
+				m.textarea.Focus()
 			}
 
 			return m, nil
