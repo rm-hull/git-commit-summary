@@ -3,9 +3,9 @@ package llmprovider
 import (
 	"context"
 
-	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/cockroachdb/errors"
 	openrouter "github.com/revrost/go-openrouter"
+	"github.com/rm-hull/git-commit-summary/internal/config"
 )
 
 type OpenRouterProvider struct {
@@ -21,12 +21,15 @@ func NewOpenRouterProvider(ctx context.Context, cfg *config.Config) (Provider, e
 }
 
 func (provider *OpenRouterProvider) Call(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	var messages []openrouter.ChatCompletionMessage
+	if systemPrompt != "" {
+		messages = append(messages, openrouter.SystemMessage(systemPrompt))
+	}
+	messages = append(messages, openrouter.UserMessage(userPrompt))
+
 	result, err := provider.client.CreateChatCompletion(ctx, openrouter.ChatCompletionRequest{
-		Model: provider.model,
-		Messages: []openrouter.ChatCompletionMessage{
-			openrouter.SystemMessage(systemPrompt),
-			openrouter.UserMessage(userPrompt),
-		},
+		Model:    provider.model,
+		Messages: messages,
 	})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to generate content")

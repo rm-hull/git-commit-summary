@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -41,7 +42,7 @@ func (m *MockGitClient) IsInWorkTree() error {
 	return args.Error(0)
 }
 
-func (m *MockGitClient) StagedFiles() ([]string, error) {
+func (m *MockGitClient) ModifiedFiles() ([]string, error) {
 	args := m.Called()
 	return args.Get(0).([]string), args.Error(1)
 }
@@ -66,7 +67,7 @@ func TestModel_Update(t *testing.T) {
 		// Explicitly use the types to avoid "imported and not used" warnings
 		var _ interfaces.GitClient = mockGit
 		var _ llmprovider.Provider = mockLLM
-		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message")
+		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", false)
 	}
 
 	t.Run("tea.KeyMsg - CtrlC in showSpinner state", func(t *testing.T) {
@@ -147,7 +148,7 @@ func TestModel_Update(t *testing.T) {
 
 		m.userMessage = userMsg // Set user message for this test case
 
-		updatedModel, cmd := m.Update(llmResultMsg(llmResult))
+		updatedModel, cmd := m.Update(llmResultMsg{content: llmResult, duration: time.Second})
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
 		// Assert that the commitView is set, but not its content directly from Update
@@ -162,7 +163,7 @@ func TestModel_Update(t *testing.T) {
 		llmResult := "This is a summary from LLM."
 		m.userMessage = "" // Ensure no user message
 
-		updatedModel, cmd := m.Update(llmResultMsg(llmResult))
+		updatedModel, cmd := m.Update(llmResultMsg{content: llmResult, duration: time.Second})
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
 		// Assert that the commitView is set, but not its content directly from Update
@@ -290,6 +291,26 @@ func TestModel_Update(t *testing.T) {
 		assert.NotNil(t, updatedModel)
 		assert.Nil(t, cmd) // Mock returns nil cmd
 		mockPromptView.AssertCalled(t, "Update", testMsg)
+	})
+
+	t.Run("llmResultMsg - YOLO mode", func(t *testing.T) {
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", true)
+		updatedModel, cmd := m.Update(llmResultMsg{content: "commit summary", duration: time.Second})
+
+		assert.Equal(t, Commit, updatedModel.(*Model).action)
+		assert.Contains(t, updatedModel.(*Model).commitMessage, "commit summary")
+		assert.NotNil(t, cmd)
+		assert.IsType(t, tea.QuitMsg{}, cmd())
+	})
+
+	t.Run("llmResultMsg - YOLO mode - empty summary", func(t *testing.T) {
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "", true)
+		updatedModel, cmd := m.Update(llmResultMsg{content: "", duration: time.Second})
+
+		assert.NotNil(t, updatedModel.(*Model).err)
+		assert.Equal(t, "failed to generate a commit summary", updatedModel.(*Model).err.Error())
+		assert.NotNil(t, cmd)
+		assert.IsType(t, tea.QuitMsg{}, cmd())
 	})
 }
 

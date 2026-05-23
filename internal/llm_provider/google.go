@@ -26,11 +26,18 @@ func NewGoogleProvider(ctx context.Context, cfg *config.Config) (Provider, error
 }
 
 func (provider *GoogleProvider) Call(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	config := &genai.GenerateContentConfig{}
+	if systemPrompt != "" {
+		config.SystemInstruction = &genai.Content{
+			Parts: []*genai.Part{genai.NewPartFromText(systemPrompt)},
+		}
+	}
+
 	result, err := provider.client.Models.GenerateContent(
 		ctx,
 		provider.model,
 		genai.Text(userPrompt),
-		nil,
+		config,
 	)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to generate content:")

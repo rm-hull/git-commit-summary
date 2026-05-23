@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cockroachdb/errors"
@@ -28,8 +29,8 @@ func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt stri
 	}
 }
 
-func (app *App) Run(ctx context.Context, userMessage string) error {
-	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage)
+func (app *App) Run(ctx context.Context, userMessage string, yolo bool) error {
+	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, yolo)
 	p := tea.NewProgram(model)
 
 	finalModel, err := p.Run()
@@ -42,6 +43,14 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 		return errors.New("failed to cast model to *ui.Model")
 	}
 
+	// If a newer version was detected at startup, notify now (after UI completes)
+	if latest := m.LatestVersion(); latest != "" {
+		fmt.Printf("%s a new version of %s is available (%s)\n",
+			ui.Blue.Bold(true).Render("NOTICE:"),
+			ui.WhiteBold.Render("git-commit-summary"),
+			latest)
+	}
+
 	if m.Err() != nil {
 		return m.Err()
 	}
@@ -51,6 +60,11 @@ func (app *App) Run(ctx context.Context, userMessage string) error {
 	}
 
 	if m.Action() == ui.Commit {
+		if yolo {
+			fmt.Println(ui.Green.Bold(true).Render("COMMIT MESSAGE:"))
+			fmt.Println(m.CommitMessage())
+			fmt.Println()
+		}
 		err = app.git.Commit(m.CommitMessage())
 		if err != nil {
 			return err

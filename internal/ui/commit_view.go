@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -21,10 +22,11 @@ type commitViewModel struct {
 	boxStyle lipgloss.Style
 	preview  bool
 	helpText bool
+	duration time.Duration
 	renderer *glamour.TermRenderer
 }
 
-func initialCommitViewModel(message string) (*commitViewModel, error) {
+func initialCommitViewModel(message string, duration time.Duration) (*commitViewModel, error) {
 	ta := textarea.New()
 	ta.CharLimit = 0
 	ta.ShowLineNumbers = false
@@ -41,6 +43,10 @@ func initialCommitViewModel(message string) (*commitViewModel, error) {
 	ta.SetHeight(height)
 	ta.SetWidth(72 + 2) // +2 is to accommodate for horizontal padding
 	ta.SetValue(message)
+	for ta.Line() > 0 {
+		ta.CursorUp()
+	}
+	ta.CursorStart()
 	if message == "" {
 		ta.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
 	} else {
@@ -71,6 +77,7 @@ func initialCommitViewModel(message string) (*commitViewModel, error) {
 			Padding(0, 1),
 		preview:  false,
 		helpText: true,
+		duration: duration,
 		renderer: renderer,
 	}, nil
 }
@@ -219,9 +226,14 @@ func (m *commitViewModel) View() string {
 		title = " Commit message "
 	}
 
+	durationStr := ""
+	if m.duration > 0 {
+		durationStr = fmt.Sprintf("┤%.1fs├─", m.duration.Seconds())
+	}
+
 	titleBorder := lipgloss.RoundedBorder()
 	titleBorder.Top = title + strings.Repeat(
-		"─", m.textarea.Width()-lipgloss.Width(title)+2) // +2 is to accommodate for horizontal padding
+		"─", m.textarea.Width()-lipgloss.Width(title)-lipgloss.Width(durationStr)+2) + durationStr
 
 	return m.boxStyle.
 		BorderStyle(titleBorder).
