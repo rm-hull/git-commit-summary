@@ -11,6 +11,14 @@ builds:
     goarch:
       - amd64
       - arm64
+    ldflags:
+      - -s -w
+
+upx:
+  - enabled: true
+    compress: best
+    goos:
+      - linux
 
 archives:
   - formats: ["tar.gz"]
