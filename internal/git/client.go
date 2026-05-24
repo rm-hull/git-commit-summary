@@ -94,12 +94,13 @@ func (c *Client) Diff() (string, error) {
 }
 
 func (c *Client) prepareCommitMessage(message string, skipCI bool) string {
-	if skipCI {
+	if skipCI && !strings.Contains(message, "[skip ci]") {
 		lines := strings.SplitN(message, "\n", 2)
+		subject := strings.TrimRight(lines[0], " \t")
 		if len(lines) == 1 {
-			return fmt.Sprintf("%s [skip ci]", message)
+			return fmt.Sprintf("%s [skip ci]", subject)
 		}
-		return fmt.Sprintf("%s [skip ci]\n%s", lines[0], lines[1])
+		return fmt.Sprintf("%s [skip ci]\n%s", subject, lines[1])
 	}
 	return message
 }
