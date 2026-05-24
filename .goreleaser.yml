@@ -25,4 +25,4 @@ brews:
       owner: rm-hull
       name: homebrew-tap
     homepage: "https://github.com/rm-hull/git-commit-summary"
-    description: "Command-line tool to automatically generates a concise git commit summary for your staged changes."
+    description: "Command-line tool to automatically generate a concise commit summary for staged changes in a git repo."
