@@ -91,11 +91,13 @@ def main():
 
     # Annotate the top bar
     top_idx = counts.index(max(counts))
-    ax.bar_label(
-        plt.matplotlib.container.BarContainer([bars[top_idx]]),
-        labels=[f"{counts[top_idx]:,}"],
-        padding=3,
-        fontsize=8,
+    ax.annotate(
+        f"{counts[top_idx]:,}",
+        xy=(top_idx, counts[top_idx]),
+        xytext=(0, 4),
+        textcoords="offset points",
+        ha="center",
+        fontsize=8
     )
 
     fig.tight_layout()
