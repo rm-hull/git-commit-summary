@@ -274,7 +274,7 @@ func (m *commitViewModel) helpTextView() string {
 	if m.preview {
 		return fmt.Sprintf("%s:commit %s:clear %s:regen %s:editor  %s:diff %s:back",
 			BoldYellow.Render("CTRL+A"),
-			BoldYellow.Render("CTRL+K"),
+			Strikethrough.Render("CTRL+K"),
 			BoldYellow.Render("CTRL+R"),
 			BoldYellow.Render("CTRL+P"),
 			BoldYellow.Render("CTRL+D"),
