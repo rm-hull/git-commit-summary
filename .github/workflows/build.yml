@@ -78,21 +78,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: "1.26"
-
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
         with:
           github_token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-          # default bump when commits don't indicate a bump type (patch/minor/major).
-          # keep default_bump=patch to preserve original behaviour; set to "minor"
-          # if you want a first tag to become v0.1.0 on fresh repositories.
           default_bump: patch
-          # restrict to main branch (optional; defaults to main,master)
           release_branches: main
           # fetch_all_tags: true    # optional if your repo has many tags
           # create_annotated_tag: true  # optional
