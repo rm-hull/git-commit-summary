@@ -52,8 +52,8 @@ func (m *MockGitClient) Diff() (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockGitClient) Commit(message string) error {
-	args := m.Called(message)
+func (m *MockGitClient) Commit(message string, skipCI bool) error {
+	args := m.Called(message, skipCI)
 	return args.Error(0)
 }
 

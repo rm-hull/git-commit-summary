@@ -99,12 +99,16 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 
 ## Flags
 
-| Flag             | Shorthand | Description                                      |
-| :--------------- | :-------- | :----------------------------------------------- |
-| `--version`      | `-v`      | Display version                                  |
-| `--setup-wizard` |           | Run the interactive setup wizard                 |
-| `--message`      | `-m`      | Append a message to the commit summary           |
-| `--llm-provider` |           | Override the `LLM_PROVIDER` environment variable |
+| Flag             | Shorthand | Description                                                           |
+| :--------------- | :-------- | :-------------------------------------------------------------------- |
+| `--all`          | `-a`      | Add all tracked files to the commit                                   |
+| `--help`         | `-h`      | Show help                                                             |
+| `--llm-provider` |           | Override the `LLM_PROVIDER` environment variable                      |
+| `--message`      | `-m`      | Append a message to the commit summary                                |
+| `--setup-wizard` |           | Run the interactive setup wizard                                      |
+| `--skip-ci`      |           | Append `[skip ci]` to the first line of the commit message to skip CI |
+| `--version`      | `-v`      | Display version                                                       |
+| `--yolo`         |           | Commit immediately without asking for confirmation                    |
 
 ## Git Alias
 

@@ -8,5 +8,5 @@ type GitClient interface {
 	IsInWorkTree() error
 	ModifiedFiles() ([]string, error)
 	Diff() (string, error)
-	Commit(message string) error
+	Commit(message string, skipCI bool) error
 }

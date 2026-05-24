@@ -27,6 +27,7 @@ func main() {
 	var showVersion *bool
 	var yoloMode *bool
 	var addAll *bool
+	var skipCI *bool
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
@@ -63,7 +64,7 @@ func main() {
 			handleError(err)
 
 			application := app.NewApp(provider, git.NewClient(*addAll), cfg.Prompt)
-			err = application.Run(ctx, userMessage, *yoloMode)
+			err = application.Run(ctx, userMessage, *yoloMode, *skipCI)
 			if err != nil {
 				handleError(err)
 			}
@@ -74,6 +75,7 @@ func main() {
 	runSetupWizard = rootCmd.PersistentFlags().Bool("setup-wizard", false, "Run setup wizard")
 	yoloMode = rootCmd.PersistentFlags().Bool("yolo", false, "Commit immediately without asking for confirmation")
 	addAll = rootCmd.PersistentFlags().BoolP("all", "a", false, "Add all tracked files to the commit")
+	skipCI = rootCmd.PersistentFlags().Bool("skip-ci", false, "Append [skip ci] to the commit message")
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 
