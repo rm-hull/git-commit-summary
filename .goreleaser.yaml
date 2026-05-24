@@ -1,0 +1,28 @@
+version: 2
+
+project_name: git-commit-summary
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+brews:
+  - name: git-commit-summary
+    repository:
+      owner: rm-hull
+      name: homebrew-tap
+    homepage: "https://github.com/rm-hull/git-commit-summary"
+    description: "Command-line tool to automatically generates a concise git commit summary for your staged changes."

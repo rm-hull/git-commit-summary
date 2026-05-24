@@ -97,10 +97,3 @@ jobs:
           # fetch_all_tags: true    # optional if your repo has many tags
           # create_annotated_tag: true  # optional
 
-      - name: Create GitHub Release
-        if: steps.tag_version.outputs.new_tag != ''
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.tag_version.outputs.new_tag }}
-          name: Release ${{ steps.tag_version.outputs.new_tag }}
-          body: ${{ steps.tag_version.outputs.changelog }}
