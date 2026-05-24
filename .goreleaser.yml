@@ -13,16 +13,25 @@ builds:
       - arm64
 
 archives:
-  - format: tar.gz
+  - formats: ["tar.gz"]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: "checksums.txt"
 
-brews:
+homebrew_casks:
   - name: git-commit-summary
     repository:
       owner: rm-hull
       name: homebrew-tap
     homepage: "https://github.com/rm-hull/git-commit-summary"
     description: "Command-line tool to automatically generate a concise commit summary for staged changes in a git repo."
+    directory: Casks
+    url:
+      verified: github.com/rm-hull/git-commit-summary
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/git-commit-summary"]
+          end
