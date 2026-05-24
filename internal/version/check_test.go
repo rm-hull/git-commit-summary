@@ -75,11 +75,46 @@ func TestCheckLatestReturnsEmptyForDevel(t *testing.T) {
 	require.Empty(t, latest)
 }
 
-func TestCheckLatestReturnsErrorOnBadStatus(t *testing.T) {
+func TestCheckLatestWithRevSuffix(t *testing.T) {
 	setupLatestTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		body, err := json.Marshal(LatestResponse{
+			Version: "v0.2.0",
+			Time:    "2026-05-19T12:00:00Z",
+			Origin: Origin{
+				VCS:  "git",
+				URL:  "https://github.com/rm-hull/git-commit-summary",
+				Hash: "abc123",
+				Ref:  "refs/tags/v0.2.0",
+			},
+		})
+		require.NoError(t, err)
+		_, _ = w.Write(body)
 	}))
 
-	_, err := CheckLatest("0.1.0")
-	require.Error(t, err)
+	latest, err := CheckLatest("0.1.0-rev-abc")
+	require.NoError(t, err)
+	require.Equal(t, "v0.2.0", latest)
+}
+
+func TestCheckLatestWithRevSuffixAndUpToDate(t *testing.T) {
+	setupLatestTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		body, err := json.Marshal(LatestResponse{
+			Version: "v0.1.0",
+			Time:    "2026-05-19T12:00:00Z",
+			Origin: Origin{
+				VCS:  "git",
+				URL:  "https://github.com/rm-hull/git-commit-summary",
+				Hash: "abc123",
+				Ref:  "refs/tags/v0.1.0",
+			},
+		})
+		require.NoError(t, err)
+		_, _ = w.Write(body)
+	}))
+
+	latest, err := CheckLatest("0.1.0-rev-abc")
+	require.NoError(t, err)
+	require.Empty(t, latest)
 }

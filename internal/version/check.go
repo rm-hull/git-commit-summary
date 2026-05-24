@@ -3,6 +3,7 @@ package version
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -58,7 +59,10 @@ func CheckLatest(currentVersion string) (string, error) {
 		return "", err
 	}
 
-	// Ensure currentVersion has 'v' prefix if it's missing, as semver package requires it.
+	// Strip any pre-release or build metadata from currentVersion for comparison,
+	// as latest.Version is expected to be a clean semver. Also, ensure currentVersion
+	// has 'v' prefix if it's missing, as semver package requires it.
+	currentVersion = strings.SplitN(currentVersion, "-rev-", 2)[0]
 	if len(currentVersion) > 0 && currentVersion[0] != 'v' {
 		currentVersion = "v" + currentVersion
 	}
