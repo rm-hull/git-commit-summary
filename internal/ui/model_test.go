@@ -133,7 +133,6 @@ func TestModel_Update(t *testing.T) {
 
 		diffContent := "diff --git a/file.go b/file.go"
 
-		// We want to check if the prompt passed to Call contains the hint.
 		mockLLM.On("Call", mock.Anything, "", mock.MatchedBy(func(p string) bool {
 			return strings.Contains(p, "CONTEXT HINT: prioritize auth flow")
 		})).Return("summary", nil).Once()
