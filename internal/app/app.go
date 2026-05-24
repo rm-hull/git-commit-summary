@@ -29,8 +29,8 @@ func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt stri
 	}
 }
 
-func (app *App) Run(ctx context.Context, userMessage string, yolo bool, skipCI bool) error {
-	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, yolo)
+func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI bool) error {
+	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, hint, yolo)
 	p := tea.NewProgram(model)
 
 	finalModel, err := p.Run()

@@ -54,6 +54,7 @@ type Model struct {
 	gitClient      interfaces.GitClient
 	systemPrompt   string
 	userMessage    string
+	hint           string
 	diff           string
 	spinner        spinner.Model
 	spinnerMessage string
@@ -72,6 +73,7 @@ func InitialModel(
 	gitClient interfaces.GitClient,
 	systemPrompt string,
 	userMessage string,
+	hint string,
 	yolo bool,
 ) *Model {
 	return &Model{
@@ -81,6 +83,7 @@ func InitialModel(
 		gitClient:      gitClient,
 		systemPrompt:   systemPrompt,
 		userMessage:    userMessage,
+		hint:           hint,
 		spinner:        spinner.New(spinner.WithSpinner(spinner.MiniDot)),
 		spinnerMessage: Magenta.Render("Checking whether a newer version exists..."),
 		action:         None,
@@ -275,9 +278,13 @@ func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
 			userPrompt = fmt.Sprintf(parts[1], diff)
 		}
 
+		if m.hint != "" {
+			userPrompt += fmt.Sprintf("\n\nCONTEXT HINT: %s", m.hint)
+		}
+
 		if userMessage != "" {
 			// append the user supplied message
-			userPrompt += "\n\n**IMPORTANT:** " + userMessage
+			userPrompt += fmt.Sprintf("\n\n**IMPORTANT:** %s", userMessage)
 		}
 
 		start := time.Now()

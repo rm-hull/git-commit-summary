@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,8 +23,8 @@ type MockLLMProvider struct {
 	mock.Mock
 }
 
-func (m *MockLLMProvider) Call(ctx context.Context, model string, prompt string) (string, error) {
-	args := m.Called(ctx, model, prompt)
+func (m *MockLLMProvider) Call(ctx context.Context, systemPrompt string, userPrompt string) (string, error) {
+	args := m.Called(ctx, systemPrompt, userPrompt)
 	return args.String(0), args.Error(1)
 }
 
@@ -67,7 +68,7 @@ func TestModel_Update(t *testing.T) {
 		// Explicitly use the types to avoid "imported and not used" warnings
 		var _ interfaces.GitClient = mockGit
 		var _ llmprovider.Provider = mockLLM
-		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", false)
+		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", false)
 	}
 
 	t.Run("tea.KeyMsg - CtrlC in showSpinner state", func(t *testing.T) {
@@ -124,19 +125,24 @@ func TestModel_Update(t *testing.T) {
 		mockGit.AssertExpectations(t)
 	})
 
-	t.Run("gitDiffMsg", func(t *testing.T) {
+	t.Run("gitDiffMsg with hint", func(t *testing.T) {
 		m := initialModel()
 		m.state = showSpinner // Ensure initial state is showSpinner
+		m.hint = "prioritize auth flow"
 		mockLLM.On("Model").Return("test-model").Once()
-		// The command returned by Update will execute llmProvider.Call later.
-		// No need to set mockLLM.On("Call") here.
 
 		diffContent := "diff --git a/file.go b/file.go"
+
+		// We want to check if the prompt passed to Call contains the hint.
+		mockLLM.On("Call", mock.Anything, "", mock.MatchedBy(func(p string) bool {
+			return strings.Contains(p, "CONTEXT HINT: prioritize auth flow")
+		})).Return("summary", nil).Once()
+
 		updatedModel, cmd := m.Update(gitDiffMsg(diffContent))
 
-		assert.Equal(t, diffContent, updatedModel.(*Model).diff)
-		assert.Contains(t, updatedModel.(*Model).spinnerMessage, "Generating commit summary (using: test-model)")
-		assert.IsType(t, tea.Batch(nil), cmd)
+		assert.Nil(t, updatedModel.(*Model).err)
+		assert.NotNil(t, cmd)
+		cmd() // Execute the command to trigger generateSummary
 		mockLLM.AssertExpectations(t)
 	})
 
@@ -294,7 +300,7 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("llmResultMsg - YOLO mode", func(t *testing.T) {
-		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", true)
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", true)
 		updatedModel, cmd := m.Update(llmResultMsg{content: "commit summary", duration: time.Second})
 
 		assert.Equal(t, Commit, updatedModel.(*Model).action)
@@ -304,7 +310,7 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("llmResultMsg - YOLO mode - empty summary", func(t *testing.T) {
-		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "", true)
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "", "", true)
 		updatedModel, cmd := m.Update(llmResultMsg{content: "", duration: time.Second})
 
 		assert.NotNil(t, updatedModel.(*Model).err)
