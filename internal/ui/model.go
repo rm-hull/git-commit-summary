@@ -279,12 +279,10 @@ func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
 		}
 
 		if m.hint != "" {
-			userPrompt += fmt.Sprintf("\n\nCONTEXT HINT: %s", m.hint)
+			userPrompt += "\n\nCONTEXT HINT: " + m.hint
 		}
-
 		if userMessage != "" {
-			// append the user supplied message
-			userPrompt += fmt.Sprintf("\n\n**IMPORTANT:** %s", userMessage)
+			userPrompt += "\n\n**IMPORTANT:** " + userMessage
 		}
 
 		start := time.Now()
