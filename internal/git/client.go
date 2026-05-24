@@ -135,7 +135,9 @@ func (c *Client) DiffWithColor() (string, error) {
 
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, ptmx)
-	_ = cmd.Wait()
+	if err := cmd.Wait(); err != nil {
+		return "", errors.Wrap(err, "git diff failed")
+	}
 
 	return buf.String(), nil
 }
