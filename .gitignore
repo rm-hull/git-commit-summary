@@ -34,3 +34,4 @@ go.work.sum
 __debug_bin*
 git-commit-summary
 test-reports/
+.antigravitycli/
