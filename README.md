@@ -102,7 +102,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | Flag             | Shorthand | Description                                                           |
 | :--------------- | :-------- | :-------------------------------------------------------------------- |
 | `--all`          | `-a`      | Add all tracked files to the commit                                   |
-| `--help`         | `-h       | Show help                                                             |
+| `--help`         | `-h`      | Show help                                                             |
 | `--llm-provider` |           | Override the `LLM_PROVIDER` environment variable                      |
 | `--message`      | `-m`      | Append a message to the commit summary                                |
 | `--setup-wizard` |           | Run the interactive setup wizard                                      |
