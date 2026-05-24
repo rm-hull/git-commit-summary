@@ -1,0 +1,31 @@
+name: Download stats
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *" # daily at 06:00 UTC
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Generate chart
+        run: uv run .github/scripts/download_stats.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit chart
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add download_stats.png
+          git diff --cached --quiet || git commit -m "chore: update download stats [skip ci]" --no-verify
+          git push
