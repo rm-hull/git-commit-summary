@@ -12,9 +12,24 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 
 ## Installation
 
+If you have [homebrew](https://brew.sh/), you can first add this tap to your Homebrew installation:
+
 ```bash
-go install github.com/rm-hull/git-commit-summary@latest
+brew tap rm-hull/tap
 ```
+
+Then you can install with:
+
+```bash
+brew install git-commit-summary
+```
+
+> [!NOTE]
+> Alternatively, if you have the [golang](https://go.dev/doc/install) toolchain, you can install with:
+>
+> ```bash
+> go install github.com/rm-hull/ git-commit-summary@latest
+>```
 
 Ensure that the executable is on your `$PATH`. You can verify this by running `git-commit-summary --version`.
 
