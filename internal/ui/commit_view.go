@@ -135,7 +135,6 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.preview = !m.preview
 			return m, nil
-
 		}
 
 		if m.preview {
@@ -205,6 +204,19 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+	case tea.WindowSizeMsg:
+		// Adjust textarea height
+		helpTextHeight := lipgloss.Height(m.helpTextView())
+		borderHeight := m.boxStyle.GetVerticalBorderSize()
+		paddingHeight := m.boxStyle.GetVerticalPadding()
+		remainingHeight := msg.Height - helpTextHeight - borderHeight - paddingHeight
+
+		m.textarea.SetHeight(max(1, remainingHeight))
+
+		// Adjust viewport for preview
+		m.viewport.Width = msg.Width - m.boxStyle.GetHorizontalBorderSize() - m.boxStyle.GetHorizontalPadding()
+		m.viewport.Height = max(1, remainingHeight)
+
 	case errMsg: // Use errMsg from model.go
 		return m, tea.Quit
 	}
@@ -260,21 +272,21 @@ func (m *commitViewModel) helpTextView() string {
 	}
 
 	if m.preview {
-		return fmt.Sprintf("%s:commit %s:clear %s:undo %s:regen %s:editor  %s:back",
+		return fmt.Sprintf("%s:commit %s:clear %s:regen %s:editor  %s:diff %s:back",
 			BoldYellow.Render("CTRL+A"),
-			Strikethrough.Render("CTRL+K"),
-			Strikethrough.Render("CTRL+Z"),
+			BoldYellow.Render("CTRL+K"),
 			BoldYellow.Render("CTRL+R"),
 			BoldYellow.Render("CTRL+P"),
+			BoldYellow.Render("CTRL+D"),
 			BoldYellow.Render("ESC"))
 	}
 
-	return fmt.Sprintf("%s:commit %s:clear %s:undo %s:regen %s:preview %s:abort",
+	return fmt.Sprintf("%s:commit %s:clear %s:regen %s:preview %s:diff %s:abort",
 		BoldYellow.Render("CTRL+A"),
 		BoldYellow.Render("CTRL+K"),
-		BoldYellow.Render("CTRL+Z"),
 		BoldYellow.Render("CTRL+R"),
 		BoldYellow.Render("CTRL+P"),
+		BoldYellow.Render("CTRL+D"),
 		BoldYellow.Render("ESC"))
 }
 

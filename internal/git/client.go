@@ -1,12 +1,15 @@
 package git
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	"github.com/creack/pty"
 )
 
 type Client struct {
@@ -91,6 +94,50 @@ func (c *Client) Diff() (string, error) {
 		return "", errors.Wrap(err, "git diff failed")
 	}
 	return string(result), nil
+}
+
+func (c *Client) DiffWithColor() (string, error) {
+	args := []string{
+		"--no-pager",
+		"diff",
+		"--color=always",
+		"--no-ext-diff",
+		"--no-textconv",
+	}
+
+	if c.addAll {
+		args = append(args, "HEAD")
+	} else {
+		args = append(args, "--staged")
+	}
+
+	args = append(args,
+		"--diff-filter=ACMRTUXBD",
+		"--",                 // separates options from pathspecs
+		".",                  // include everything under the repo root
+		":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
+		":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
+		":(exclude)**/build/**",
+		":(exclude)**/dist/**",
+		":(exclude)**/target/**",
+		":(exclude)**/out/**",
+		":(exclude)go.sum",
+	)
+
+	cmd := exec.Command("git", args...)
+
+	ptmx, err := pty.Start(cmd)
+	if err != nil {
+		// fallback to plain pipe if pty fails
+		return c.Diff()
+	}
+	defer ptmx.Close()
+
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, ptmx)
+	_ = cmd.Wait()
+
+	return buf.String(), nil
 }
 
 func (c *Client) prepareCommitMessage(message string, skipCI bool) string {

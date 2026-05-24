@@ -7,10 +7,13 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/cockroachdb/errors"
 	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/galactixx/stringwrap"
+	"github.com/rm-hull/git-commit-summary/internal/git"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	versionpkg "github.com/rm-hull/git-commit-summary/internal/version"
@@ -59,7 +62,11 @@ type Model struct {
 	spinner        spinner.Model
 	spinnerMessage string
 	latestVersion  string
+	width, height  int
 	commitView     tea.Model
+	diffView       viewport.Model
+	diffLoaded     bool
+	showingDiff    bool
 	commitMessage  string
 	promptView     tea.Model
 	action         Action
@@ -86,6 +93,7 @@ func InitialModel(
 		hint:           hint,
 		spinner:        spinner.New(spinner.WithSpinner(spinner.MiniDot)),
 		spinnerMessage: Magenta.Render("Checking whether a newer version exists..."),
+		diffView:       viewport.New(72+2, 20),
 		action:         None,
 		yolo:           yolo,
 	}
@@ -104,7 +112,41 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.action = Abort
 				return m, tea.Quit
 			}
+		case tea.KeyCtrlD:
+			if m.state == showCommitView {
+				m.showingDiff = !m.showingDiff
+				if m.showingDiff && !m.diffLoaded {
+					return m, m.getDiffWithColor
+				}
+				return m, nil
+			}
+		case tea.KeyCtrlA:
+			if m.state == showCommitView && m.showingDiff {
+				_, cmd := m.commitView.Update(msg)
+				return m, cmd
+			}
+		case tea.KeyCtrlR:
+			if m.state == showCommitView && m.showingDiff {
+				_, cmd := m.commitView.Update(msg)
+				return m, cmd
+			}
+		case tea.KeyCtrlP:
+			if m.state == showCommitView && m.showingDiff {
+				m.showingDiff = false
+				_, cmd := m.commitView.Update(msg)
+				return m, cmd
+			}
+		case tea.KeyEsc:
+			if m.state == showCommitView && m.showingDiff {
+				m.showingDiff = false
+				return m, nil
+			}
 		}
+
+	case diffColorMsg:
+		m.diffView.SetContent(string(msg))
+		m.diffLoaded = true
+		return m, nil
 
 	case gitCheckMsg:
 		if len(msg) == 0 {
@@ -194,6 +236,22 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.latestVersion = string(msg)
 		m.spinnerMessage = Magenta.Render("Running git commands to determine modified files...")
 		return m, m.checkGitStatus
+
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+
+		// Set diffView dimensions
+		// Width is fixed to 72+2 for consistency with commit message constraints.
+		m.diffView.Width = 72 + 2
+		m.diffView.Height = m.height - 3 // Account for box borders and help text
+
+		// Propagate to commitView so it can adjust its internal textarea/viewport
+		var cmd tea.Cmd
+		if m.commitView != nil {
+			m.commitView, cmd = m.commitView.Update(msg)
+		}
+		return m, cmd
 	}
 
 	var cmd tea.Cmd
@@ -201,7 +259,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case showSpinner:
 		m.spinner, cmd = m.spinner.Update(msg)
 	case showCommitView:
-		m.commitView, cmd = m.commitView.Update(msg)
+		if m.showingDiff {
+			m.diffView, cmd = m.diffView.Update(msg)
+		} else {
+			m.commitView, cmd = m.commitView.Update(msg)
+		}
 	case showRegeneratePrompt:
 		m.promptView, cmd = m.promptView.Update(msg)
 	}
@@ -230,6 +292,26 @@ func (m *Model) View() string {
 		if m.commitView == nil {
 			return m.spinner.View() + " " + m.spinnerMessage
 		}
+		if m.showingDiff {
+			boxStyle := lipgloss.NewStyle().
+				BorderForeground(lipgloss.Color("6")). // Cyan
+				Padding(0, 1)
+
+			title := " Raw diff "
+			titleBorder := lipgloss.RoundedBorder()
+			titleBorder.Top = title + strings.Repeat("─", (72+2)-lipgloss.Width(title))
+
+			helpText := fmt.Sprintf("%s:commit %s:regen %s:preview %s:diff  %s:back",
+				BoldYellow.Render("CTRL+A"),
+				BoldYellow.Render("CTRL+R"),
+				BoldYellow.Render("CTRL+P"),
+				BoldYellow.Render("CTRL+D"),
+				BoldYellow.Render("ESC"))
+
+			return boxStyle.
+				BorderStyle(titleBorder).
+				Render(m.diffView.View()) + "\n" + helpText
+		}
 		return m.commitView.View()
 	case showRegeneratePrompt:
 		if m.commitView == nil || m.promptView == nil {
@@ -251,6 +333,16 @@ func (m *Model) checkGitStatus() tea.Msg {
 		return errMsg{err}
 	}
 	return gitCheckMsg(modifiedFiles)
+}
+
+type diffColorMsg string
+
+func (m *Model) getDiffWithColor() tea.Msg {
+	diff, err := m.gitClient.(*git.Client).DiffWithColor()
+	if err != nil {
+		return errMsg{err}
+	}
+	return diffColorMsg(diff)
 }
 
 func (m *Model) getGitDiff() tea.Msg {
