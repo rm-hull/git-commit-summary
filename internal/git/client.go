@@ -93,7 +93,20 @@ func (c *Client) Diff() (string, error) {
 	return string(result), nil
 }
 
-func (c *Client) Commit(message string) error {
+func (c *Client) prepareCommitMessage(message string, skipCI bool) string {
+	if skipCI {
+		lines := strings.SplitN(message, "\n", 2)
+		if len(lines) == 1 {
+			return fmt.Sprintf("%s [skip ci]", message)
+		}
+		return fmt.Sprintf("%s [skip ci]\n%s", lines[0], lines[1])
+	}
+	return message
+}
+
+func (c *Client) Commit(message string, skipCI bool) error {
+	message = c.prepareCommitMessage(message, skipCI)
+
 	tmpfile, err := os.CreateTemp("", "gitmsg-*.txt")
 	if err != nil {
 		return err
