@@ -63,31 +63,7 @@ func (c *Client) ModifiedFiles() ([]string, error) {
 }
 
 func (c *Client) Diff() (string, error) {
-	args := []string{
-		"--no-pager",
-		"diff",
-		"--no-ext-diff",
-		"--no-textconv",
-	}
-
-	if c.addAll {
-		args = append(args, "HEAD")
-	} else {
-		args = append(args, "--staged")
-	}
-
-	args = append(args,
-		"--diff-filter=ACMRTUXBD",
-		"--",                 // separates options from pathspecs
-		".",                  // include everything under the repo root
-		":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
-		":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
-		":(exclude)**/build/**",
-		":(exclude)**/dist/**",
-		":(exclude)**/target/**",
-		":(exclude)**/out/**",
-		":(exclude)go.sum",
-	)
+	args := c.diffArgs(false)
 
 	result, err := exec.Command("git", args...).CombinedOutput()
 	if err != nil {
@@ -97,32 +73,7 @@ func (c *Client) Diff() (string, error) {
 }
 
 func (c *Client) DiffWithColor() (string, error) {
-	args := []string{
-		"--no-pager",
-		"diff",
-		"--color=always",
-		"--no-ext-diff",
-		"--no-textconv",
-	}
-
-	if c.addAll {
-		args = append(args, "HEAD")
-	} else {
-		args = append(args, "--staged")
-	}
-
-	args = append(args,
-		"--diff-filter=ACMRTUXBD",
-		"--",                 // separates options from pathspecs
-		".",                  // include everything under the repo root
-		":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
-		":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
-		":(exclude)**/build/**",
-		":(exclude)**/dist/**",
-		":(exclude)**/target/**",
-		":(exclude)**/out/**",
-		":(exclude)go.sum",
-	)
+	args := c.diffArgs(true)
 
 	cmd := exec.Command("git", args...)
 
@@ -140,6 +91,40 @@ func (c *Client) DiffWithColor() (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+func (c *Client) diffArgs(color bool) []string {
+	args := []string{
+		"--no-pager",
+		"diff",
+	}
+	if color {
+		args = append(args, "--color=always")
+	}
+	args = append(args,
+		"--no-ext-diff",
+		"--no-textconv",
+	)
+
+	if c.addAll {
+		args = append(args, "HEAD")
+	} else {
+		args = append(args, "--staged")
+	}
+
+	args = append(args,
+		"--diff-filter=ACMRTUXBD",
+		"--",                 // separates options from pathspecs
+		".",                  // include everything under the repo root
+		":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
+		":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
+		":(exclude)**/build/**",
+		":(exclude)**/dist/**",
+		":(exclude)**/target/**",
+		":(exclude)**/out/**",
+		":(exclude)go.sum",
+	)
+	return args
 }
 
 func (c *Client) prepareCommitMessage(message string, skipCI bool) string {
