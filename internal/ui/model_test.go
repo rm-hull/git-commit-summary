@@ -142,7 +142,7 @@ func TestModel_Update(t *testing.T) {
 
 		assert.Nil(t, updatedModel.(*Model).err)
 		assert.NotNil(t, cmd)
-		cmd() // Execute the command to trigger generateSummary
+		cmd()
 		mockLLM.AssertExpectations(t)
 	})
 
