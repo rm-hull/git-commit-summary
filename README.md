@@ -8,6 +8,7 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 
 - **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
 - **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
+- **Contextual Hints:** Provide additional context to the LLM via the `--hint` flag to improve relevance.
 - **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
 - **Multiple LLM Providers:** Supports Google Gemini, OpenAI, OpenRouter, and local Llama.cpp instances.
 - **Setup Wizard:** Easy configuration with an interactive setup wizard.
@@ -103,6 +104,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | :--------------- | :-------- | :-------------------------------------------------------------------- |
 | `--all`          | `-a`      | Add all tracked files to the commit                                   |
 | `--help`         | `-h`      | Show help                                                             |
+| `--hint`         | `-H`      | Provide contextual guidance for the commit summary generation         |
 | `--llm-provider` |           | Override the `LLM_PROVIDER` environment variable                      |
 | `--message`      | `-m`      | Append a message to the commit summary                                |
 | `--setup-wizard` |           | Run the interactive setup wizard                                      |
