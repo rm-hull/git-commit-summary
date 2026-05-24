@@ -11,9 +11,10 @@ import httpx
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import sys
+from pathlib import Path
 
 REPO = "rm-hull/git-commit-summary"
-OUTPUT = "download_stats.png"
+OUTPUT = Path(__file__).parents[2] / "download_stats.png"
 
 
 def fetch_releases(repo: str) -> list[dict]:
@@ -54,7 +55,16 @@ def main():
     stats.reverse()
 
     if not stats:
-        print("No releases with downloads found.")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.text(0.5, 0.5, "No download data yet", ha="center", va="center",
+                transform=ax.transAxes, fontsize=13, color="#888")
+        ax.set_title(f"Downloads per release — {repo}", fontsize=13, pad=12)
+        ax.spines[["top", "right", "left", "bottom"]].set_visible(False)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        fig.tight_layout()
+        fig.savefig(OUTPUT, dpi=150, bbox_inches="tight")
+        print(f"  No downloads yet, saved placeholder to {OUTPUT}")
         return
 
     tags = [s["tag"] for s in stats]
