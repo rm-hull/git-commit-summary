@@ -210,19 +210,6 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-	case tea.WindowSizeMsg:
-		// Adjust textarea height
-		helpTextHeight := lipgloss.Height(m.helpTextView())
-		borderHeight := m.boxStyle.GetVerticalBorderSize()
-		paddingHeight := m.boxStyle.GetVerticalPadding()
-		remainingHeight := msg.Height - helpTextHeight - borderHeight - paddingHeight
-
-		m.textarea.SetHeight(max(1, remainingHeight))
-
-		// Adjust viewport for preview
-		m.viewport.SetWidth(msg.Width - m.boxStyle.GetHorizontalBorderSize() - m.boxStyle.GetHorizontalPadding())
-		m.viewport.SetHeight(max(1, remainingHeight))
-
 	case errMsg: // Use errMsg from model.go
 		return m, tea.Quit
 	}

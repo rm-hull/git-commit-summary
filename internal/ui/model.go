@@ -214,16 +214,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.latestVersion = string(msg)
 		m.spinnerMessage = Magenta.Render("Running git commands to determine modified files...")
 		return m, m.checkGitStatus
-
-	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
-
-		// Propagate to commitView so it can adjust its internal textarea/viewport
-		if m.commitView != nil {
-			m.commitView, cmd = m.commitView.Update(msg)
-		}
-		return m, cmd
 	}
 
 	switch m.state {
@@ -250,8 +240,6 @@ func (m *Model) checkLatestVersion() tea.Msg {
 func (m *Model) LatestVersion() string {
 	return m.latestVersion
 }
-
-// LatestVersionMsg is handled above to chain into git checks
 
 func (m *Model) View() tea.View {
 	switch m.state {

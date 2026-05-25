@@ -42,10 +42,6 @@ func (m *diffViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case diffColorMsg:
 		m.viewport.SetContent(string(msg))
 		return m, nil
-	case tea.WindowSizeMsg:
-		m.viewport.SetWidth(msg.Width)
-		m.viewport.SetHeight(msg.Height)
-		return m, nil
 	}
 
 	var cmd tea.Cmd
