@@ -92,6 +92,7 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 
 func (m *commitViewModel) Init() tea.Cmd {
 	m.textarea.Focus()
+	m.helpText = true
 	return textarea.Blink
 }
 
