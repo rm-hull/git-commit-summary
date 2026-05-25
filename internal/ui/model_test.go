@@ -226,10 +226,7 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("cancelRegenPromptMsg - re-enables help text", func(t *testing.T) {
-		ctx := context.Background()
-		mockLLM := new(MockLLMProvider)
-		mockGit := new(MockGitClient)
-		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", false)
+		m := initialModel()
 		m.state = showRegeneratePrompt
 
 		// Create a real commitViewModel to check helpText
