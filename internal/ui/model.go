@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
 	"github.com/cockroachdb/errors"
 	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/galactixx/stringwrap"
@@ -97,9 +97,8 @@ func (m *Model) Init() tea.Cmd {
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC:
+	case tea.KeyPressMsg:
+		if msg.String() == "ctrl+c" {
 			if m.state == showSpinner {
 				m.action = Abort
 				return m, tea.Quit
@@ -222,22 +221,29 @@ func (m *Model) LatestVersion() string {
 
 // LatestVersionMsg is handled above to chain into git checks
 
-func (m *Model) View() string {
+func (m *Model) View() tea.View {
 	switch m.state {
 	case showSpinner:
-		return m.spinner.View() + " " + m.spinnerMessage
+		return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
 	case showCommitView:
 		if m.commitView == nil {
-			return m.spinner.View() + " " + m.spinnerMessage
+			return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
 		}
 		return m.commitView.View()
 	case showRegeneratePrompt:
 		if m.commitView == nil || m.promptView == nil {
-			return m.spinner.View() + " " + m.spinnerMessage
+			return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
 		}
-		return m.commitView.View() + m.promptView.View()
+		// Assuming tea.View can be combined or concatenated if they are strings
+		// Or maybe I need to convert them to strings?
+		// tea.View seems to have Content field.
+		// Wait, tea.View might not be directly concatenated.
+		// Let me check what tea.NewView accepts.
+		// It accepts a string.
+		// If I need to return tea.View, maybe I should convert the views to strings.
+		return tea.NewView(m.commitView.View().Content + m.promptView.View().Content)
 	default:
-		return ""
+		return tea.NewView("")
 	}
 }
 
