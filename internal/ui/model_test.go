@@ -225,25 +225,26 @@ func TestModel_Update(t *testing.T) {
 		mockLLM.AssertExpectations(t)
 	})
 
-	t.Run("cancelRegenPromptMsg", func(t *testing.T) {
+	t.Run("cancelRegenPromptMsg - re-enables help text", func(t *testing.T) {
 		m := initialModel()
-		m.state = showRegeneratePrompt // Ensure state is showRegeneratePrompt
+		m.state = showRegeneratePrompt
 
-		// Mock the sub-model's Init method
-		mockCommitView := new(mockTeaModel)
-		mockCommitView.On("Init").Return((tea.Cmd)(nil)).Once()
-		m.commitView = mockCommitView
+		// Create a real commitViewModel to check helpText
+		cv, err := initialCommitViewModel("test message", 0)
+		assert.NoError(t, err)
+		cv.helpText = false // Start with helpText disabled
+		m.commitView = cv
 
 		updatedModel, cmd := m.Update(cancelRegenPromptMsg{})
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
-		assert.Nil(t, cmd) // Should return m.commitView.Init() which is mocked to return nil
-		mockCommitView.AssertExpectations(t)
+		assert.True(t, cv.helpText, "helpText should be re-enabled after cancelling regeneration")
+		assert.NotNil(t, cmd, "Update should return a command from commitView.Init()")
 	})
 
 	t.Run("errMsg", func(t *testing.T) {
 		m := initialModel()
-		m.state = showSpinner // Ensure state is showSpinner
+		m.state = showSpinner // Ensure initial state is showSpinner
 
 		testErr := errors.New("something went wrong")
 		updatedModel, cmd := m.Update(errMsg{err: testErr})
