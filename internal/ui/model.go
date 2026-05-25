@@ -263,26 +263,26 @@ func (m *Model) getGitDiff() tea.Msg {
 }
 
 func (m *Model) generateSummary(diff string) tea.Cmd {
+	var systemInstruction string
+	var userPrompt string
+
+	// Split the systemPrompt into instructions and the diff template.
+	// The prompt.md format is: [Instructions] \n\n Diff follows: \n\n ```diff %s ``` ...
+	parts := strings.SplitN(m.systemPrompt, "Diff follows:", 2)
+	if len(parts) < 2 {
+		// Fallback if "Diff follows:" is not found in the prompt template.
+		systemInstruction = ""
+		userPrompt = fmt.Sprintf(m.systemPrompt, diff)
+	} else {
+		systemInstruction = strings.TrimSpace(parts[0])
+		userPrompt = fmt.Sprintf(parts[1], diff)
+	}
+
+	if m.hint != "" {
+		userPrompt += "\n\nCONTEXT HINT: " + m.hint
+	}
+
 	return func() tea.Msg {
-		var systemInstruction string
-		var userPrompt string
-
-		// Split the systemPrompt into instructions and the diff template.
-		// The prompt.md format is: [Instructions] \n\n Diff follows: \n\n ```diff %s ``` ...
-		parts := strings.SplitN(m.systemPrompt, "Diff follows:", 2)
-		if len(parts) < 2 {
-			// Fallback if "Diff follows:" is not found in the prompt template.
-			systemInstruction = ""
-			userPrompt = fmt.Sprintf(m.systemPrompt, diff)
-		} else {
-			systemInstruction = strings.TrimSpace(parts[0])
-			userPrompt = fmt.Sprintf(parts[1], diff)
-		}
-
-		if m.hint != "" {
-			userPrompt += "\n\nCONTEXT HINT: " + m.hint
-		}
-
 		start := time.Now()
 		resp, err := m.llmProvider.Call(m.ctx, systemInstruction, userPrompt)
 		duration := time.Since(start)
