@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 type diffColorMsg string
@@ -17,8 +17,12 @@ type diffViewModel struct {
 }
 
 func initialDiffViewModel(width, height int) *diffViewModel {
+	vp := viewport.New(viewport.WithWidth(width), viewport.WithHeight(height))
+	vp.SoftWrap = false
+	vp.MouseWheelEnabled = true
+
 	return &diffViewModel{
-		viewport: viewport.New(width, height),
+		viewport: vp,
 		boxStyle: lipgloss.NewStyle().
 			BorderForeground(lipgloss.Color("6")). // Cyan
 			Padding(0, 1),
@@ -35,8 +39,8 @@ func (m *diffViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewport.SetContent(string(msg))
 		return m, nil
 	case tea.WindowSizeMsg:
-		m.viewport.Width = msg.Width
-		m.viewport.Height = msg.Height
+		m.viewport.SetWidth(msg.Width)
+		m.viewport.SetHeight(msg.Height)
 		return m, nil
 	}
 
@@ -45,11 +49,11 @@ func (m *diffViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *diffViewModel) View() string {
+func (m *diffViewModel) View() tea.View {
 	title := " Raw diff "
 	titleBorder := lipgloss.RoundedBorder()
 
-	repeatCount := max((m.viewport.Width+2)-lipgloss.Width(title), 0)
+	repeatCount := max((m.viewport.Width()+2)-lipgloss.Width(title), 0)
 	titleBorder.Top = title + strings.Repeat("─", repeatCount)
 
 	helpText := fmt.Sprintf("%s:commit %s:clear %s:regen %s:editor  %s:diff %s:back",
@@ -60,7 +64,7 @@ func (m *diffViewModel) View() string {
 		BoldYellow.Render("CTRL+D"),
 		BoldYellow.Render("ESC"))
 
-	return m.boxStyle.
+	return tea.NewView(m.boxStyle.
 		BorderStyle(titleBorder).
-		Render(m.viewport.View()) + "\n" + helpText
+		Render(m.viewport.View()) + "\n" + helpText)
 }

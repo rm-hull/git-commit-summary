@@ -87,7 +87,7 @@ func (c *Client) DiffWithColor() (string, error) {
 		return "", errors.Wrap(err, "reading git diff output failed")
 	}
 
-	if 	err := cmd.Wait(); err != nil {
+	if err := cmd.Wait(); err != nil {
 		return "", errors.Wrap(err, "waiting for git diff command failed")
 	}
 

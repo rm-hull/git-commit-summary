@@ -5,13 +5,13 @@ import (
 	"strings"
 	"time"
 
+	"charm.land/bubbles/v2/textarea"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/glamour/v2"
+	"charm.land/glamour/v2/styles"
+	"charm.land/lipgloss/v2"
 	"github.com/atotto/clipboard"
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
-	"github.com/charmbracelet/glamour/styles"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/cockroachdb/errors"
 	"github.com/leodido/go-conventionalcommits"
 	"github.com/leodido/go-conventionalcommits/parser"
@@ -56,7 +56,11 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 		ta.Placeholder = "Please supply a commit message."
 	}
 
-	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
+	// Disable the default cursor line background highlighting to match v1 behavior.
+	textStyles := textarea.DefaultStyles(false)
+	textStyles.Focused.CursorLine = lipgloss.NewStyle()
+	textStyles.Blurred.CursorLine = lipgloss.NewStyle()
+	ta.SetStyles(textStyles)
 
 	customStyle := styles.DarkStyleConfig
 	customStyle.Document.Margin = uintPtr(0)
@@ -71,7 +75,7 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 
 	return &commitViewModel{
 		textarea: ta,
-		viewport: viewport.New(ta.Width(), ta.Height()),
+		viewport: viewport.New(viewport.WithWidth(ta.Width()), viewport.WithHeight(ta.Height())),
 		history:  NewHistory(message),
 		boxStyle: lipgloss.NewStyle().
 			BorderForeground(lipgloss.Color("6")). // Cyan
@@ -86,6 +90,7 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 
 func (m *commitViewModel) Init() tea.Cmd {
 	m.textarea.Focus()
+	m.helpText = true
 	return textarea.Blink
 }
 
@@ -96,20 +101,20 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	oldValue := m.textarea.Value()
 
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlA:
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "ctrl+a":
 			m.helpText = false
 			m.textarea.Blur()
 			return m, func() tea.Msg { return commitMsg(m.textarea.Value()) }
 
-		case tea.KeyCtrlR:
+		case "ctrl+r":
 			m.helpText = false
 			m.textarea.Blur()
 			return m, func() tea.Msg { return regenerateMsg{} }
 
-		case tea.KeyEsc:
-			if m.preview && msg.Type == tea.KeyEsc {
+		case "esc":
+			if m.preview {
 				m.preview = false
 				m.textarea.Focus()
 				return m, nil
@@ -118,7 +123,7 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Blur()
 			return m, func() tea.Msg { return abortMsg{} }
 
-		case tea.KeyCtrlP:
+		case "ctrl+p":
 			if m.preview {
 				m.textarea.Focus()
 			} else {
@@ -141,20 +146,20 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(cmds...)
 		}
 
-		switch msg.Type {
-		case tea.KeyCtrlZ:
+		switch msg.String() {
+		case "ctrl+z":
 			if value, ok := m.history.Undo(); ok {
 				m.textarea.SetValue(value)
 			}
 			return m, nil
 
-		case tea.KeyCtrlY:
+		case "ctrl+y":
 			if value, ok := m.history.Redo(); ok {
 				m.textarea.SetValue(value)
 			}
 			return m, nil
 
-		case tea.KeyCtrlX:
+		case "ctrl+x":
 			if m.textarea.Value() == "" {
 				return m, nil
 			}
@@ -187,7 +192,7 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			return m, nil
 
-		case tea.KeyCtrlK:
+		case "ctrl+k":
 			if m.textarea.Value() == "" {
 				return m, nil
 			}
@@ -212,8 +217,8 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.textarea.SetHeight(max(1, remainingHeight))
 
 		// Adjust viewport for preview
-		m.viewport.Width = msg.Width - m.boxStyle.GetHorizontalBorderSize() - m.boxStyle.GetHorizontalPadding()
-		m.viewport.Height = max(1, remainingHeight)
+		m.viewport.SetWidth(msg.Width - m.boxStyle.GetHorizontalBorderSize() - m.boxStyle.GetHorizontalPadding())
+		m.viewport.SetHeight(max(1, remainingHeight))
 
 	case errMsg: // Use errMsg from model.go
 		return m, tea.Quit
@@ -230,7 +235,7 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m *commitViewModel) View() string {
+func (m *commitViewModel) View() tea.View {
 	var view string
 	var title string
 
@@ -259,9 +264,9 @@ func (m *commitViewModel) View() string {
 		titleBorder.Bottom = strings.Repeat("─", padding) + lintErr
 	}
 
-	return m.boxStyle.
+	return tea.NewView(m.boxStyle.
 		BorderStyle(titleBorder).
-		Render(view) + "\n" + m.helpTextView()
+		Render(view) + "\n" + m.helpTextView())
 }
 
 func (m *commitViewModel) helpTextView() string {

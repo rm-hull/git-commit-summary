@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
 	"github.com/cockroachdb/errors"
 	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/galactixx/stringwrap"
@@ -103,35 +103,36 @@ func (m *Model) Init() tea.Cmd {
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC:
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "ctrl+c":
 			if m.state == showSpinner {
 				m.action = Abort
 				return m, tea.Quit
 			}
-		case tea.KeyCtrlD:
-			if m.state == showCommitView {
+		case "ctrl+d":
+			switch m.state {
+			case showCommitView:
 				m.state = showDiffView
 				if !m.diffLoaded {
 					return m, m.getDiffWithColor
 				}
 				return m, nil
-			} else if m.state == showDiffView {
+			case showDiffView:
 				m.state = showCommitView
 				return m, nil
 			}
-		case tea.KeyCtrlA:
+		case "ctrl+a":
 			if m.state == showCommitView {
 				_, cmd := m.commitView.Update(msg)
 				return m, cmd
 			}
-		case tea.KeyCtrlR:
+		case "ctrl+r":
 			if m.state == showCommitView {
 				_, cmd := m.commitView.Update(msg)
 				return m, cmd
 			}
-		case tea.KeyCtrlP:
+		case "ctrl+p":
 			if m.state == showCommitView {
 				// This triggers preview in commitView, but we aren't changing state here.
 				// However, the user might want to toggle preview while in commit view.
@@ -140,7 +141,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				_, cmd := m.commitView.Update(msg)
 				return m, cmd
 			}
-		case tea.KeyEsc:
+		case "esc":
 			if m.state == showDiffView {
 				m.state = showCommitView
 				return m, nil
@@ -167,7 +168,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Blue.Render(")"),
 		)
 		m.diff = string(msg)
-		return m, m.generateSummary(m.diff, "")
+		return m, m.generateSummary(m.diff)
 
 	case llmResultMsg:
 		commitMessage := msg.content
@@ -212,6 +213,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.promptView = initialPromptViewModel(
 			Magenta.Render("Add an optional instruction to help shape regenerating the commit summary:"),
 			"ENTER to confirm, or ESC to cancel.",
+			m.hint,
 		)
 
 		return m, m.promptView.Init()
@@ -223,7 +225,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Blue.Bold(true).Underline(true).Render(m.llmProvider.Model()),
 			Blue.Render(")"),
 		)
-		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff, string(msg)))
+		m.hint = string(msg)
+		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff))
 
 	case cancelRegenPromptMsg:
 		m.state = showCommitView
@@ -282,24 +285,24 @@ func (m *Model) LatestVersion() string {
 
 // LatestVersionMsg is handled above to chain into git checks
 
-func (m *Model) View() string {
+func (m *Model) View() tea.View {
 	switch m.state {
 	case showSpinner:
-		return m.spinner.View() + " " + m.spinnerMessage
+		return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
 	case showCommitView:
 		if m.commitView == nil {
-			return m.spinner.View() + " " + m.spinnerMessage
+			return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
 		}
 		return m.commitView.View()
 	case showRegeneratePrompt:
 		if m.commitView == nil || m.promptView == nil {
-			return m.spinner.View() + " " + m.spinnerMessage
+			return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
 		}
-		return m.commitView.View() + m.promptView.View()
+		return tea.NewView(m.commitView.View().Content + m.promptView.View().Content)
 	case showDiffView:
 		return m.diffView.View()
 	default:
-		return ""
+		return tea.NewView("")
 	}
 }
 
@@ -331,30 +334,27 @@ func (m *Model) getGitDiff() tea.Msg {
 	return gitDiffMsg(diff)
 }
 
-func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
+func (m *Model) generateSummary(diff string) tea.Cmd {
+	var systemInstruction string
+	var userPrompt string
+
+	// Split the systemPrompt into instructions and the diff template.
+	// The prompt.md format is: [Instructions] \n\n Diff follows: \n\n ```diff %s ``` ...
+	parts := strings.SplitN(m.systemPrompt, "Diff follows:", 2)
+	if len(parts) < 2 {
+		// Fallback if "Diff follows:" is not found in the prompt template.
+		systemInstruction = ""
+		userPrompt = fmt.Sprintf(m.systemPrompt, diff)
+	} else {
+		systemInstruction = strings.TrimSpace(parts[0])
+		userPrompt = fmt.Sprintf(parts[1], diff)
+	}
+
+	if m.hint != "" {
+		userPrompt += "\n\nCONTEXT HINT: " + m.hint
+	}
+
 	return func() tea.Msg {
-		var systemInstruction string
-		var userPrompt string
-
-		// Split the systemPrompt into instructions and the diff template.
-		// The prompt.md format is: [Instructions] \n\n Diff follows: \n\n ```diff %s ``` ...
-		parts := strings.SplitN(m.systemPrompt, "Diff follows:", 2)
-		if len(parts) < 2 {
-			// Fallback if "Diff follows:" is not found in the prompt template.
-			systemInstruction = ""
-			userPrompt = fmt.Sprintf(m.systemPrompt, diff)
-		} else {
-			systemInstruction = strings.TrimSpace(parts[0])
-			userPrompt = fmt.Sprintf(parts[1], diff)
-		}
-
-		if m.hint != "" {
-			userPrompt += "\n\nCONTEXT HINT: " + m.hint
-		}
-		if userMessage != "" {
-			userPrompt += "\n\n**IMPORTANT:** " + userMessage
-		}
-
 		start := time.Now()
 		resp, err := m.llmProvider.Call(m.ctx, systemInstruction, userPrompt)
 		duration := time.Since(start)
