@@ -119,7 +119,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Blue.Render(")"),
 		)
 		m.diff = string(msg)
-		return m, m.generateSummary(m.diff, "")
+		return m, m.generateSummary(m.diff)
 
 	case llmResultMsg:
 		commitMessage := msg.content
@@ -164,6 +164,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.promptView = initialPromptViewModel(
 			Magenta.Render("Add an optional instruction to help shape regenerating the commit summary:"),
 			"ENTER to confirm, or ESC to cancel.",
+			m.hint,
 		)
 
 		return m, m.promptView.Init()
@@ -175,7 +176,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Blue.Bold(true).Underline(true).Render(m.llmProvider.Model()),
 			Blue.Render(")"),
 		)
-		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff, string(msg)))
+		m.hint = string(msg)
+		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff))
 
 	case cancelRegenPromptMsg:
 		m.state = showCommitView
@@ -260,7 +262,7 @@ func (m *Model) getGitDiff() tea.Msg {
 	return gitDiffMsg(diff)
 }
 
-func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
+func (m *Model) generateSummary(diff string) tea.Cmd {
 	return func() tea.Msg {
 		var systemInstruction string
 		var userPrompt string
@@ -279,9 +281,6 @@ func (m *Model) generateSummary(diff string, userMessage string) tea.Cmd {
 
 		if m.hint != "" {
 			userPrompt += "\n\nCONTEXT HINT: " + m.hint
-		}
-		if userMessage != "" {
-			userPrompt += "\n\n**IMPORTANT:** " + userMessage
 		}
 
 		start := time.Now()

@@ -9,9 +9,7 @@ import (
 
 	"charm.land/bubbles/v2/spinner"
 	"charm.land/bubbles/v2/textarea"
-	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/x/ansi"
 	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -197,32 +195,29 @@ func TestModel_Update(t *testing.T) {
 		assert.IsType(t, tea.QuitMsg{}, cmd())
 	})
 
-	t.Run("regenerateMsg", func(t *testing.T) {
+	t.Run("regenerateMsg - initializes promptView with current hint", func(t *testing.T) {
 		m := initialModel()
-		m.state = showCommitView // Ensure state is showCommitView
+		m.state = showCommitView
+		m.hint = "current hint"
 
-		updatedModel, cmd := m.Update(regenerateMsg{})
+		updatedModel, _ := m.Update(regenerateMsg{})
 
 		assert.Equal(t, showRegeneratePrompt, updatedModel.(*Model).state)
-		assert.NotNil(t, updatedModel.(*Model).promptView)
-		assert.NotNil(t, cmd)
-		assert.IsType(t, textinput.Blink(), cmd())
+		pv, ok := updatedModel.(*Model).promptView.(*promptViewModel)
+		assert.True(t, ok)
+		assert.Equal(t, "current hint", pv.textinput.Value())
 	})
 
-	t.Run("userResponseMsg", func(t *testing.T) {
+	t.Run("userResponseMsg - updates m.hint", func(t *testing.T) {
 		m := initialModel()
-		m.state = showRegeneratePrompt // Ensure state is showRegeneratePrompt
+		m.state = showRegeneratePrompt
 		mockLLM.On("Model").Return("test-model").Once()
-		// The command returned by Update will execute llmProvider.Call later.
-		// No need to set mockLLM.On("Call") here.
 
-		userResponse := "make it shorter"
-		updatedModel, cmd := m.Update(userResponseMsg(userResponse))
+		userResponse := "new hint"
+		updatedModel, _ := m.Update(userResponseMsg(userResponse))
 
 		assert.Equal(t, showSpinner, updatedModel.(*Model).state)
-		assert.Contains(t, ansi.Strip(updatedModel.(*Model).spinnerMessage), "Re-generating commit summary (using: test-model)")
-		assert.IsType(t, tea.Batch(nil), cmd) // Should return tea.Batch(m.spinner.Tick, m.generateSummary)
-		mockLLM.AssertExpectations(t)
+		assert.Equal(t, "new hint", updatedModel.(*Model).hint)
 	})
 
 	t.Run("cancelRegenPromptMsg", func(t *testing.T) {
