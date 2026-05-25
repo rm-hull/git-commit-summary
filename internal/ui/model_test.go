@@ -11,6 +11,7 @@ import (
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -101,7 +102,7 @@ func TestModel_Update(t *testing.T) {
 
 		assert.Equal(t, None, updatedModel.(*Model).action) // Action should not be Abort
 		assert.Nil(t, cmd)                                  // No tea.Quit command
-		mockCommitView.AssertCalled(t, "Update", mock.Anything)
+		mockCommitView.AssertCalled(t, "Update", tea.KeyPressMsg(tea.Key{Code: 'c', Mod: tea.ModCtrl}))
 	})
 
 	t.Run("gitCheckMsg - empty (no staged changes)", func(t *testing.T) {
@@ -219,8 +220,7 @@ func TestModel_Update(t *testing.T) {
 		updatedModel, cmd := m.Update(userResponseMsg(userResponse))
 
 		assert.Equal(t, showSpinner, updatedModel.(*Model).state)
-		assert.Contains(t, updatedModel.(*Model).spinnerMessage, "Re-generating commit summary (using: ")
-		assert.Contains(t, updatedModel.(*Model).spinnerMessage, ")")
+		assert.Contains(t, ansi.Strip(updatedModel.(*Model).spinnerMessage), "Re-generating commit summary (using: test-model)")
 		assert.IsType(t, tea.Batch(nil), cmd) // Should return tea.Batch(m.spinner.Tick, m.generateSummary)
 		mockLLM.AssertExpectations(t)
 	})
