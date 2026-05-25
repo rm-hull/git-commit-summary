@@ -16,6 +16,7 @@ func initialPromptViewModel(message, placeholder, hint string) *promptViewModel 
 	ti := textinput.New()
 	ti.Placeholder = placeholder
 	ti.SetValue(hint)
+	ti.CursorEnd()
 	ti.Prompt = "❯ "
 	ti.Focus()
 	ti.CharLimit = 156
