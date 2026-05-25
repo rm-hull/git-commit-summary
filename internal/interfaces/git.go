@@ -7,6 +7,6 @@ var ErrAborted = errors.New("aborted")
 type GitClient interface {
 	IsInWorkTree() error
 	ModifiedFiles() ([]string, error)
-	Diff() (string, error)
+	Diff(color, exclude bool) (string, error)
 	Commit(message string, skipCI bool) error
 }

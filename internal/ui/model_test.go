@@ -48,7 +48,7 @@ func (m *MockGitClient) ModifiedFiles() ([]string, error) {
 	return args.Get(0).([]string), args.Error(1)
 }
 
-func (m *MockGitClient) Diff() (string, error) {
+func (m *MockGitClient) Diff(color, exclude bool) (string, error) {
 	args := m.Called()
 	return args.String(0), args.Error(1)
 }

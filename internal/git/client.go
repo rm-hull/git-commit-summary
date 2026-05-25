@@ -62,23 +62,22 @@ func (c *Client) ModifiedFiles() ([]string, error) {
 	return strings.Split(trimmed, "\n"), nil
 }
 
-func (c *Client) Diff() (string, error) {
-	args := c.diffArgs(false, true)
-	result, err := exec.Command("git", args...).CombinedOutput()
-	if err != nil {
-		return "", errors.Wrap(err, "git diff failed")
-	}
-	return string(result), nil
-}
+func (c *Client) Diff(color, exclude bool) (string, error) {
+	args := c.diffArgs(color, exclude)
 
-func (c *Client) DiffWithColor() (string, error) {
-	args := c.diffArgs(true, false)
 	cmd := exec.Command("git", args...)
+	if !color {
+		result, err := cmd.CombinedOutput()
+		if err != nil {
+			return "", errors.Wrap(err, "git diff failed")
+		}
+		return string(result), nil
+	}
 
 	ptmx, err := pty.Start(cmd)
 	if err != nil {
 		// fallback to plain pipe if pty fails
-		return c.Diff()
+		return c.Diff(false, exclude)
 	}
 	defer func() { _ = ptmx.Close() }()
 

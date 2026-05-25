@@ -19,7 +19,6 @@ type diffViewModel struct {
 func initialDiffViewModel(width, height int) *diffViewModel {
 	vp := viewport.New(viewport.WithWidth(width), viewport.WithHeight(height))
 	vp.SoftWrap = false
-	vp.MouseWheelEnabled = true
 
 	return &diffViewModel{
 		viewport: vp,

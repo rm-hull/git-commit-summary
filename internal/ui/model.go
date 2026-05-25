@@ -11,7 +11,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/galactixx/stringwrap"
-	"github.com/rm-hull/git-commit-summary/internal/git"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	versionpkg "github.com/rm-hull/git-commit-summary/internal/version"
@@ -115,7 +114,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case showCommitView:
 				m.state = showDiffView
 				if !m.diffLoaded {
-					return m, m.getDiffWithColor
+					return m, m.getFullDiffWithColor
 				}
 				return m, nil
 			case showDiffView:
@@ -159,7 +158,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = errors.New("no changes detected")
 			return m, tea.Quit
 		}
-		return m, m.getGitDiff
+		return m, m.getGitDiffForLLM
 
 	case gitDiffMsg:
 		m.spinnerMessage = fmt.Sprintf("%s%s%s",
@@ -318,16 +317,16 @@ func (m *Model) checkGitStatus() tea.Msg {
 	return gitCheckMsg(modifiedFiles)
 }
 
-func (m *Model) getDiffWithColor() tea.Msg {
-	diff, err := m.gitClient.(*git.Client).DiffWithColor()
+func (m *Model) getFullDiffWithColor() tea.Msg {
+	diff, err := m.gitClient.Diff(true, false)
 	if err != nil {
 		return errMsg{err}
 	}
 	return diffColorMsg(diff)
 }
 
-func (m *Model) getGitDiff() tea.Msg {
-	diff, err := m.gitClient.Diff()
+func (m *Model) getGitDiffForLLM() tea.Msg {
+	diff, err := m.gitClient.Diff(false, true)
 	if err != nil {
 		return errMsg{err}
 	}
