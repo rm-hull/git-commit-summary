@@ -63,7 +63,6 @@ type Model struct {
 	spinner        spinner.Model
 	spinnerMessage string
 	latestVersion  string
-	width, height  int
 	commitView     tea.Model
 	diffView       tea.Model
 	diffLoaded     bool
