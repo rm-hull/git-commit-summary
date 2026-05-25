@@ -2,14 +2,16 @@ package ui
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/textarea"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -75,7 +77,7 @@ func TestModel_Update(t *testing.T) {
 		m := initialModel()
 		m.state = showSpinner // Ensure initial state is showSpinner
 
-		updatedModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyCtrlC})
+		updatedModel, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'c', Mod: tea.ModCtrl}))
 
 		assert.Equal(t, Abort, updatedModel.(*Model).action)
 		assert.NotNil(t, cmd)
@@ -88,14 +90,19 @@ func TestModel_Update(t *testing.T) {
 
 		// Mock the sub-model's Update method
 		mockCommitView := new(mockTeaModel)
-		mockCommitView.On("Update", tea.KeyMsg{Type: tea.KeyCtrlC}).Return(mockCommitView, (tea.Cmd)(nil))
+		mockCommitView.On("Update", mock.MatchedBy(func(msg tea.Msg) bool {
+			if s, ok := msg.(fmt.Stringer); ok {
+				return s.String() == "ctrl+c"
+			}
+			return false
+		})).Return(mockCommitView, (tea.Cmd)(nil))
 		m.commitView = mockCommitView
 
-		updatedModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyCtrlC})
+		updatedModel, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'c', Mod: tea.ModCtrl}))
 
 		assert.Equal(t, None, updatedModel.(*Model).action) // Action should not be Abort
 		assert.Nil(t, cmd)                                  // No tea.Quit command
-		mockCommitView.AssertCalled(t, "Update", tea.KeyMsg{Type: tea.KeyCtrlC})
+		mockCommitView.AssertCalled(t, "Update", tea.KeyPressMsg(tea.Key{Code: 'c', Mod: tea.ModCtrl}))
 	})
 
 	t.Run("gitCheckMsg - empty (no staged changes)", func(t *testing.T) {
@@ -213,7 +220,7 @@ func TestModel_Update(t *testing.T) {
 		updatedModel, cmd := m.Update(userResponseMsg(userResponse))
 
 		assert.Equal(t, showSpinner, updatedModel.(*Model).state)
-		assert.Contains(t, updatedModel.(*Model).spinnerMessage, "Re-generating commit summary (using: test-model)")
+		assert.Contains(t, ansi.Strip(updatedModel.(*Model).spinnerMessage), "Re-generating commit summary (using: test-model)")
 		assert.IsType(t, tea.Batch(nil), cmd) // Should return tea.Batch(m.spinner.Tick, m.generateSummary)
 		mockLLM.AssertExpectations(t)
 	})
@@ -275,7 +282,7 @@ func TestModel_Update(t *testing.T) {
 		mockCommitView.On("Update", mock.Anything).Return(mockCommitView, (tea.Cmd)(nil)).Once()
 		m.commitView = mockCommitView
 
-		testMsg := tea.KeyMsg{Type: tea.KeyEnter}
+		testMsg := tea.KeyPressMsg(tea.Key{Code: tea.KeyEnter})
 		updatedModel, cmd := m.Update(testMsg)
 
 		assert.NotNil(t, updatedModel)
@@ -290,7 +297,7 @@ func TestModel_Update(t *testing.T) {
 		mockPromptView.On("Update", mock.Anything).Return(mockPromptView, (tea.Cmd)(nil)).Once()
 		m.promptView = mockPromptView
 
-		testMsg := tea.KeyMsg{Type: tea.KeyEnter}
+		testMsg := tea.KeyPressMsg(tea.Key{Code: tea.KeyEnter})
 		updatedModel, cmd := m.Update(testMsg)
 
 		assert.NotNil(t, updatedModel)
@@ -352,10 +359,15 @@ func (m *mockTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return model, cmd
 }
 
-func (m *mockTeaModel) View() string {
+func (m *mockTeaModel) View() tea.View {
 	args := m.Called()
 	if len(args) > 0 {
-		return args.String(0)
+		if v, ok := args.Get(0).(tea.View); ok {
+			return v
+		}
+		if s, ok := args.Get(0).(string); ok {
+			return tea.NewView(s)
+		}
 	}
-	return ""
+	return tea.NewView("")
 }
