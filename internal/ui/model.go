@@ -234,13 +234,6 @@ func (m *Model) View() tea.View {
 		if m.commitView == nil || m.promptView == nil {
 			return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
 		}
-		// Assuming tea.View can be combined or concatenated if they are strings
-		// Or maybe I need to convert them to strings?
-		// tea.View seems to have Content field.
-		// Wait, tea.View might not be directly concatenated.
-		// Let me check what tea.NewView accepts.
-		// It accepts a string.
-		// If I need to return tea.View, maybe I should convert the views to strings.
 		return tea.NewView(m.commitView.View().Content + m.promptView.View().Content)
 	default:
 		return tea.NewView("")

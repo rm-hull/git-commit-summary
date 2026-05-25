@@ -56,7 +56,11 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 		ta.Placeholder = "Please supply a commit message."
 	}
 
-	// ta.FocusedStyle.CursorLine = lipgloss.NewStyle() // FIXME: Check v2 textarea FocusedStyle
+	// Disable the default cursor line background highlighting to match v1 behavior.
+	textStyles := textarea.DefaultStyles(false)
+	textStyles.Focused.CursorLine = lipgloss.NewStyle()
+	textStyles.Blurred.CursorLine = lipgloss.NewStyle()
+	ta.SetStyles(textStyles)
 
 	vp := viewport.New(viewport.WithWidth(ta.Width()), viewport.WithHeight(ta.Height()))
 
