@@ -235,10 +235,11 @@ func TestModel_Update(t *testing.T) {
 		cv.helpText = false // Start with helpText disabled
 		m.commitView = cv
 
-		updatedModel, _ := m.Update(cancelRegenPromptMsg{})
+		updatedModel, cmd := m.Update(cancelRegenPromptMsg{})
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
 		assert.True(t, cv.helpText, "helpText should be re-enabled after cancelling regeneration")
+		assert.NotNil(t, cmd, "Update should return a command from commitView.Init()")
 	})
 
 	t.Run("errMsg", func(t *testing.T) {
