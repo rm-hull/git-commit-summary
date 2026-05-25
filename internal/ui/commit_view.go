@@ -58,8 +58,6 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 
 	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
 
-	vp := viewport.New(ta.Width(), ta.Height())
-
 	customStyle := styles.DarkStyleConfig
 	customStyle.Document.Margin = uintPtr(0)
 	customStyle.H2.BlockSuffix = ""
@@ -73,7 +71,7 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 
 	return &commitViewModel{
 		textarea: ta,
-		viewport: vp,
+		viewport: viewport.New(ta.Width(), ta.Height()),
 		history:  NewHistory(message),
 		boxStyle: lipgloss.NewStyle().
 			BorderForeground(lipgloss.Color("6")). // Cyan
