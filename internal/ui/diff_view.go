@@ -9,8 +9,6 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-type diffColorMsg string
-
 type diffViewModel struct {
 	viewport viewport.Model
 	boxStyle lipgloss.Style

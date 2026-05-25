@@ -33,6 +33,7 @@ type (
 		duration time.Duration
 	}
 	commitMsg            string
+	diffColorMsg         string
 	errMsg               struct{ err error }
 	abortMsg             struct{}
 	regenerateMsg        struct{}
