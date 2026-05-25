@@ -50,10 +50,7 @@ func (m *diffViewModel) View() string {
 	titleBorder := lipgloss.RoundedBorder()
 
 	// Ensure we don't have a negative repeat count
-	repeatCount := (m.viewport.Width + 2) - lipgloss.Width(title)
-	if repeatCount < 0 {
-		repeatCount = 0
-	}
+	repeatCount := max((m.viewport.Width + 2) - lipgloss.Width(title), 0)
 	titleBorder.Top = title + strings.Repeat("─", repeatCount)
 
 	helpText := fmt.Sprintf("%s:commit %s:regen %s:preview %s:diff  %s:back",

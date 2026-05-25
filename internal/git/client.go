@@ -63,8 +63,7 @@ func (c *Client) ModifiedFiles() ([]string, error) {
 }
 
 func (c *Client) Diff() (string, error) {
-	args := c.diffArgs(false)
-
+	args := c.diffArgs(false, true)
 	result, err := exec.Command("git", args...).CombinedOutput()
 	if err != nil {
 		return "", errors.Wrap(err, "git diff failed")
@@ -73,8 +72,7 @@ func (c *Client) Diff() (string, error) {
 }
 
 func (c *Client) DiffWithColor() (string, error) {
-	args := c.diffArgs(true)
-
+	args := c.diffArgs(true, false)
 	cmd := exec.Command("git", args...)
 
 	ptmx, err := pty.Start(cmd)
@@ -82,18 +80,21 @@ func (c *Client) DiffWithColor() (string, error) {
 		// fallback to plain pipe if pty fails
 		return c.Diff()
 	}
-	defer ptmx.Close()
+	defer func() { _ = ptmx.Close() }()
 
 	var buf bytes.Buffer
-	_, _ = io.Copy(&buf, ptmx)
-	if err := cmd.Wait(); err != nil {
-		return "", errors.Wrap(err, "git diff failed")
+	if _, err := io.Copy(&buf, ptmx); err != nil {
+		return "", errors.Wrap(err, "reading git diff output failed")
+	}
+
+	if 	err := cmd.Wait(); err != nil {
+		return "", errors.Wrap(err, "waiting for git diff command failed")
 	}
 
 	return buf.String(), nil
 }
 
-func (c *Client) diffArgs(color bool) []string {
+func (c *Client) diffArgs(color, exclude bool) []string {
 	args := []string{
 		"--no-pager",
 		"diff",
@@ -112,18 +113,20 @@ func (c *Client) diffArgs(color bool) []string {
 		args = append(args, "--staged")
 	}
 
-	args = append(args,
-		"--diff-filter=ACMRTUXBD",
-		"--",                 // separates options from pathspecs
-		".",                  // include everything under the repo root
-		":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
-		":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
-		":(exclude)**/build/**",
-		":(exclude)**/dist/**",
-		":(exclude)**/target/**",
-		":(exclude)**/out/**",
-		":(exclude)go.sum",
-	)
+	if exclude {
+		args = append(args,
+			"--diff-filter=ACMRTUXBD",
+			"--",                 // separates options from pathspecs
+			".",                  // include everything under the repo root
+			":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
+			":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
+			":(exclude)**/build/**",
+			":(exclude)**/dist/**",
+			":(exclude)**/target/**",
+			":(exclude)**/out/**",
+			":(exclude)go.sum",
+		)
+	}
 	return args
 }
 
