@@ -71,7 +71,7 @@ func (c *Client) Diff(color, exclude bool) (string, error) {
 		if err != nil {
 			return "", errors.Wrap(err, "git diff failed")
 		}
-		return string(result), nil
+		return strings.ReplaceAll(string(result), "\t", "    "), nil
 	}
 
 	ptmx, err := pty.Start(cmd)
@@ -90,7 +90,7 @@ func (c *Client) Diff(color, exclude bool) (string, error) {
 		return "", errors.Wrap(err, "waiting for git diff command failed")
 	}
 
-	return buf.String(), nil
+	return strings.ReplaceAll(buf.String(), "\t", "    "), nil
 }
 
 func (c *Client) diffArgs(color, exclude bool) []string {

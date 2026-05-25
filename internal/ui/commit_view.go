@@ -113,6 +113,9 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Blur()
 			return m, func() tea.Msg { return regenerateMsg{} }
 
+		case "ctrl+d":
+			return m, func() tea.Msg { return showDiffViewMsg{} }
+
 		case "esc":
 			if m.preview {
 				m.preview = false

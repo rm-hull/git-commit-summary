@@ -37,6 +37,8 @@ type (
 	abortMsg             struct{}
 	regenerateMsg        struct{}
 	cancelRegenPromptMsg struct{}
+	showDiffViewMsg      struct{}
+	cancelDiffViewMsg    struct{}
 	userResponseMsg      string
 )
 
@@ -101,57 +103,14 @@ func (m *Model) Init() tea.Cmd {
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
-		switch msg.String() {
-		case "ctrl+c":
-			if m.state == showSpinner {
-				m.action = Abort
-				return m, tea.Quit
-			}
-		case "ctrl+d":
-			switch m.state {
-			case showCommitView:
-				m.state = showDiffView
-				if !m.diffLoaded {
-					return m, m.getFullDiffWithColor
-				}
-				return m, nil
-			case showDiffView:
-				m.state = showCommitView
-				return m, nil
-			}
-		case "ctrl+a":
-			if m.state == showCommitView {
-				_, cmd := m.commitView.Update(msg)
-				return m, cmd
-			}
-		case "ctrl+r":
-			if m.state == showCommitView {
-				_, cmd := m.commitView.Update(msg)
-				return m, cmd
-			}
-		case "ctrl+p":
-			if m.state == showCommitView {
-				// This triggers preview in commitView, but we aren't changing state here.
-				// However, the user might want to toggle preview while in commit view.
-				// The current implementation of commitView handles preview.
-				// If we want to keep the same behavior, we just let commitView handle it.
-				_, cmd := m.commitView.Update(msg)
-				return m, cmd
-			}
-		case "esc":
-			if m.state == showDiffView {
-				m.state = showCommitView
-				return m, nil
-			}
+		if msg.String() == "ctrl+c" && m.state == showSpinner {
+			m.action = Abort
+			return m, tea.Quit
 		}
-
-	case diffColorMsg:
-		m.diffLoaded = true
-		var cmd tea.Cmd
-		m.diffView, cmd = m.diffView.Update(msg)
-		return m, cmd
 
 	case gitCheckMsg:
 		if len(msg) == 0 {
@@ -227,9 +186,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.hint = string(msg)
 		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff))
 
-	case cancelRegenPromptMsg:
+	case cancelRegenPromptMsg, cancelDiffViewMsg:
 		m.state = showCommitView
 		return m, m.commitView.Init()
+
+	case showDiffViewMsg:
+		m.state = showDiffView
+		if !m.diffLoaded {
+			return m, m.getFullDiffWithColor
+		}
+		return m, m.diffView.Init()
+
+	case diffColorMsg:
+		m.diffLoaded = true
+		m.diffView, cmd = m.diffView.Update(msg)
+		return m, cmd
 
 	case errMsg:
 		m.err = msg.err
@@ -249,14 +220,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 
 		// Propagate to commitView so it can adjust its internal textarea/viewport
-		var cmd tea.Cmd
 		if m.commitView != nil {
 			m.commitView, cmd = m.commitView.Update(msg)
 		}
 		return m, cmd
 	}
 
-	var cmd tea.Cmd
 	switch m.state {
 	case showSpinner:
 		m.spinner, cmd = m.spinner.Update(msg)

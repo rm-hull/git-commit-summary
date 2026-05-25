@@ -34,6 +34,11 @@ func (m *diffViewModel) Init() tea.Cmd {
 
 func (m *diffViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "esc", "ctrl+d":
+			return m, func() tea.Msg { return cancelDiffViewMsg{} }
+		}
 	case diffColorMsg:
 		m.viewport.SetContent(string(msg))
 		return m, nil
