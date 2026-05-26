@@ -44,7 +44,7 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 		height = 15
 	}
 	ta.SetHeight(height)
-	ta.SetWidth(72 + 2) // +2 is to accommodate for horizontal padding
+	ta.SetWidth(72)
 	ta.SetValue(message)
 	for ta.Line() > 0 {
 		ta.CursorUp()
