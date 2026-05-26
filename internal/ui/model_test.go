@@ -118,7 +118,7 @@ func TestModel_Update(t *testing.T) {
 		m := initialModel()
 		m.state = showSpinner // Ensure initial state is showSpinner
 
-		mockGit.On("Diff").Return("mocked diff content", nil).Once()
+		mockGit.On("Diff", false, true).Return("mocked diff content", nil).Once()
 
 		updatedModel, cmd := m.Update(gitCheckMsg{"file1.go", "file2.go"})
 
