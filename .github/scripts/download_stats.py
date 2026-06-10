@@ -4,6 +4,7 @@
 # dependencies = [
 #   "httpx",
 #   "matplotlib",
+#   "packaging",
 # ]
 # ///
 
@@ -13,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import sys
 from pathlib import Path
+from packaging import version
 
 REPO = "rm-hull/git-commit-summary"
 OUTPUT = Path(__file__).parents[2] / "docs" / "download_stats.png"
@@ -97,7 +99,7 @@ def main():
     filtered = [s for s in stats if s["tag"] in top20]
     if not is_latest_in_top20:
         filtered.append(latest)
-    filtered = sorted(filtered, key=lambda s: s["tag"])
+    filtered = sorted(filtered, key=lambda s: version.parse(s["tag"]))
 
     tags = [s["tag"] for s in filtered]
     counts = [s["downloads"] for s in filtered]
