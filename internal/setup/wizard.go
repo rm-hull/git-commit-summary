@@ -29,6 +29,14 @@ func Run(cfg *config.Config) (*config.Config, error) {
 
 	form := huh.NewForm(
 		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Include project context in prompts?").
+				Description("If enabled, the tool will include your README.md or\n.project-context.md to help the LLM understand your\nproject better.").
+				Affirmative("Yes").
+				Negative("No").
+				Value(&cfg.IncludeProjectContext),
+		),
+		huh.NewGroup(
 			huh.NewSelect[string]().
 				Title("Select LLM Provider").
 				Options(options...).
@@ -125,9 +133,13 @@ func submitGroup(cfg *config.Config, confirm *bool) *huh.Group {
 			Negative("No").
 			Value(confirm).
 			DescriptionFunc(func() string {
+				contextStr := "NO"
+				if cfg.IncludeProjectContext {
+					contextStr = "YES"
+				}
 				return fmt.Sprintf(
-					"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)",
-					cfg.LLMProvider, cfg.APIKey, cfg.Model)
+					"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)\n  - Include project context (%s)",
+					cfg.LLMProvider, cfg.APIKey, cfg.Model, contextStr)
 			}, cfg),
 	).WithHideFunc(func() bool {
 		return cfg.Validate() != nil

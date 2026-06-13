@@ -33,6 +33,10 @@ func (m *MockLLMProvider) Model() string {
 	return args.String(0)
 }
 
+func (m *MockLLMProvider) Implement() llmprovider.Provider {
+	return m
+}
+
 // MockGitClient is a mock implementation of interfaces.GitClient
 type MockGitClient struct {
 	mock.Mock
@@ -58,6 +62,10 @@ func (m *MockGitClient) Commit(message string, skipCI bool) error {
 	return args.Error(0)
 }
 
+func (m *MockGitClient) Implement() interfaces.GitClient {
+	return m
+}
+
 func TestModel_Update(t *testing.T) {
 	ctx := context.Background()
 	mockLLM := new(MockLLMProvider)
@@ -65,15 +73,12 @@ func TestModel_Update(t *testing.T) {
 
 	// Common setup for InitialModel
 	initialModel := func() *Model {
-		// Explicitly use the types to avoid "imported and not used" warnings
-		var _ interfaces.GitClient = mockGit
-		var _ llmprovider.Provider = mockLLM
-		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", false)
+		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", false, false)
 	}
 
 	t.Run("tea.KeyMsg - CtrlC in showSpinner state", func(t *testing.T) {
 		m := initialModel()
-		m.state = showSpinner // Ensure initial state is showSpinner
+		m.state = showSpinner
 
 		updatedModel, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'c', Mod: tea.ModCtrl}))
 
@@ -84,9 +89,8 @@ func TestModel_Update(t *testing.T) {
 
 	t.Run("tea.KeyMsg - CtrlC in other states", func(t *testing.T) {
 		m := initialModel()
-		m.state = showCommitView // Set to a state other than showSpinner
+		m.state = showCommitView
 
-		// Mock the sub-model's Update method
 		mockCommitView := new(mockTeaModel)
 		mockCommitView.On("Update", mock.MatchedBy(func(msg tea.Msg) bool {
 			if s, ok := msg.(fmt.Stringer); ok {
@@ -98,14 +102,14 @@ func TestModel_Update(t *testing.T) {
 
 		updatedModel, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'c', Mod: tea.ModCtrl}))
 
-		assert.Equal(t, None, updatedModel.(*Model).action) // Action should not be Abort
-		assert.Nil(t, cmd)                                  // No tea.Quit command
+		assert.Equal(t, None, updatedModel.(*Model).action)
+		assert.Nil(t, cmd)
 		mockCommitView.AssertCalled(t, "Update", tea.KeyPressMsg(tea.Key{Code: 'c', Mod: tea.ModCtrl}))
 	})
 
 	t.Run("gitCheckMsg - empty (no staged changes)", func(t *testing.T) {
 		m := initialModel()
-		m.state = showSpinner // Ensure initial state is showSpinner
+		m.state = showSpinner
 
 		updatedModel, cmd := m.Update(gitCheckMsg{})
 
@@ -116,7 +120,7 @@ func TestModel_Update(t *testing.T) {
 
 	t.Run("gitCheckMsg - non-empty (staged changes)", func(t *testing.T) {
 		m := initialModel()
-		m.state = showSpinner // Ensure initial state is showSpinner
+		m.state = showSpinner
 
 		mockGit.On("Diff").Return("mocked diff content", nil).Once()
 
@@ -132,7 +136,7 @@ func TestModel_Update(t *testing.T) {
 
 	t.Run("gitDiffMsg with hint", func(t *testing.T) {
 		m := initialModel()
-		m.state = showSpinner // Ensure initial state is showSpinner
+		m.state = showSpinner
 		m.hint = "prioritize auth flow"
 		mockLLM.On("Model").Return("test-model").Once()
 
@@ -152,16 +156,14 @@ func TestModel_Update(t *testing.T) {
 
 	t.Run("llmResultMsg - with user message", func(t *testing.T) {
 		m := initialModel()
-		m.state = showSpinner // Ensure initial state is showSpinner
+		m.state = showSpinner
 		llmResult := "This is a summary from LLM."
 		userMsg := "Additional user message."
-
-		m.userMessage = userMsg // Set user message for this test case
+		m.userMessage = userMsg
 
 		updatedModel, cmd := m.Update(llmResultMsg{content: llmResult, duration: time.Second})
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
-		// Assert that the commitView is set, but not its content directly from Update
 		assert.NotNil(t, updatedModel.(*Model).commitView)
 		assert.NotNil(t, cmd)
 		assert.IsType(t, textarea.Blink(), cmd())
@@ -169,14 +171,13 @@ func TestModel_Update(t *testing.T) {
 
 	t.Run("llmResultMsg - without user message", func(t *testing.T) {
 		m := initialModel()
-		m.state = showSpinner // Ensure initial state is showSpinner
+		m.state = showSpinner
 		llmResult := "This is a summary from LLM."
-		m.userMessage = "" // Ensure no user message
+		m.userMessage = ""
 
 		updatedModel, cmd := m.Update(llmResultMsg{content: llmResult, duration: time.Second})
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
-		// Assert that the commitView is set, but not its content directly from Update
 		assert.NotNil(t, updatedModel.(*Model).commitView)
 		assert.NotNil(t, cmd)
 		assert.IsType(t, textarea.Blink(), cmd())
@@ -184,7 +185,7 @@ func TestModel_Update(t *testing.T) {
 
 	t.Run("commitMsg", func(t *testing.T) {
 		m := initialModel()
-		m.state = showCommitView // Ensure state is showCommitView
+		m.state = showCommitView
 
 		commitContent := "feat: new feature"
 		updatedModel, cmd := m.Update(commitMsg(commitContent))
@@ -224,22 +225,21 @@ func TestModel_Update(t *testing.T) {
 		m := initialModel()
 		m.state = showRegeneratePrompt
 
-		// Create a real commitViewModel to check helpText
 		cv, err := initialCommitViewModel("test message", 0)
 		assert.NoError(t, err)
-		cv.helpText = false // Start with helpText disabled
+		cv.helpText = false
 		m.commitView = cv
 
 		updatedModel, cmd := m.Update(cancelRegenPromptMsg{})
 
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
-		assert.True(t, cv.helpText, "helpText should be re-enabled after cancelling regeneration")
-		assert.NotNil(t, cmd, "Update should return a command from commitView.Init()")
+		assert.True(t, cv.helpText)
+		assert.NotNil(t, cmd)
 	})
 
 	t.Run("errMsg", func(t *testing.T) {
 		m := initialModel()
-		m.state = showSpinner // Ensure initial state is showSpinner
+		m.state = showSpinner
 
 		testErr := errors.New("something went wrong")
 		updatedModel, cmd := m.Update(errMsg{err: testErr})
@@ -251,7 +251,7 @@ func TestModel_Update(t *testing.T) {
 
 	t.Run("abortMsg", func(t *testing.T) {
 		m := initialModel()
-		m.state = showCommitView // Ensure state is showCommitView
+		m.state = showCommitView
 
 		updatedModel, cmd := m.Update(abortMsg{})
 
@@ -263,9 +263,6 @@ func TestModel_Update(t *testing.T) {
 	t.Run("spinner.Update for showSpinner state", func(t *testing.T) {
 		m := initialModel()
 		m.state = showSpinner
-		// Spinner's Update method is tested by charmbracelet/bubbles,
-		// here we just ensure it's called and returns its cmd.
-		// We can't easily mock spinner.Model directly, so we'll check the cmd.
 		_, cmd := m.Update(spinner.TickMsg{})
 		assert.NotNil(t, cmd)
 		assert.IsType(t, spinner.TickMsg{}, cmd())
@@ -282,7 +279,7 @@ func TestModel_Update(t *testing.T) {
 		updatedModel, cmd := m.Update(testMsg)
 
 		assert.NotNil(t, updatedModel)
-		assert.Nil(t, cmd) // Mock returns nil cmd
+		assert.Nil(t, cmd)
 		mockCommitView.AssertCalled(t, "Update", testMsg)
 	})
 
@@ -297,12 +294,12 @@ func TestModel_Update(t *testing.T) {
 		updatedModel, cmd := m.Update(testMsg)
 
 		assert.NotNil(t, updatedModel)
-		assert.Nil(t, cmd) // Mock returns nil cmd
+		assert.Nil(t, cmd)
 		mockPromptView.AssertCalled(t, "Update", testMsg)
 	})
 
 	t.Run("llmResultMsg - YOLO mode", func(t *testing.T) {
-		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", true)
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", true, false)
 		updatedModel, cmd := m.Update(llmResultMsg{content: "commit summary", duration: time.Second})
 
 		assert.Equal(t, Commit, updatedModel.(*Model).action)
@@ -312,7 +309,7 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("llmResultMsg - YOLO mode - empty summary", func(t *testing.T) {
-		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "", "", true)
+		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "", "", true, false)
 		updatedModel, cmd := m.Update(llmResultMsg{content: "", duration: time.Second})
 
 		assert.NotNil(t, updatedModel.(*Model).err)

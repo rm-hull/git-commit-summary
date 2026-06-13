@@ -41,7 +41,7 @@ Agents should orient themselves using this map:
 - **Building:** `go build`
 - **Linting:** Run `golangci-lint` to ensure standards.
 - **Running:** `./git-commit-summary [flags]`
-- **Testing:** Add unit tests for new logic in `internal/`. Run tests via `go test ./...`.
+- **Testing:** **Mandatory.** Every feature or fix must include unit tests in `internal/`. Run `go test ./...` before declaring a task complete. If tests are skipped, the task is not finished.
 
 ## 6. Known Flags (for integration/testing)
 - `--version` / `-v`: Display version.
