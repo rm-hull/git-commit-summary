@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 
 	"github.com/cockroachdb/errors"
 	"github.com/creack/pty"
@@ -82,7 +83,7 @@ func (c *Client) Diff(color, exclude bool) (string, error) {
 	defer func() { _ = ptmx.Close() }()
 
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, ptmx); err != nil {
+	if _, err := io.Copy(&buf, ptmx); err != nil && !errors.Is(err, syscall.EIO) {
 		return "", errors.Wrap(err, "reading git diff output failed")
 	}
 
