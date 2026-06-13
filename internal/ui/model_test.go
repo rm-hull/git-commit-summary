@@ -341,6 +341,7 @@ func TestModel_Update(t *testing.T) {
 		assert.NotNil(t, cmd)
 		assert.IsType(t, tea.QuitMsg{}, cmd())
 	})
+
 	t.Run("gitDiffMsg - includes recent commits in prompt", func(t *testing.T) {
 		llm, git := new(MockLLMProvider), new(MockGitClient)
 		m := initialModel(llm, git)
