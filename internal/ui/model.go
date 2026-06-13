@@ -251,10 +251,12 @@ func (m *Model) View() tea.View {
 
 func (m *Model) checkGitStatus() tea.Msg {
 	time.Sleep(500 * time.Millisecond) // Add a small delay
-	if err := m.gitClient.IsInWorkTree(); err != nil {
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	defer cancel()
+	if err := m.gitClient.IsInWorkTree(ctx); err != nil {
 		return errMsg{err}
 	}
-	modifiedFiles, err := m.gitClient.ModifiedFiles()
+	modifiedFiles, err := m.gitClient.ModifiedFiles(ctx)
 	if err != nil {
 		return errMsg{err}
 	}
@@ -262,7 +264,9 @@ func (m *Model) checkGitStatus() tea.Msg {
 }
 
 func (m *Model) getGitDiff() tea.Msg {
-	diff, err := m.gitClient.Diff()
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	defer cancel()
+	diff, err := m.gitClient.Diff(ctx)
 	if err != nil {
 		return errMsg{err}
 	}
@@ -296,14 +300,18 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 	}
 
 	if m.recentCommitsCount > 0 {
-		recent, err := m.gitClient.RecentCommits(m.recentCommitsCount)
+		ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+		recent, err := m.gitClient.RecentCommits(ctx, m.recentCommitsCount)
+		cancel()
 		if err == nil && len(recent) > 0 {
 			systemInstruction += "\n\n### Recent Commit Style Examples\n````text\n" + strings.Join(recent, "\n") + "\n````"
 		}
 	}
 	return func() tea.Msg {
 		start := time.Now()
-		resp, err := m.llmProvider.Call(m.ctx, systemInstruction, userPrompt)
+		ctx, cancel := context.WithTimeout(m.ctx, 60*time.Second)
+		defer cancel()
+		resp, err := m.llmProvider.Call(ctx, systemInstruction, userPrompt)
 		duration := time.Since(start)
 		if err != nil {
 			return errMsg{err}
