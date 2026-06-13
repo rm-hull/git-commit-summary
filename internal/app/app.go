@@ -69,7 +69,7 @@ func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI 
 			fmt.Println(m.CommitMessage())
 			fmt.Println()
 		}
-		err = app.git.Commit(m.CommitMessage(), skipCI)
+		err = app.git.Commit(ctx, m.CommitMessage(), skipCI)
 		if err != nil {
 			return err
 		}

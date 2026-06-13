@@ -42,27 +42,27 @@ type MockGitClient struct {
 	mock.Mock
 }
 
-func (m *MockGitClient) IsInWorkTree() error {
-	args := m.Called()
+func (m *MockGitClient) IsInWorkTree(ctx context.Context) error {
+	args := m.Called(ctx)
 	return args.Error(0)
 }
 
-func (m *MockGitClient) ModifiedFiles() ([]string, error) {
-	args := m.Called()
+func (m *MockGitClient) ModifiedFiles(ctx context.Context) ([]string, error) {
+	args := m.Called(ctx)
 	return args.Get(0).([]string), args.Error(1)
 }
 
-func (m *MockGitClient) Diff() (string, error) {
-	args := m.Called()
+func (m *MockGitClient) Diff(ctx context.Context) (string, error) {
+	args := m.Called(ctx)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockGitClient) Commit(message string, skipCI bool) error {
-	args := m.Called(message, skipCI)
+func (m *MockGitClient) Commit(ctx context.Context, message string, skipCI bool) error {
+	args := m.Called(ctx, message, skipCI)
 	return args.Error(0)
 }
-func (m *MockGitClient) RecentCommits(count int) ([]string, error) {
-	args := m.Called(count)
+func (m *MockGitClient) RecentCommits(ctx context.Context, count int) ([]string, error) {
+	args := m.Called(ctx, count)
 	return args.Get(0).([]string), args.Error(1)
 }
 
@@ -128,7 +128,7 @@ func TestModel_Update(t *testing.T) {
 		m := initialModel(llm, git)
 		m.state = showSpinner
 
-		git.On("Diff").Return("mocked diff content", nil).Once()
+		git.On("Diff", mock.Anything).Return("mocked diff content", nil).Once()
 
 		updatedModel, cmd := m.Update(gitCheckMsg{"file1.go", "file2.go"})
 
@@ -146,7 +146,7 @@ func TestModel_Update(t *testing.T) {
 		m.state = showSpinner
 		m.hint = "prioritize auth flow"
 		llm.On("Model").Return("test-model").Once()
-		git.On("RecentCommits", 5).Return([]string{}, nil).Once()
+		git.On("RecentCommits", mock.Anything, 5).Return([]string{}, nil).Once()
 
 		diffContent := "diff --git a/file.go b/file.go"
 		llm.On("Call", mock.Anything, mock.Anything, mock.MatchedBy(func(p string) bool {
@@ -226,7 +226,7 @@ func TestModel_Update(t *testing.T) {
 		m := initialModel(llm, git)
 		m.state = showRegeneratePrompt
 		llm.On("Model").Return("test-model").Once()
-		git.On("RecentCommits", 5).Return([]string{}, nil).Once()
+		git.On("RecentCommits", mock.Anything, 5).Return([]string{}, nil).Once()
 		llm.On("Call", mock.Anything, mock.Anything, mock.Anything).Return("summary", nil).Once()
 
 		userResponse := "new hint"
@@ -354,7 +354,7 @@ func TestModel_Update(t *testing.T) {
 			"fix: second recent commit",
 			"docs: third recent commit",
 		}
-		git.On("RecentCommits", 3).Return(recentCommits, nil).Once()
+		git.On("RecentCommits", mock.Anything, 3).Return(recentCommits, nil).Once()
 
 		llm.On("Call", mock.Anything, mock.MatchedBy(func(s string) bool {
 			return strings.Contains(s, "### Recent Commit Style Examples") &&

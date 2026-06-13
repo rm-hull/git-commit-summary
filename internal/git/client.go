@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"context"
 
 	"github.com/cockroachdb/errors"
 )
@@ -19,8 +20,8 @@ func NewClient(addAll bool) *Client {
 	}
 }
 
-func (c *Client) IsInWorkTree() error {
-	result, err := exec.Command(
+func (c *Client) IsInWorkTree(ctx context.Context) error {
+	result, err := exec.CommandContext(ctx,
 		"git",
 		"rev-parse",
 		"--is-inside-work-tree",
@@ -39,7 +40,7 @@ func (c *Client) IsInWorkTree() error {
 	return nil
 }
 
-func (c *Client) ModifiedFiles() ([]string, error) {
+func (c *Client) ModifiedFiles(ctx context.Context) ([]string, error) {
 	args := []string{"diff", "--name-only"}
 	if c.addAll {
 		args = append(args, "HEAD")
@@ -47,7 +48,7 @@ func (c *Client) ModifiedFiles() ([]string, error) {
 		args = append(args, "--staged")
 	}
 
-	result, err := exec.Command("git", args...).CombinedOutput()
+	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
 	if err != nil {
 		return nil, errors.Wrap(err, "listing modified files failed")
 	}
@@ -59,7 +60,7 @@ func (c *Client) ModifiedFiles() ([]string, error) {
 	return strings.Split(trimmed, "\n"), nil
 }
 
-func (c *Client) Diff() (string, error) {
+func (c *Client) Diff(ctx context.Context) (string, error) {
 	args := []string{
 		"--no-pager",
 		"diff",
@@ -86,7 +87,7 @@ func (c *Client) Diff() (string, error) {
 		":(exclude)go.sum",
 	)
 
-	result, err := exec.Command("git", args...).CombinedOutput()
+	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
 	if err != nil {
 		return "", errors.Wrap(err, "git diff failed")
 	}
@@ -105,7 +106,7 @@ func (c *Client) prepareCommitMessage(message string, skipCI bool) string {
 	return message
 }
 
-func (c *Client) Commit(message string, skipCI bool) error {
+func (c *Client) Commit(ctx context.Context, message string, skipCI bool) error {
 	message = c.prepareCommitMessage(message, skipCI)
 
 	tmpfile, err := os.CreateTemp("", "gitmsg-*.txt")
@@ -122,30 +123,30 @@ func (c *Client) Commit(message string, skipCI bool) error {
 	if err := tmpfile.Close(); err != nil {
 		return errors.Wrap(err, "git commit failed")
 	}
-
+	
 	// Set up git commit command
 	args := []string{"commit"}
 	if c.addAll {
 		args = append(args, "-a")
 	}
 	args = append(args, "-F", tmpfile.Name())
-
-	cmd := exec.Command("git", args...)
-
+	
+	cmd := exec.CommandContext(ctx, "git", args...)
+	
 	// Connect stdout/stderr of git to our program’s stdout/stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin // allow interactive prompts (e.g., GPG signing, editor, etc.)
-
+	
 	// Run the command
 	if err := cmd.Run(); err != nil {
 		return errors.Wrap(err, "git commit failed")
 	}
-
+	
 	return nil
-}
+	}
 
-func (c *Client) RecentCommits(count int) ([]string, error) {
+func (c *Client) RecentCommits(ctx context.Context, count int) ([]string, error) {
 	if count <= 0 {
 		return nil, nil
 	}
@@ -155,7 +156,7 @@ func (c *Client) RecentCommits(count int) ([]string, error) {
 		"--format=%s",
 		"--no-merges",
 	}
-	result, err := exec.Command("git", args...).CombinedOutput()
+	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
 	if err != nil {
 		return nil, errors.Wrap(err, "fetching recent commits failed")
 	}
@@ -164,4 +165,4 @@ func (c *Client) RecentCommits(count int) ([]string, error) {
 		return nil, nil
 	}
 	return strings.Split(trimmed, "\n"), nil
-}
+	}
