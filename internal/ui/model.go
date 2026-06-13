@@ -287,7 +287,7 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 
 	if m.includeProjectContext {
 		if projCtx := m.getProjectContext(); projCtx != "" {
-			systemInstruction += "\n\n### Project Context\n" + projCtx
+			systemInstruction += "\n\n### Project Context\n````markdown\n" + projCtx + "\n````"
 		}
 	}
 
@@ -298,10 +298,9 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 	if m.recentCommitsCount > 0 {
 		recent, err := m.gitClient.RecentCommits(m.recentCommitsCount)
 		if err == nil && len(recent) > 0 {
-			systemInstruction += "\n\n### Recent Commit Style Examples\n" + strings.Join(recent, "\n")
+			systemInstruction += "\n\n### Recent Commit Style Examples\n````text\n" + strings.Join(recent, "\n") + "\n````"
 		}
 	}
-
 	return func() tea.Msg {
 		start := time.Now()
 		resp, err := m.llmProvider.Call(m.ctx, systemInstruction, userPrompt)
