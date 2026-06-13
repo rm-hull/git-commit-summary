@@ -275,9 +275,9 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 
 	// Split the systemPrompt into instructions and the diff template.
 	// The prompt.md format is: [Instructions] \n\n Diff follows: \n\n ```diff %s ``` ...
-	parts := strings.SplitN(m.systemPrompt, "Diff follows:", 2)
+	parts := strings.SplitN(m.systemPrompt, "### Diff", 2)
 	if len(parts) < 2 {
-		// Fallback if "Diff follows:" is not found in the prompt template.
+		// Fallback if "### Diff" is not found in the prompt template.
 		systemInstruction = ""
 		userPrompt = fmt.Sprintf(m.systemPrompt, diff)
 	} else {
@@ -287,7 +287,7 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 
 	if m.includeProjectContext {
 		if projCtx := m.getProjectContext(); projCtx != "" {
-			systemInstruction += "\n\nPROJECT CONTEXT:\n" + projCtx
+			systemInstruction += "\n\n### Project Context\n" + projCtx
 		}
 	}
 
@@ -298,9 +298,10 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 	if m.recentCommitsCount > 0 {
 		recent, err := m.gitClient.RecentCommits(m.recentCommitsCount)
 		if err == nil && len(recent) > 0 {
-			systemInstruction += "\n\nRECENT COMMIT STYLE EXAMPLES:\n" + strings.Join(recent, "\n")
+			systemInstruction += "\n\n### Recent Commit Style Examples\n" + strings.Join(recent, "\n")
 		}
 	}
+
 	return func() tea.Msg {
 		start := time.Now()
 		resp, err := m.llmProvider.Call(m.ctx, systemInstruction, userPrompt)

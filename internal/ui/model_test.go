@@ -356,7 +356,7 @@ func TestModel_Update(t *testing.T) {
 		git.On("RecentCommits", 3).Return(recentCommits, nil).Once()
 
 		llm.On("Call", mock.Anything, mock.MatchedBy(func(s string) bool {
-			return strings.Contains(s, "RECENT COMMIT STYLE EXAMPLES:") &&
+			return strings.Contains(s, "### Recent Commit Style Examples") &&
 				strings.Contains(s, "feat: first recent commit") &&
 				strings.Contains(s, "fix: second recent commit") &&
 				strings.Contains(s, "docs: third recent commit")
@@ -371,6 +371,7 @@ func TestModel_Update(t *testing.T) {
 		llm.AssertExpectations(t)
 	})
 }
+
 // mockTeaModel is a generic mock for tea.Model interface
 type mockTeaModel struct {
 	mock.Mock

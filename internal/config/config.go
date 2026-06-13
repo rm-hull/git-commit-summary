@@ -42,7 +42,7 @@ type Config struct {
 	Model                 string `validate:"required_unless=LLMProvider test"`
 	BaseURL               string `validate:"required_if=LLMProvider llama.cpp"`
 	IncludeProjectContext bool
-	RecentCommitsCount    int
+	RecentCommitsCount    int `validate:"min=0"`
 	Models                Models
 	Prompt                string
 	validate              *validator.Validate
