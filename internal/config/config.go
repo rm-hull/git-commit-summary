@@ -65,7 +65,7 @@ func Load() (*Config, error) {
 	}
 	// Default to true if not specified.
 	cfg.IncludeProjectContext = true
-	if os.Getenv("INCLUDE_PROJECT_CONTEXT") == "false" {
+	if val := strings.ToLower(os.Getenv("INCLUDE_PROJECT_CONTEXT")); val == "false" || val == "0" || val == "f" {
 		cfg.IncludeProjectContext = false
 	}
 
