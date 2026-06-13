@@ -67,6 +67,7 @@ type Model struct {
 	err                   error
 	yolo                  bool
 	includeProjectContext bool
+	recentCommitsCount    int
 }
 
 func InitialModel(
@@ -78,6 +79,7 @@ func InitialModel(
 	hint string,
 	yolo bool,
 	includeProjectContext bool,
+	recentCommitsCount int,
 ) *Model {
 	return &Model{
 		ctx:                   ctx,
@@ -92,6 +94,7 @@ func InitialModel(
 		action:                None,
 		yolo:                  yolo,
 		includeProjectContext: includeProjectContext,
+		recentCommitsCount:    recentCommitsCount,
 	}
 }
 
@@ -292,6 +295,12 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 		userPrompt += "\n\nCONTEXT HINT: " + m.hint
 	}
 
+	if m.recentCommitsCount > 0 {
+		recent, err := m.gitClient.RecentCommits(m.recentCommitsCount)
+		if err == nil && len(recent) > 0 {
+			systemInstruction += "\n\nRECENT COMMIT STYLE EXAMPLES:\n" + strings.Join(recent, "\n")
+		}
+	}
 	return func() tea.Msg {
 		start := time.Now()
 		resp, err := m.llmProvider.Call(m.ctx, systemInstruction, userPrompt)

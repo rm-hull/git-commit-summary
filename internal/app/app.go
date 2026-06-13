@@ -20,19 +20,21 @@ type App struct {
 	git                   interfaces.GitClient
 	prompt                string
 	includeProjectContext bool
+	recentCommitsCount    int
 }
 
-func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt string, includeProjectContext bool) *App {
+func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt string, includeProjectContext bool, recentCommitsCount int) *App {
 	return &App{
 		llmProvider:           provider,
 		git:                   git,
 		prompt:                prompt,
 		includeProjectContext: includeProjectContext,
+		recentCommitsCount:    recentCommitsCount,
 	}
 }
 
 func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI bool) error {
-	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, hint, yolo, app.includeProjectContext)
+	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, hint, yolo, app.includeProjectContext, app.recentCommitsCount)
 	p := tea.NewProgram(model)
 
 	finalModel, err := p.Run()

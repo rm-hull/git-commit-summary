@@ -42,6 +42,7 @@ type Config struct {
 	Model                 string `validate:"required_unless=LLMProvider test"`
 	BaseURL               string `validate:"required_if=LLMProvider llama.cpp"`
 	IncludeProjectContext bool
+	RecentCommitsCount    int
 	Models                Models
 	Prompt                string
 	validate              *validator.Validate
@@ -65,14 +66,15 @@ func Load() (*Config, error) {
 	}
 	// Default to true if not specified.
 	cfg.IncludeProjectContext = true
+	cfg.RecentCommitsCount = 5
 	if val := strings.ToLower(os.Getenv("INCLUDE_PROJECT_CONTEXT")); val == "false" || val == "0" || val == "f" {
 		cfg.IncludeProjectContext = false
 	}
+	if val := os.Getenv("RECENT_COMMITS_COUNT"); val != "" {
+		fmt.Sscanf(val, "%d", &cfg.RecentCommitsCount)
+	}
 
 	err = json.Unmarshal(models_raw, &cfg.Models)
-	if err != nil {
-		return nil, err
-	}
 
 	if cfg.LLMProvider == "" {
 		cfg.LLMProvider = "google"
@@ -127,6 +129,7 @@ func (cfg *Config) Save() error {
 			"GEMINI_API_KEY":          cfg.APIKey,
 			"GEMINI_MODEL":            cfg.Model,
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
+			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
 		})
 	case "openai":
 		return updateProperties(configPath, map[string]string{
@@ -134,6 +137,7 @@ func (cfg *Config) Save() error {
 			"OPENAI_API_KEY":          cfg.APIKey,
 			"OPENAI_MODEL":            cfg.Model,
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
+			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
 		})
 	case "openrouter":
 		return updateProperties(configPath, map[string]string{
@@ -141,6 +145,7 @@ func (cfg *Config) Save() error {
 			"OPENROUTER_API_KEY":      cfg.APIKey,
 			"OPENROUTER_MODEL":        cfg.Model,
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
+			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
 		})
 	case "llama.cpp":
 		return updateProperties(configPath, map[string]string{
@@ -149,11 +154,13 @@ func (cfg *Config) Save() error {
 			"LLAMACPP_MODEL":          cfg.Model,
 			"LLAMACPP_BASE_URL":       cfg.BaseURL,
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
+			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
 		})
 	case "test":
 		return updateProperties(configPath, map[string]string{
 			"LLM_PROVIDER":            "test",
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
+			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
 		})
 	default:
 		return errors.Newf("unknown LLM provider: %s", cfg.LLMProvider)
