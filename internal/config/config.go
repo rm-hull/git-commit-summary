@@ -37,13 +37,14 @@ type Models struct {
 }
 
 type Config struct {
-	LLMProvider string `validate:"required,oneof=google openai llama.cpp openrouter test"`
-	APIKey      string `validate:"required_unless=LLMProvider test"`
-	Model       string `validate:"required_unless=LLMProvider test"`
-	BaseURL     string `validate:"required_if=LLMProvider llama.cpp"`
-	Models      Models
-	Prompt      string
-	validate    *validator.Validate
+	LLMProvider           string `validate:"required,oneof=google openai llama.cpp openrouter test"`
+	APIKey                string `validate:"required_unless=LLMProvider test"`
+	Model                 string `validate:"required_unless=LLMProvider test"`
+	BaseURL               string `validate:"required_if=LLMProvider llama.cpp"`
+	IncludeProjectContext bool
+	Models                Models
+	Prompt                string
+	validate              *validator.Validate
 }
 
 func Load() (*Config, error) {
@@ -61,6 +62,11 @@ func Load() (*Config, error) {
 		LLMProvider: os.Getenv("LLM_PROVIDER"),
 		Prompt:      prompt,
 		validate:    validator.New(),
+	}
+	// Default to true if not specified.
+	cfg.IncludeProjectContext = true
+	if os.Getenv("INCLUDE_PROJECT_CONTEXT") == "false" {
+		cfg.IncludeProjectContext = false
 	}
 
 	err = json.Unmarshal(models_raw, &cfg.Models)
@@ -117,32 +123,37 @@ func (cfg *Config) Save() error {
 	switch cfg.LLMProvider {
 	case "google":
 		return updateProperties(configPath, map[string]string{
-			"LLM_PROVIDER":   "google",
-			"GEMINI_API_KEY": cfg.APIKey,
-			"GEMINI_MODEL":   cfg.Model,
+			"LLM_PROVIDER":            "google",
+			"GEMINI_API_KEY":          cfg.APIKey,
+			"GEMINI_MODEL":            cfg.Model,
+			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 		})
 	case "openai":
 		return updateProperties(configPath, map[string]string{
-			"LLM_PROVIDER":   "openai",
-			"OPENAI_API_KEY": cfg.APIKey,
-			"OPENAI_MODEL":   cfg.Model,
+			"LLM_PROVIDER":            "openai",
+			"OPENAI_API_KEY":          cfg.APIKey,
+			"OPENAI_MODEL":            cfg.Model,
+			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 		})
 	case "openrouter":
 		return updateProperties(configPath, map[string]string{
-			"LLM_PROVIDER":       "openrouter",
-			"OPENROUTER_API_KEY": cfg.APIKey,
-			"OPENROUTER_MODEL":   cfg.Model,
+			"LLM_PROVIDER":            "openrouter",
+			"OPENROUTER_API_KEY":      cfg.APIKey,
+			"OPENROUTER_MODEL":        cfg.Model,
+			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 		})
 	case "llama.cpp":
 		return updateProperties(configPath, map[string]string{
-			"LLM_PROVIDER":      "llama.cpp",
-			"LLAMACPP_API_KEY":  cfg.APIKey,
-			"LLAMACPP_MODEL":    cfg.Model,
-			"LLAMACPP_BASE_URL": cfg.BaseURL,
+			"LLM_PROVIDER":            "llama.cpp",
+			"LLAMACPP_API_KEY":        cfg.APIKey,
+			"LLAMACPP_MODEL":          cfg.Model,
+			"LLAMACPP_BASE_URL":       cfg.BaseURL,
+			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 		})
 	case "test":
 		return updateProperties(configPath, map[string]string{
-			"LLM_PROVIDER": "test",
+			"LLM_PROVIDER":            "test",
+			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 		})
 	default:
 		return errors.Newf("unknown LLM provider: %s", cfg.LLMProvider)

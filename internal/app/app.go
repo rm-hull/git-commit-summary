@@ -16,21 +16,23 @@ import (
 var _ interfaces.GitClient = (*git.Client)(nil)
 
 type App struct {
-	llmProvider llmprovider.Provider
-	git         interfaces.GitClient
-	prompt      string
+	llmProvider           llmprovider.Provider
+	git                   interfaces.GitClient
+	prompt                string
+	includeProjectContext bool
 }
 
-func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt string) *App {
+func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt string, includeProjectContext bool) *App {
 	return &App{
-		llmProvider: provider,
-		git:         git,
-		prompt:      prompt,
+		llmProvider:           provider,
+		git:                   git,
+		prompt:                prompt,
+		includeProjectContext: includeProjectContext,
 	}
 }
 
 func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI bool) error {
-	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, hint, yolo)
+	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, hint, yolo, app.includeProjectContext)
 	p := tea.NewProgram(model)
 
 	finalModel, err := p.Run()
