@@ -283,8 +283,8 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 	}
 
 	if m.includeProjectContext {
-		if context := m.getProjectContext(); context != "" {
-			systemInstruction += "\n\nPROJECT CONTEXT:\n" + context
+		if projCtx := m.getProjectContext(); projCtx != "" {
+			systemInstruction += "\n\nPROJECT CONTEXT:\n" + projCtx
 		}
 	}
 
