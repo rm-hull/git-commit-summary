@@ -61,6 +61,10 @@ func (m *MockGitClient) Commit(message string, skipCI bool) error {
 	args := m.Called(message, skipCI)
 	return args.Error(0)
 }
+func (m *MockGitClient) RecentCommits(count int) ([]string, error) {
+	args := m.Called(count)
+	return args.Get(0).([]string), args.Error(1)
+}
 
 func (m *MockGitClient) Implement() interfaces.GitClient {
 	return m
@@ -68,16 +72,15 @@ func (m *MockGitClient) Implement() interfaces.GitClient {
 
 func TestModel_Update(t *testing.T) {
 	ctx := context.Background()
-	mockLLM := new(MockLLMProvider)
-	mockGit := new(MockGitClient)
 
 	// Common setup for InitialModel
-	initialModel := func() *Model {
-		return InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", false, false)
+	initialModel := func(llm *MockLLMProvider, git *MockGitClient) *Model {
+		return InitialModel(ctx, llm, git, "system prompt", "user message", "", false, false, 5)
 	}
 
 	t.Run("tea.KeyMsg - CtrlC in showSpinner state", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showSpinner
 
 		updatedModel, cmd := m.Update(tea.KeyPressMsg(tea.Key{Code: 'c', Mod: tea.ModCtrl}))
@@ -88,7 +91,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("tea.KeyMsg - CtrlC in other states", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showCommitView
 
 		mockCommitView := new(mockTeaModel)
@@ -108,7 +112,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("gitCheckMsg - empty (no staged changes)", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showSpinner
 
 		updatedModel, cmd := m.Update(gitCheckMsg{})
@@ -119,10 +124,11 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("gitCheckMsg - non-empty (staged changes)", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showSpinner
 
-		mockGit.On("Diff").Return("mocked diff content", nil).Once()
+		git.On("Diff").Return("mocked diff content", nil).Once()
 
 		updatedModel, cmd := m.Update(gitCheckMsg{"file1.go", "file2.go"})
 
@@ -131,18 +137,19 @@ func TestModel_Update(t *testing.T) {
 		msg := cmd()
 		assert.IsType(t, gitDiffMsg(""), msg)
 		assert.Equal(t, gitDiffMsg("mocked diff content"), msg)
-		mockGit.AssertExpectations(t)
+		git.AssertExpectations(t)
 	})
 
 	t.Run("gitDiffMsg with hint", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showSpinner
 		m.hint = "prioritize auth flow"
-		mockLLM.On("Model").Return("test-model").Once()
+		llm.On("Model").Return("test-model").Once()
+		git.On("RecentCommits", 5).Return([]string{}, nil).Once()
 
 		diffContent := "diff --git a/file.go b/file.go"
-
-		mockLLM.On("Call", mock.Anything, "", mock.MatchedBy(func(p string) bool {
+		llm.On("Call", mock.Anything, mock.Anything, mock.MatchedBy(func(p string) bool {
 			return strings.Contains(p, "CONTEXT HINT: prioritize auth flow")
 		})).Return("summary", nil).Once()
 
@@ -151,11 +158,13 @@ func TestModel_Update(t *testing.T) {
 		assert.Nil(t, updatedModel.(*Model).err)
 		assert.NotNil(t, cmd)
 		cmd()
-		mockLLM.AssertExpectations(t)
+		llm.AssertExpectations(t)
+		git.AssertExpectations(t)
 	})
 
 	t.Run("llmResultMsg - with user message", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showSpinner
 		llmResult := "This is a summary from LLM."
 		userMsg := "Additional user message."
@@ -170,7 +179,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("llmResultMsg - without user message", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showSpinner
 		llmResult := "This is a summary from LLM."
 		m.userMessage = ""
@@ -184,7 +194,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("commitMsg", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showCommitView
 
 		commitContent := "feat: new feature"
@@ -197,7 +208,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("regenerateMsg - initializes promptView with current hint", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showCommitView
 		m.hint = "current hint"
 
@@ -210,9 +222,12 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("userResponseMsg - updates m.hint", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showRegeneratePrompt
-		mockLLM.On("Model").Return("test-model").Once()
+		llm.On("Model").Return("test-model").Once()
+		git.On("RecentCommits", 5).Return([]string{}, nil).Once()
+		llm.On("Call", mock.Anything, mock.Anything, mock.Anything).Return("summary", nil).Once()
 
 		userResponse := "new hint"
 		updatedModel, _ := m.Update(userResponseMsg(userResponse))
@@ -222,7 +237,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("cancelRegenPromptMsg - re-enables help text", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showRegeneratePrompt
 
 		cv, err := initialCommitViewModel("test message", 0)
@@ -238,7 +254,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("errMsg", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showSpinner
 
 		testErr := errors.New("something went wrong")
@@ -250,7 +267,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("abortMsg", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showCommitView
 
 		updatedModel, cmd := m.Update(abortMsg{})
@@ -261,15 +279,18 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("spinner.Update for showSpinner state", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showSpinner
 		_, cmd := m.Update(spinner.TickMsg{})
+
 		assert.NotNil(t, cmd)
 		assert.IsType(t, spinner.TickMsg{}, cmd())
 	})
 
 	t.Run("commitView.Update for showCommitView state", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showCommitView
 		mockCommitView := new(mockTeaModel)
 		mockCommitView.On("Update", mock.Anything).Return(mockCommitView, (tea.Cmd)(nil)).Once()
@@ -284,7 +305,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("promptView.Update for showRegeneratePrompt state", func(t *testing.T) {
-		m := initialModel()
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
 		m.state = showRegeneratePrompt
 		mockPromptView := new(mockTeaModel)
 		mockPromptView.On("Update", mock.Anything).Return(mockPromptView, (tea.Cmd)(nil)).Once()
@@ -299,7 +321,8 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("llmResultMsg - YOLO mode", func(t *testing.T) {
-		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "user message", "", true, false)
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := InitialModel(ctx, llm, git, "system prompt", "user message", "", true, false, 5)
 		updatedModel, cmd := m.Update(llmResultMsg{content: "commit summary", duration: time.Second})
 
 		assert.Equal(t, Commit, updatedModel.(*Model).action)
@@ -309,13 +332,44 @@ func TestModel_Update(t *testing.T) {
 	})
 
 	t.Run("llmResultMsg - YOLO mode - empty summary", func(t *testing.T) {
-		m := InitialModel(ctx, mockLLM, mockGit, "system prompt", "", "", true, false)
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := InitialModel(ctx, llm, git, "system prompt", "", "", true, false, 5)
 		updatedModel, cmd := m.Update(llmResultMsg{content: "", duration: time.Second})
 
 		assert.NotNil(t, updatedModel.(*Model).err)
 		assert.Equal(t, "failed to generate a commit summary", updatedModel.(*Model).err.Error())
 		assert.NotNil(t, cmd)
 		assert.IsType(t, tea.QuitMsg{}, cmd())
+	})
+
+	t.Run("gitDiffMsg - includes recent commits in prompt", func(t *testing.T) {
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
+		m.state = showSpinner
+		m.recentCommitsCount = 3
+		llm.On("Model").Return("test-model").Once()
+
+		recentCommits := []string{
+			"feat: first recent commit",
+			"fix: second recent commit",
+			"docs: third recent commit",
+		}
+		git.On("RecentCommits", 3).Return(recentCommits, nil).Once()
+
+		llm.On("Call", mock.Anything, mock.MatchedBy(func(s string) bool {
+			return strings.Contains(s, "### Recent Commit Style Examples") &&
+				strings.Contains(s, "feat: first recent commit") &&
+				strings.Contains(s, "fix: second recent commit") &&
+				strings.Contains(s, "docs: third recent commit")
+		}), mock.Anything).Return("summary", nil).Once()
+
+		updatedModel, cmd := m.Update(gitDiffMsg("mocked diff content"))
+
+		assert.Nil(t, updatedModel.(*Model).err)
+		assert.NotNil(t, cmd)
+		cmd()
+		git.AssertExpectations(t)
+		llm.AssertExpectations(t)
 	})
 }
 

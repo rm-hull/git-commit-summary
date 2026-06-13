@@ -144,3 +144,24 @@ func (c *Client) Commit(message string, skipCI bool) error {
 
 	return nil
 }
+
+func (c *Client) RecentCommits(count int) ([]string, error) {
+	if count <= 0 {
+		return nil, nil
+	}
+	args := []string{
+		"log",
+		fmt.Sprintf("--max-count=%d", count),
+		"--format=%s",
+		"--no-merges",
+	}
+	result, err := exec.Command("git", args...).CombinedOutput()
+	if err != nil {
+		return nil, errors.Wrap(err, "fetching recent commits failed")
+	}
+	trimmed := strings.TrimSpace(string(result))
+	if trimmed == "" {
+		return nil, nil
+	}
+	return strings.Split(trimmed, "\n"), nil
+}

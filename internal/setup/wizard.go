@@ -35,7 +35,18 @@ func Run(cfg *config.Config) (*config.Config, error) {
 				Affirmative("Yes").
 				Negative("No").
 				Value(&cfg.IncludeProjectContext),
+			huh.NewSelect[int]().
+				Title("Number of recent commits to include").
+				Description("The number of recent commits to include as context to help\nthe LLM understand the current trajectory of the project.").
+				Options(
+					huh.NewOption("0", 0),
+					huh.NewOption("1", 1),
+					huh.NewOption("3", 3),
+					huh.NewOption("5", 5),
+				).
+				Value(&cfg.RecentCommitsCount),
 		),
+
 		huh.NewGroup(
 			huh.NewSelect[string]().
 				Title("Select LLM Provider").
@@ -138,8 +149,9 @@ func submitGroup(cfg *config.Config, confirm *bool) *huh.Group {
 					contextStr = "YES"
 				}
 				return fmt.Sprintf(
-					"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)\n  - Include project context (%s)",
-					cfg.LLMProvider, cfg.APIKey, cfg.Model, contextStr)
+					"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)\n  - Include project context (%s)\n  - Recent commits count (%d)",
+					cfg.LLMProvider, cfg.APIKey, cfg.Model, contextStr, cfg.RecentCommitsCount)
+
 			}, cfg),
 	).WithHideFunc(func() bool {
 		return cfg.Validate() != nil
