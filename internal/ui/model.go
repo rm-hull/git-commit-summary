@@ -308,12 +308,12 @@ func (m *Model) getProjectContext() string {
 	for _, file := range files {
 		data, err := os.ReadFile(file)
 		if err == nil {
-			content := string(data)
 			// Truncate to 4000 characters to avoid token overflow
-			if len(content) > 4000 {
-				content = content[:4000] + "\n\n[... content truncated ...]"
+			runes := []rune(string(data))
+			if len(runes) > 4000 {
+				return string(runes[:4000]) + "\n\n[... content truncated ...]"
 			}
-			return content
+			return string(runes)
 		}
 	}
 	return ""
