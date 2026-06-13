@@ -301,8 +301,8 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 
 	if m.recentCommitsCount > 0 {
 		ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+		defer cancel()
 		recent, err := m.gitClient.RecentCommits(ctx, m.recentCommitsCount)
-		cancel()
 		if err == nil && len(recent) > 0 {
 			systemInstruction += "\n\n### Recent Commit Style Examples\n````text\n" + strings.Join(recent, "\n") + "\n````"
 		}
