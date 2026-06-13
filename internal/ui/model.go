@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -52,25 +53,27 @@ const (
 )
 
 type Model struct {
-	ctx            context.Context
-	state          sessionState
-	llmProvider    llmprovider.Provider
-	gitClient      interfaces.GitClient
-	systemPrompt   string
-	userMessage    string
-	hint           string
-	diff           string
-	spinner        spinner.Model
-	spinnerMessage string
-	latestVersion  string
-	commitView     tea.Model
-	diffView       tea.Model
-	diffLoaded     bool
-	commitMessage  string
-	promptView     tea.Model
-	action         Action
-	err            error
-	yolo           bool
+	ctx                   context.Context
+	state                 sessionState
+	llmProvider           llmprovider.Provider
+	gitClient             interfaces.GitClient
+	systemPrompt          string
+	userMessage           string
+	hint                  string
+	diff                  string
+	spinner               spinner.Model
+	spinnerMessage        string
+	latestVersion         string
+	commitView            tea.Model
+	diffView              tea.Model
+	diffLoaded            bool
+	commitMessage         string
+	promptView            tea.Model
+	action                Action
+	err                   error
+	yolo                  bool
+	includeProjectContext bool
+	recentCommitsCount    int
 }
 
 func InitialModel(
@@ -81,20 +84,24 @@ func InitialModel(
 	userMessage string,
 	hint string,
 	yolo bool,
+	includeProjectContext bool,
+	recentCommitsCount int,
 ) *Model {
 	return &Model{
-		ctx:            ctx,
-		state:          showSpinner,
-		llmProvider:    llmProvider,
-		gitClient:      gitClient,
-		systemPrompt:   systemPrompt,
-		userMessage:    userMessage,
-		hint:           hint,
-		spinner:        spinner.New(spinner.WithSpinner(spinner.MiniDot)),
-		spinnerMessage: Magenta.Render("Checking whether a newer version exists..."),
-		diffView:       initialDiffViewModel(72+2, 20),
-		action:         None,
-		yolo:           yolo,
+		ctx:                   ctx,
+		state:                 showSpinner,
+		llmProvider:           llmProvider,
+		gitClient:             gitClient,
+		systemPrompt:          systemPrompt,
+		userMessage:           userMessage,
+		hint:                  hint,
+		spinner:               spinner.New(spinner.WithSpinner(spinner.MiniDot)),
+		spinnerMessage:        Magenta.Render("Checking whether a newer version exists..."),
+		diffView:              initialDiffViewModel(72+2, 20),
+		action:                None,
+		yolo:                  yolo,
+		includeProjectContext: includeProjectContext,
+		recentCommitsCount:    recentCommitsCount,
 	}
 }
 
@@ -264,10 +271,12 @@ func (m *Model) View() tea.View {
 
 func (m *Model) checkGitStatus() tea.Msg {
 	time.Sleep(500 * time.Millisecond) // Add a small delay
-	if err := m.gitClient.IsInWorkTree(); err != nil {
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	defer cancel()
+	if err := m.gitClient.IsInWorkTree(ctx); err != nil {
 		return errMsg{err}
 	}
-	modifiedFiles, err := m.gitClient.ModifiedFiles()
+	modifiedFiles, err := m.gitClient.ModifiedFiles(ctx)
 	if err != nil {
 		return errMsg{err}
 	}
@@ -275,7 +284,9 @@ func (m *Model) checkGitStatus() tea.Msg {
 }
 
 func (m *Model) getFullDiffWithColor() tea.Msg {
-	diff, err := m.gitClient.Diff(true, false)
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	defer cancel()
+	diff, err := m.gitClient.Diff(ctx, true, false)
 	if err != nil {
 		return errMsg{err}
 	}
@@ -283,7 +294,9 @@ func (m *Model) getFullDiffWithColor() tea.Msg {
 }
 
 func (m *Model) getGitDiffForLLM() tea.Msg {
-	diff, err := m.gitClient.Diff(false, true)
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	defer cancel()
+	diff, err := m.gitClient.Diff(ctx, false, true)
 	if err != nil {
 		return errMsg{err}
 	}
@@ -296,9 +309,9 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 
 	// Split the systemPrompt into instructions and the diff template.
 	// The prompt.md format is: [Instructions] \n\n Diff follows: \n\n ```diff %s ``` ...
-	parts := strings.SplitN(m.systemPrompt, "Diff follows:", 2)
+	parts := strings.SplitN(m.systemPrompt, "### Diff", 2)
 	if len(parts) < 2 {
-		// Fallback if "Diff follows:" is not found in the prompt template.
+		// Fallback if "### Diff" is not found in the prompt template.
 		systemInstruction = ""
 		userPrompt = fmt.Sprintf(m.systemPrompt, diff)
 	} else {
@@ -306,19 +319,51 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 		userPrompt = fmt.Sprintf(parts[1], diff)
 	}
 
+	if m.includeProjectContext {
+		if projCtx := m.getProjectContext(); projCtx != "" {
+			systemInstruction += "\n\n### Project Context\n````markdown\n" + projCtx + "\n````"
+		}
+	}
+
 	if m.hint != "" {
 		userPrompt += "\n\nCONTEXT HINT: " + m.hint
 	}
 
+	if m.recentCommitsCount > 0 {
+		ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+		defer cancel()
+		recent, err := m.gitClient.RecentCommits(ctx, m.recentCommitsCount)
+		if err == nil && len(recent) > 0 {
+			systemInstruction += "\n\n### Recent Commit Style Examples\n````text\n" + strings.Join(recent, "\n") + "\n````"
+		}
+	}
 	return func() tea.Msg {
 		start := time.Now()
-		resp, err := m.llmProvider.Call(m.ctx, systemInstruction, userPrompt)
+		ctx, cancel := context.WithTimeout(m.ctx, 60*time.Second)
+		defer cancel()
+		resp, err := m.llmProvider.Call(ctx, systemInstruction, userPrompt)
 		duration := time.Since(start)
 		if err != nil {
 			return errMsg{err}
 		}
 		return llmResultMsg{content: resp, duration: duration}
 	}
+}
+
+func (m *Model) getProjectContext() string {
+	files := []string{".project-context.md", "README.md"}
+	for _, file := range files {
+		data, err := os.ReadFile(file)
+		if err == nil {
+			// Truncate to 4000 characters to avoid token overflow
+			runes := []rune(string(data))
+			if len(runes) > 4000 {
+				return string(runes[:4000]) + "\n\n[... content truncated ...]"
+			}
+			return string(runes)
+		}
+	}
+	return ""
 }
 
 func (m *Model) Err() error {
