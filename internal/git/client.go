@@ -144,6 +144,7 @@ func (c *Client) Commit(message string, skipCI bool) error {
 
 	return nil
 }
+
 func (c *Client) RecentCommits(count int) ([]string, error) {
 	if count <= 0 {
 		return nil, nil
