@@ -75,6 +75,9 @@ func Load() (*Config, error) {
 	}
 
 	err = json.Unmarshal(models_raw, &cfg.Models)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal models json")
+	}
 
 	if cfg.LLMProvider == "" {
 		cfg.LLMProvider = "google"
