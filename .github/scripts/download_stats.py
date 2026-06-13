@@ -128,6 +128,7 @@ def main():
     ax.set_title(f"Downloads per release — {repo}", fontsize=13, pad=12)
     ax.set_xlabel("Release", fontsize=10)
     ax.set_ylabel("Downloads", fontsize=10)
+    ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
     ax.tick_params(axis="x", rotation=45, labelsize=8)
     ax.tick_params(axis="y", labelsize=9)
