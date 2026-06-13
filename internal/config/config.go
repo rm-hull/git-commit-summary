@@ -71,9 +71,10 @@ func Load() (*Config, error) {
 		cfg.IncludeProjectContext = false
 	}
 	if val := os.Getenv("RECENT_COMMITS_COUNT"); val != "" {
-		fmt.Sscanf(val, "%d", &cfg.RecentCommitsCount)
+		if _, err := fmt.Sscanf(val, "%d", &cfg.RecentCommitsCount); err != nil {
+			return nil, errors.Wrapf(err, "invalid RECENT_COMMITS_COUNT value: %s", val)
+		}
 	}
-
 	err = json.Unmarshal(models_raw, &cfg.Models)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal models json")
