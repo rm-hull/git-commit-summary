@@ -23,6 +23,7 @@ const (
 	showSpinner sessionState = iota
 	showCommitView
 	showRegeneratePrompt
+	showDiffView
 )
 
 type (
@@ -33,10 +34,13 @@ type (
 		duration time.Duration
 	}
 	commitMsg            string
+	diffColorMsg         string
 	errMsg               struct{ err error }
 	abortMsg             struct{}
 	regenerateMsg        struct{}
 	cancelRegenPromptMsg struct{}
+	showDiffViewMsg      struct{}
+	cancelDiffViewMsg    struct{}
 	userResponseMsg      string
 )
 
@@ -61,6 +65,8 @@ type Model struct {
 	spinnerMessage        string
 	latestVersion         string
 	commitView            tea.Model
+	diffView              tea.Model
+	diffLoaded            bool
 	commitMessage         string
 	promptView            tea.Model
 	action                Action
@@ -91,6 +97,7 @@ func InitialModel(
 		hint:                  hint,
 		spinner:               spinner.New(spinner.WithSpinner(spinner.MiniDot)),
 		spinnerMessage:        Magenta.Render("Checking whether a newer version exists..."),
+		diffView:              initialDiffViewModel(72, 20),
 		action:                None,
 		yolo:                  yolo,
 		includeProjectContext: includeProjectContext,
@@ -103,13 +110,13 @@ func (m *Model) Init() tea.Cmd {
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
-		if msg.String() == "ctrl+c" {
-			if m.state == showSpinner {
-				m.action = Abort
-				return m, tea.Quit
-			}
+		if msg.String() == "ctrl+c" && m.state == showSpinner {
+			m.action = Abort
+			return m, tea.Quit
 		}
 
 	case gitCheckMsg:
@@ -117,7 +124,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = errors.New("no changes detected")
 			return m, tea.Quit
 		}
-		return m, m.getGitDiff
+		return m, m.getGitDiffForLLM
 
 	case gitDiffMsg:
 		m.spinnerMessage = fmt.Sprintf("%s%s%s",
@@ -186,9 +193,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.hint = string(msg)
 		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff))
 
-	case cancelRegenPromptMsg:
+	case cancelRegenPromptMsg, cancelDiffViewMsg:
 		m.state = showCommitView
 		return m, m.commitView.Init()
+
+	case showDiffViewMsg:
+		m.state = showDiffView
+		if !m.diffLoaded {
+			return m, m.getFullDiffWithColor
+		}
+		return m, m.diffView.Init()
+
+	case diffColorMsg:
+		m.diffLoaded = true
+		m.diffView, cmd = m.diffView.Update(msg)
+		return m, cmd
 
 	case errMsg:
 		m.err = msg.err
@@ -204,7 +223,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.checkGitStatus
 	}
 
-	var cmd tea.Cmd
 	switch m.state {
 	case showSpinner:
 		m.spinner, cmd = m.spinner.Update(msg)
@@ -212,6 +230,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.commitView, cmd = m.commitView.Update(msg)
 	case showRegeneratePrompt:
 		m.promptView, cmd = m.promptView.Update(msg)
+	case showDiffView:
+		m.diffView, cmd = m.diffView.Update(msg)
 	}
 	return m, cmd
 }
@@ -228,8 +248,6 @@ func (m *Model) LatestVersion() string {
 	return m.latestVersion
 }
 
-// LatestVersionMsg is handled above to chain into git checks
-
 func (m *Model) View() tea.View {
 	switch m.state {
 	case showSpinner:
@@ -244,6 +262,8 @@ func (m *Model) View() tea.View {
 			return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
 		}
 		return tea.NewView(m.commitView.View().Content + m.promptView.View().Content)
+	case showDiffView:
+		return m.diffView.View()
 	default:
 		return tea.NewView("")
 	}
@@ -263,10 +283,20 @@ func (m *Model) checkGitStatus() tea.Msg {
 	return gitCheckMsg(modifiedFiles)
 }
 
-func (m *Model) getGitDiff() tea.Msg {
+func (m *Model) getFullDiffWithColor() tea.Msg {
 	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
 	defer cancel()
-	diff, err := m.gitClient.Diff(ctx)
+	diff, err := m.gitClient.Diff(ctx, true, false)
+	if err != nil {
+		return errMsg{err}
+	}
+	return diffColorMsg(diff)
+}
+
+func (m *Model) getGitDiffForLLM() tea.Msg {
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	defer cancel()
+	diff, err := m.gitClient.Diff(ctx, false, true)
 	if err != nil {
 		return errMsg{err}
 	}

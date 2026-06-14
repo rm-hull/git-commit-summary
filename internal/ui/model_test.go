@@ -52,8 +52,8 @@ func (m *MockGitClient) ModifiedFiles(ctx context.Context) ([]string, error) {
 	return args.Get(0).([]string), args.Error(1)
 }
 
-func (m *MockGitClient) Diff(ctx context.Context) (string, error) {
-	args := m.Called(ctx)
+func (m *MockGitClient) Diff(ctx context.Context, color, exclude bool) (string, error) {
+	args := m.Called(ctx, color, exclude)
 	return args.String(0), args.Error(1)
 }
 
@@ -128,7 +128,7 @@ func TestModel_Update(t *testing.T) {
 		m := initialModel(llm, git)
 		m.state = showSpinner
 
-		git.On("Diff", mock.Anything).Return("mocked diff content", nil).Once()
+		git.On("Diff", mock.Anything, false, true).Return("mocked diff content", nil).Once()
 
 		updatedModel, cmd := m.Update(gitCheckMsg{"file1.go", "file2.go"})
 

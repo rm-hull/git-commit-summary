@@ -61,8 +61,6 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 	textStyles.Focused.CursorLine = lipgloss.NewStyle()
 	ta.SetStyles(textStyles)
 
-	vp := viewport.New(viewport.WithWidth(ta.Width()), viewport.WithHeight(ta.Height()))
-
 	customStyle := styles.DarkStyleConfig
 	customStyle.Document.Margin = uintPtr(0)
 	customStyle.H2.BlockSuffix = ""
@@ -76,7 +74,7 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 
 	return &commitViewModel{
 		textarea: ta,
-		viewport: vp,
+		viewport: viewport.New(viewport.WithWidth(ta.Width()), viewport.WithHeight(ta.Height())),
 		history:  NewHistory(message),
 		boxStyle: lipgloss.NewStyle().
 			BorderForeground(lipgloss.Color("6")). // Cyan
@@ -114,6 +112,9 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Blur()
 			return m, func() tea.Msg { return regenerateMsg{} }
 
+		case "ctrl+d":
+			return m, func() tea.Msg { return showDiffViewMsg{} }
+
 		case "esc":
 			if m.preview {
 				m.preview = false
@@ -139,7 +140,6 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.preview = !m.preview
 			return m, nil
-
 		}
 
 		if m.preview {
@@ -264,21 +264,21 @@ func (m *commitViewModel) helpTextView() string {
 	}
 
 	if m.preview {
-		return fmt.Sprintf("%s:commit %s:clear %s:undo %s:regen %s:editor  %s:back",
+		return fmt.Sprintf("%s:commit %s:clear %s:regen %s:editor  %s:diff %s:back",
 			BoldYellow.Render("CTRL+A"),
 			Strikethrough.Render("CTRL+K"),
-			Strikethrough.Render("CTRL+Z"),
 			BoldYellow.Render("CTRL+R"),
 			BoldYellow.Render("CTRL+P"),
+			BoldYellow.Render("CTRL+D"),
 			BoldYellow.Render("ESC"))
 	}
 
-	return fmt.Sprintf("%s:commit %s:clear %s:undo %s:regen %s:preview %s:abort",
+	return fmt.Sprintf("%s:commit %s:clear %s:regen %s:preview %s:diff %s:abort",
 		BoldYellow.Render("CTRL+A"),
 		BoldYellow.Render("CTRL+K"),
-		BoldYellow.Render("CTRL+Z"),
 		BoldYellow.Render("CTRL+R"),
 		BoldYellow.Render("CTRL+P"),
+		BoldYellow.Render("CTRL+D"),
 		BoldYellow.Render("ESC"))
 }
 

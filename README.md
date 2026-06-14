@@ -8,10 +8,13 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 
 - **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
 - **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
+- **Raw Diff View:** Quickly review your staged changes with a colored diff directly within the editor.
 - **Contextual Hints:** Provide additional context to the LLM via the `--hint` flag to improve relevance.
 - **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
 - **Multiple LLM Providers:** Supports Google Gemini, OpenAI, OpenRouter, and local Llama.cpp instances.
 - **Setup Wizard:** Easy configuration with an interactive setup wizard.
+
+![diff_view](./docs/diff_view.png)
 
 ## Installation
 
@@ -96,6 +99,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
     - `CTRL+K`: Clear the generated commit message
     - `CTRL+X`: Cut line and copy to clipboard
     - `CTRL+P`: Toggle preview mode
+    - `CTRL+D`: View raw colored diff of staged changes
     - `ESC`: Abort
 
 ## Flags

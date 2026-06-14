@@ -1,13 +1,17 @@
 package git
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
-	"context"
+	"syscall"
 
 	"github.com/cockroachdb/errors"
+	"github.com/creack/pty"
 )
 
 type Client struct {
@@ -60,13 +64,54 @@ func (c *Client) ModifiedFiles(ctx context.Context) ([]string, error) {
 	return strings.Split(trimmed, "\n"), nil
 }
 
-func (c *Client) Diff(ctx context.Context) (string, error) {
+func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) {
+	args := c.diffArgs(color, exclude)
+
+	cmd := exec.CommandContext(ctx, "git", args...)
+	if !color {
+		result, err := cmd.CombinedOutput()
+		if err != nil {
+			return "", errors.Wrap(err, "git diff failed")
+		}
+		return strings.ReplaceAll(string(result), "\t", "    "), nil
+	}
+
+	ptmx, err := pty.Start(cmd)
+	if err != nil {
+		// fallback to plain pipe if pty fails
+		return c.Diff(ctx, false, exclude)
+	}
+	defer func() { _ = ptmx.Close() }()
+
+	var buf bytes.Buffer
+	_, copyErr := io.Copy(&buf, ptmx)
+	waitErr := cmd.Wait()
+
+	if copyErr != nil && !errors.Is(copyErr, syscall.EIO) {
+		return "", errors.Wrap(copyErr, "reading git diff output failed")
+	}
+
+	if waitErr != nil {
+		return "", errors.Wrap(waitErr, "waiting for git diff command failed")
+	}
+
+	output := buf.String()
+	output = strings.ReplaceAll(output, "\r", "")
+	return strings.ReplaceAll(output, "\t", "    "), nil
+}
+
+func (c *Client) diffArgs(color, exclude bool) []string {
 	args := []string{
 		"--no-pager",
 		"diff",
+	}
+	if color {
+		args = append(args, "--color=always")
+	}
+	args = append(args,
 		"--no-ext-diff",
 		"--no-textconv",
-	}
+	)
 
 	if c.addAll {
 		args = append(args, "HEAD")
@@ -74,24 +119,21 @@ func (c *Client) Diff(ctx context.Context) (string, error) {
 		args = append(args, "--staged")
 	}
 
-	args = append(args,
-		"--diff-filter=ACMRTUXBD",
-		"--",                 // separates options from pathspecs
-		".",                  // include everything under the repo root
-		":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
-		":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
-		":(exclude)**/build/**",
-		":(exclude)**/dist/**",
-		":(exclude)**/target/**",
-		":(exclude)**/out/**",
-		":(exclude)go.sum",
-	)
-
-	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
-	if err != nil {
-		return "", errors.Wrap(err, "git diff failed")
+	if exclude {
+		args = append(args,
+			"--diff-filter=ACMRTUXBD",
+			"--",                 // separates options from pathspecs
+			".",                  // include everything under the repo root
+			":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
+			":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
+			":(exclude)**/build/**",
+			":(exclude)**/dist/**",
+			":(exclude)**/target/**",
+			":(exclude)**/out/**",
+			":(exclude)go.sum",
+		)
 	}
-	return string(result), nil
+	return args
 }
 
 func (c *Client) prepareCommitMessage(message string, skipCI bool) string {
@@ -123,28 +165,28 @@ func (c *Client) Commit(ctx context.Context, message string, skipCI bool) error 
 	if err := tmpfile.Close(); err != nil {
 		return errors.Wrap(err, "git commit failed")
 	}
-	
+
 	// Set up git commit command
 	args := []string{"commit"}
 	if c.addAll {
 		args = append(args, "-a")
 	}
 	args = append(args, "-F", tmpfile.Name())
-	
+
 	cmd := exec.CommandContext(ctx, "git", args...)
-	
+
 	// Connect stdout/stderr of git to our program’s stdout/stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin // allow interactive prompts (e.g., GPG signing, editor, etc.)
-	
+
 	// Run the command
 	if err := cmd.Run(); err != nil {
 		return errors.Wrap(err, "git commit failed")
 	}
-	
+
 	return nil
-	}
+}
 
 func (c *Client) RecentCommits(ctx context.Context, count int) ([]string, error) {
 	if count <= 0 {
@@ -165,4 +207,4 @@ func (c *Client) RecentCommits(ctx context.Context, count int) ([]string, error)
 		return nil, nil
 	}
 	return strings.Split(trimmed, "\n"), nil
-	}
+}
