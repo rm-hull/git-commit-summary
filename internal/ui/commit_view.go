@@ -133,9 +133,9 @@ func (m *commitViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				out, err := m.renderer.Render(m.textarea.Value())
 				if err != nil {
 					message := fmt.Sprintf("%s:\n%v", BoldRed.Render("Error rendering preview:"), err)
-					m.viewport.SetContent(strings.ReplaceAll(message, "\r", ""))
+					m.viewport.SetContent(message)
 				} else {
-					m.viewport.SetContent(strings.ReplaceAll(strings.TrimSpace(out), "\r", ""))
+					m.viewport.SetContent(strings.TrimSpace(out))
 				}
 			}
 			m.preview = !m.preview

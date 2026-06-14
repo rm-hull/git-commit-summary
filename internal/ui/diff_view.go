@@ -38,7 +38,7 @@ func (m *diffViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, func() tea.Msg { return cancelDiffViewMsg{} }
 		}
 	case diffColorMsg:
-		m.viewport.SetContent(strings.ReplaceAll(string(msg), "\r", ""))
+		m.viewport.SetContent(string(msg))
 	}
 
 	var cmd tea.Cmd

@@ -97,7 +97,7 @@ func InitialModel(
 		hint:                  hint,
 		spinner:               spinner.New(spinner.WithSpinner(spinner.MiniDot)),
 		spinnerMessage:        Magenta.Render("Checking whether a newer version exists..."),
-		diffView:              initialDiffViewModel(72+2, 20),
+		diffView:              initialDiffViewModel(72, 20),
 		action:                None,
 		yolo:                  yolo,
 		includeProjectContext: includeProjectContext,

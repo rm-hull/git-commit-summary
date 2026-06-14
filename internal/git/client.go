@@ -84,15 +84,20 @@ func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) 
 	defer func() { _ = ptmx.Close() }()
 
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, ptmx); err != nil && !errors.Is(err, syscall.EIO) {
-		return "", errors.Wrap(err, "reading git diff output failed")
+	_, copyErr := io.Copy(&buf, ptmx)
+	waitErr := cmd.Wait()
+
+	if copyErr != nil && !errors.Is(copyErr, syscall.EIO) {
+		return "", errors.Wrap(copyErr, "reading git diff output failed")
 	}
 
-	if err := cmd.Wait(); err != nil {
-		return "", errors.Wrap(err, "waiting for git diff command failed")
+	if waitErr != nil {
+		return "", errors.Wrap(waitErr, "waiting for git diff command failed")
 	}
 
-	return strings.ReplaceAll(buf.String(), "\t", "    "), nil
+	output := buf.String()
+	output = strings.ReplaceAll(output, "\r", "")
+	return strings.ReplaceAll(output, "\t", "    "), nil
 }
 
 func (c *Client) diffArgs(color, exclude bool) []string {
