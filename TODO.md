@@ -14,7 +14,7 @@ The `internal.TextArea` function is not very descriptive.
 - **Rename `internal.TextArea` to `editCommitMessage`:** This will make the function's purpose more clear.
 - **Improve the user interface for editing the commit message:** Consider if a more robust editor integration (like calling `vim` or `nano`) is necessary, or if the current TUI is sufficient.
 
-## 3. Add a `Makefile`
+## 3. ~~Add a `Makefile`~~
 A `Makefile` would automate common development tasks, such as building, testing, and running the application.
 
 - **Create a `Makefile`:** This file will contain rules for building, testing, and running the application.
