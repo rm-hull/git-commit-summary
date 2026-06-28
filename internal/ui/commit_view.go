@@ -51,7 +51,7 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 	}
 	ta.CursorStart()
 	if message == "" {
-		ta.Placeholder = "Unable to provide a commit summary: staged files may be too large to\nbe summarized or were excluded from the visible diff."
+		ta.Placeholder = "Unable to supply a commit summary: staged files too large or excluded."
 	} else {
 		ta.Placeholder = "Please supply a commit message."
 	}
