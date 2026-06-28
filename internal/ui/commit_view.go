@@ -285,7 +285,8 @@ func (m *commitViewModel) helpTextView() string {
 func (m *commitViewModel) commitLint(msg string) string {
 	_, err := m.commitParser.Parse([]byte(msg))
 	if err != nil {
-		return strings.TrimSpace(strings.Split(err.Error(), ": col=")[0])
+		msg := strings.ReplaceAll(err.Error(), "\n", "\\n")
+		return strings.TrimSpace(strings.Split(msg, ": col=")[0])
 	}
 
 	lines := strings.Split(msg, "\n")
