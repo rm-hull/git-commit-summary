@@ -148,7 +148,7 @@ func (c *Client) prepareCommitMessage(message string, skipCI bool) string {
 	return message
 }
 
-func (c *Client) Commit(ctx context.Context, message string, skipCI bool) error {
+func (c *Client) Commit(ctx context.Context, message string, skipCI, noVerify bool) error {
 	message = c.prepareCommitMessage(message, skipCI)
 
 	tmpfile, err := os.CreateTemp("", "gitmsg-*.txt")
@@ -170,6 +170,9 @@ func (c *Client) Commit(ctx context.Context, message string, skipCI bool) error 
 	args := []string{"commit"}
 	if c.addAll {
 		args = append(args, "-a")
+	}
+	if noVerify {
+		args = append(args, "--no-verify")
 	}
 	args = append(args, "-F", tmpfile.Name())
 
