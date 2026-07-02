@@ -33,7 +33,7 @@ func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt stri
 	}
 }
 
-func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI bool) error {
+func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI, noVerify bool) error {
 	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, hint, yolo, app.includeProjectContext, app.recentCommitsCount)
 	p := tea.NewProgram(model)
 
@@ -69,7 +69,7 @@ func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI 
 			fmt.Println(m.CommitMessage())
 			fmt.Println()
 		}
-		err = app.git.Commit(ctx, m.CommitMessage(), skipCI)
+		err = app.git.Commit(ctx, m.CommitMessage(), skipCI, noVerify)
 		if err != nil {
 			return err
 		}

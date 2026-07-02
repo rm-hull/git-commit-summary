@@ -28,6 +28,7 @@ func main() {
 	var yoloMode *bool
 	var addAll *bool
 	var skipCI *bool
+	var noVerify *bool
 	var hint string
 
 	rootCmd := &cobra.Command{
@@ -65,7 +66,7 @@ func main() {
 			handleError(err)
 
 			application := app.NewApp(provider, git.NewClient(*addAll), cfg.Prompt, cfg.IncludeProjectContext, cfg.RecentCommitsCount)
-			err = application.Run(ctx, userMessage, hint, *yoloMode, *skipCI)
+			err = application.Run(ctx, userMessage, hint, *yoloMode, *skipCI, *noVerify)
 			if err != nil {
 				handleError(err)
 			}
@@ -77,6 +78,7 @@ func main() {
 	yoloMode = rootCmd.PersistentFlags().Bool("yolo", false, "Commit immediately without asking for confirmation")
 	addAll = rootCmd.PersistentFlags().BoolP("all", "a", false, "Add all tracked files to the commit")
 	skipCI = rootCmd.PersistentFlags().Bool("skip-ci", false, "Append [skip ci] to the commit message")
+	noVerify = rootCmd.PersistentFlags().Bool("no-verify", false, "Skip git commit pre-verify hooks")
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 	rootCmd.PersistentFlags().StringVarP(&hint, "hint", "H", "", "Provide contextual guidance for the commit summary generation")

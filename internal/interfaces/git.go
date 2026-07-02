@@ -12,5 +12,5 @@ type GitClient interface {
 	ModifiedFiles(ctx context.Context) ([]string, error)
 	Diff(ctx context.Context, color, exclude bool) (string, error)
 	RecentCommits(ctx context.Context, count int) ([]string, error)
-	Commit(ctx context.Context, message string, skipCI bool) error
+	Commit(ctx context.Context, message string, skipCI, noVerify bool) error
 }
