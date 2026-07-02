@@ -57,8 +57,8 @@ func (m *MockGitClient) Diff(ctx context.Context, color, exclude bool) (string, 
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockGitClient) Commit(ctx context.Context, message string, skipCI bool) error {
-	args := m.Called(ctx, message, skipCI)
+func (m *MockGitClient) Commit(ctx context.Context, message string, skipCI, noVerify bool) error {
+	args := m.Called(ctx, message, skipCI, noVerify)
 	return args.Error(0)
 }
 func (m *MockGitClient) RecentCommits(ctx context.Context, count int) ([]string, error) {

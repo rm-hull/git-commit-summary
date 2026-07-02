@@ -23,6 +23,14 @@ type App struct {
 	recentCommitsCount    int
 }
 
+type RunOptions struct {
+	UserMessage string
+	Hint        string
+	Yolo        bool
+	SkipCI      bool
+	NoVerify    bool
+}
+
 func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt string, includeProjectContext bool, recentCommitsCount int) *App {
 	return &App{
 		llmProvider:           provider,
@@ -33,8 +41,8 @@ func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt stri
 	}
 }
 
-func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI bool) error {
-	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, hint, yolo, app.includeProjectContext, app.recentCommitsCount)
+func (app *App) Run(ctx context.Context, opts RunOptions) error {
+	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, opts.UserMessage, opts.Hint, opts.Yolo, app.includeProjectContext, app.recentCommitsCount)
 	p := tea.NewProgram(model)
 
 	finalModel, err := p.Run()
@@ -64,12 +72,12 @@ func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI 
 	}
 
 	if m.Action() == ui.Commit {
-		if yolo {
+		if opts.Yolo {
 			fmt.Println(ui.Green.Bold(true).Render("COMMIT MESSAGE:"))
 			fmt.Println(m.CommitMessage())
 			fmt.Println()
 		}
-		err = app.git.Commit(ctx, m.CommitMessage(), skipCI)
+		err = app.git.Commit(ctx, m.CommitMessage(), opts.SkipCI, opts.NoVerify)
 		if err != nil {
 			return err
 		}

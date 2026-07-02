@@ -111,6 +111,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | `--hint`         | `-H`      | Provide contextual guidance for the commit summary generation         |
 | `--llm-provider` |           | Override the `LLM_PROVIDER` environment variable                      |
 | `--message`      | `-m`      | Append a message to the commit summary                                |
+| `--no-verify`    |           | Bypass pre-commit and commit-msg hooks                                |
 | `--setup-wizard` |           | Run the interactive setup wizard                                      |
 | `--skip-ci`      |           | Append `[skip ci]` to the first line of the commit message to skip CI |
 | `--version`      | `-v`      | Display version                                                       |
