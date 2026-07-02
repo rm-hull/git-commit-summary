@@ -66,7 +66,7 @@ func main() {
 			handleError(err)
 
 			application := app.NewApp(provider, git.NewClient(*addAll), cfg.Prompt, cfg.IncludeProjectContext, cfg.RecentCommitsCount)
-			err = application.Run(ctx, userMessage, hint, *yoloMode, *skipCI, *noVerify)
+			err = application.Run(ctx, userMessage, hint, *yoloMode, *skipCI, noVerify)
 			if err != nil {
 				handleError(err)
 			}
