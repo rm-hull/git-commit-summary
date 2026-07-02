@@ -28,7 +28,7 @@ func main() {
 	var yoloMode *bool
 	var addAll *bool
 	var skipCI *bool
-	var noVerify *bool
+	var noVerify bool
 	var hint string
 
 	rootCmd := &cobra.Command{
