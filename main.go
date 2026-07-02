@@ -78,7 +78,7 @@ func main() {
 	yoloMode = rootCmd.PersistentFlags().Bool("yolo", false, "Commit immediately without asking for confirmation")
 	addAll = rootCmd.PersistentFlags().BoolP("all", "a", false, "Add all tracked files to the commit")
 	skipCI = rootCmd.PersistentFlags().Bool("skip-ci", false, "Append [skip ci] to the commit message")
-	noVerify = rootCmd.PersistentFlags().Bool("no-verify", false, "Skip git commit pre-verify hooks")
+	rootCmd.PersistentFlags().BoolVar(&noVerify, "no-verify", false, "Bypass pre-commit and commit-msg hooks")
 	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
 	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 	rootCmd.PersistentFlags().StringVarP(&hint, "hint", "H", "", "Provide contextual guidance for the commit summary generation")
