@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"os"
 	tea "charm.land/bubbletea/v2"
 	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/git-commit-summary/internal/git"
@@ -33,7 +34,7 @@ func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt stri
 	}
 }
 
-func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI bool) error {
+func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI bool, commitMsgFile string) error {
 	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, userMessage, hint, yolo, app.includeProjectContext, app.recentCommitsCount)
 	p := tea.NewProgram(model)
 
@@ -64,14 +65,21 @@ func (app *App) Run(ctx context.Context, userMessage, hint string, yolo, skipCI 
 	}
 
 	if m.Action() == ui.Commit {
-		if yolo {
-			fmt.Println(ui.Green.Bold(true).Render("COMMIT MESSAGE:"))
-			fmt.Println(m.CommitMessage())
-			fmt.Println()
-		}
-		err = app.git.Commit(ctx, m.CommitMessage(), skipCI)
-		if err != nil {
-			return err
+		if commitMsgFile != "" {
+			err = os.WriteFile(commitMsgFile, []byte(m.CommitMessage()), 0644)
+			if err != nil {
+				return errors.Wrap(err, "failed to write commit message to file")
+			}
+		} else {
+			if yolo {
+				fmt.Println(ui.Green.Bold(true).Render("COMMIT MESSAGE:"))
+				fmt.Println(m.CommitMessage())
+				fmt.Println()
+			}
+			err = app.git.Commit(ctx, m.CommitMessage(), skipCI)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
