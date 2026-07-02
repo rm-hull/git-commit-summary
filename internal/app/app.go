@@ -41,7 +41,7 @@ func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt stri
 	}
 }
 
-func (app *App) Run(ctx context.Context, opts *RunOptions) error {
+func (app *App) Run(ctx context.Context, opts RunOptions) error {
 	model := ui.InitialModel(ctx, app.llmProvider, app.git, app.prompt, opts.UserMessage, opts.Hint, opts.Yolo, app.includeProjectContext, app.recentCommitsCount)
 	p := tea.NewProgram(model)
 

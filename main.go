@@ -26,7 +26,7 @@ func main() {
 	var showVersion *bool
 	var addAll *bool
 
-	runOptions := &app.RunOptions{}
+	runOptions := app.RunOptions{}
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
@@ -64,6 +64,7 @@ func main() {
 
 			application := app.NewApp(provider, git.NewClient(*addAll), cfg.Prompt, cfg.IncludeProjectContext, cfg.RecentCommitsCount)
 			err = application.Run(ctx, runOptions)
+			handleError(err)
 		},
 	}
 
