@@ -9,7 +9,7 @@ import (
 	"github.com/rm-hull/git-commit-summary/internal/ui"
 )
 
-func InstallHook(exePath string) error {
+func InstallHook() error {
 	gitDir, err := exec.Command("git", "rev-parse", "--git-dir").Output()
 	if err != nil {
 		return fmt.Errorf("not a git repository: %w", err)

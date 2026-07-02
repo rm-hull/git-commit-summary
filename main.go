@@ -37,7 +37,7 @@ func main() {
 		Short: "Generate a commit summary using Gemini or OpenAI",
 		Run: func(cmd *cobra.Command, args []string) {
 			if *installHook {
-				err := setup.InstallHook("")
+				err := setup.InstallHook()
 				handleError(err)
 				os.Exit(0)
 			}
