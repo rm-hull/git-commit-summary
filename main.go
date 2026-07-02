@@ -21,15 +21,12 @@ func main() {
 	cfg, err := config.Load()
 	handleError(err)
 
-	var userMessage string
 	var llmProvider string
 	var runSetupWizard *bool
 	var showVersion *bool
-	var yoloMode *bool
 	var addAll *bool
-	var skipCI *bool
-	var noVerify bool
-	var hint string
+
+	runOptions := &app.RunOptions{}
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
@@ -66,22 +63,19 @@ func main() {
 			handleError(err)
 
 			application := app.NewApp(provider, git.NewClient(*addAll), cfg.Prompt, cfg.IncludeProjectContext, cfg.RecentCommitsCount)
-			err = application.Run(ctx, userMessage, hint, *yoloMode, *skipCI, noVerify)
-			if err != nil {
-				handleError(err)
-			}
+			err = application.Run(ctx, runOptions)
 		},
 	}
 
 	showVersion = rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
 	runSetupWizard = rootCmd.PersistentFlags().Bool("setup-wizard", false, "Run setup wizard")
-	yoloMode = rootCmd.PersistentFlags().Bool("yolo", false, "Commit immediately without asking for confirmation")
 	addAll = rootCmd.PersistentFlags().BoolP("all", "a", false, "Add all tracked files to the commit")
-	skipCI = rootCmd.PersistentFlags().Bool("skip-ci", false, "Append [skip ci] to the commit message")
-	rootCmd.PersistentFlags().BoolVar(&noVerify, "no-verify", false, "Bypass pre-commit and commit-msg hooks")
-	rootCmd.PersistentFlags().StringVarP(&userMessage, "message", "m", "", "Append a message to the commit summary")
+	rootCmd.PersistentFlags().BoolVar(&runOptions.Yolo, "yolo", false, "Commit immediately without asking for confirmation")
+	rootCmd.PersistentFlags().BoolVar(&runOptions.SkipCI, "skip-ci", false, "Append [skip ci] to the commit message")
+	rootCmd.PersistentFlags().BoolVar(&runOptions.NoVerify, "no-verify", false, "Bypass pre-commit and commit-msg hooks")
+	rootCmd.PersistentFlags().StringVarP(&runOptions.UserMessage, "message", "m", "", "Append a message to the commit summary")
+	rootCmd.PersistentFlags().StringVarP(&runOptions.Hint, "hint", "H", "", "Provide contextual guidance for the commit summary generation")
 	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
-	rootCmd.PersistentFlags().StringVarP(&hint, "hint", "H", "", "Provide contextual guidance for the commit summary generation")
 
 	_ = rootCmd.Execute()
 }
