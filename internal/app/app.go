@@ -34,6 +34,23 @@ type RunOptions struct {
 	NoVerify      bool
 }
 
+func(ro *RunOptions) HandleError(err error) {
+	if err != nil {
+		if errors.Is(err, interfaces.ErrAborted) {
+			fmt.Println(ui.BoldRed.Render("ABORTED!"))
+			exitcode := 0
+			if ro.CommitMsgFile != "" {
+				exitcode = 1
+			}
+			os.Exit(exitcode)
+		} else {
+			prefix := ui.BoldRed.Render("ERROR:")
+			fmt.Fprintf(os.Stderr, "%s %v\n", prefix, err)
+			os.Exit(1)
+		}
+	}
+}
+
 func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt string, includeProjectContext bool, recentCommitsCount int) *App {
 	return &App{
 		llmProvider:           provider,
