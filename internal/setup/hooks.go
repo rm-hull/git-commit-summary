@@ -17,9 +17,9 @@ func InstallHook() error {
 
 	gitDirStr := string(gitDir[:len(gitDir)-1])
 	hookPath := filepath.Join(gitDirStr, "hooks", "prepare-commit-msg")
-	absExe, err := exec.LookPath("git-commit-summary")
+	absExe, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("git-commit-summary not found in PATH: %w", err)
+		return fmt.Errorf("failed to get current executable path: %w", err)
 	}
 
 	content := fmt.Sprintf("#!/bin/sh\n%s --yolo \"$1\"\n", absExe)
