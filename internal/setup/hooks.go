@@ -22,7 +22,7 @@ func InstallHook() error {
 		return fmt.Errorf("failed to get current executable path: %w", err)
 	}
 
-	content := fmt.Sprintf("#!/bin/sh\n%s --yolo \"$1\"\n", absExe)
+	content := fmt.Sprintf("#!/bin/sh\n\"%s\" --yolo \"$1\"\n", absExe)
 
 	err = os.MkdirAll(filepath.Dir(hookPath), 0755)
 	if err != nil {
