@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"os"
+
 	tea "charm.land/bubbletea/v2"
 	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/git-commit-summary/internal/git"
@@ -24,11 +26,29 @@ type App struct {
 }
 
 type RunOptions struct {
-	UserMessage string
-	Hint        string
-	Yolo        bool
-	SkipCI      bool
-	NoVerify    bool
+	CommitMsgFile string
+	UserMessage   string
+	Hint          string
+	Yolo          bool
+	SkipCI        bool
+	NoVerify      bool
+}
+
+func(ro *RunOptions) HandleError(err error) {
+	if err != nil {
+		if errors.Is(err, interfaces.ErrAborted) {
+			fmt.Println(ui.BoldRed.Render("ABORTED!"))
+			exitcode := 0
+			if ro.CommitMsgFile != "" {
+				exitcode = 1
+			}
+			os.Exit(exitcode)
+		} else {
+			prefix := ui.BoldRed.Render("ERROR:")
+			fmt.Fprintf(os.Stderr, "%s %v\n", prefix, err)
+			os.Exit(1)
+		}
+	}
 }
 
 func NewApp(provider llmprovider.Provider, git interfaces.GitClient, prompt string, includeProjectContext bool, recentCommitsCount int) *App {
@@ -72,14 +92,21 @@ func (app *App) Run(ctx context.Context, opts RunOptions) error {
 	}
 
 	if m.Action() == ui.Commit {
-		if opts.Yolo {
-			fmt.Println(ui.Green.Bold(true).Render("COMMIT MESSAGE:"))
-			fmt.Println(m.CommitMessage())
-			fmt.Println()
-		}
-		err = app.git.Commit(ctx, m.CommitMessage(), opts.SkipCI, opts.NoVerify)
-		if err != nil {
-			return err
+		if opts.CommitMsgFile != "" {
+			err = os.WriteFile(opts.CommitMsgFile, []byte(m.CommitMessage()), 0644)
+			if err != nil {
+				return errors.Wrap(err, "failed to write commit message to file")
+			}
+		} else {
+			if opts.Yolo {
+				fmt.Println(ui.Green.Bold(true).Render("COMMIT MESSAGE:"))
+				fmt.Println(m.CommitMessage())
+				fmt.Println()
+			}
+			err = app.git.Commit(ctx, m.CommitMessage(), opts.SkipCI, opts.NoVerify)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

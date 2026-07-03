@@ -177,6 +177,7 @@ func (c *Client) Commit(ctx context.Context, message string, skipCI, noVerify bo
 	args = append(args, "-F", tmpfile.Name())
 
 	cmd := exec.CommandContext(ctx, "git", args...)
+	cmd.Env = append(os.Environ(), "GIT_COMMIT_SUMMARY_IGNORE_HOOK=1")
 
 	// Connect stdout/stderr of git to our program’s stdout/stderr
 	cmd.Stdout = os.Stdout
