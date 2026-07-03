@@ -61,6 +61,7 @@ func (m *MockGitClient) Commit(ctx context.Context, message string, skipCI, noVe
 	args := m.Called(ctx, message, skipCI, noVerify)
 	return args.Error(0)
 }
+
 func (m *MockGitClient) RecentCommits(ctx context.Context, count int) ([]string, error) {
 	args := m.Called(ctx, count)
 	return args.Get(0).([]string), args.Error(1)
@@ -417,4 +418,24 @@ func (m *mockTeaModel) View() tea.View {
 		}
 	}
 	return tea.NewView("")
+}
+
+func TestTrimTrailingSpaces(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"no trailing spaces", "hello\nworld", "hello\nworld"},
+		{"trailing spaces on some lines", "hello  \nworld \n ", "hello\nworld\n"},
+		{"tabs and carriage returns", "line1\t\r\nline2  \n", "line1\nline2\n"},
+		{"empty string", "", ""},
+		{"single line with space", "hello ", "hello"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, trimTrailingSpaces(tt.input))
+		})
+	}
 }

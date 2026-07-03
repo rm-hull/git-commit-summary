@@ -149,6 +149,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 		}
+		commitMessage = trimTrailingSpaces(commitMessage)
 		commitMessage = strings.ReplaceAll(commitMessage, "\n\n\n", "\n\n")
 
 		if m.yolo {
@@ -376,4 +377,12 @@ func (m *Model) Action() Action {
 
 func (m *Model) CommitMessage() string {
 	return m.commitMessage
+}
+
+func trimTrailingSpaces(s string) string {
+	lines := strings.Split(s, "\n")
+	for i := range lines {
+		lines[i] = strings.TrimRight(lines[i], " \t\r")
+	}
+	return strings.Join(lines, "\n")
 }
