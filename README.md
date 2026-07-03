@@ -7,12 +7,13 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 ## Features
 
 - **Automatic Commit Summaries:** Analyzes your staged changes and generates ~~AI-slop~~ high-quality commit messages.
-- **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
-- **Raw Diff View:** Quickly review your staged changes with a colored diff directly within the editor.
-- **Contextual Hints:** Provide additional context to the LLM via the `--hint` flag to improve relevance.
 - **Colorful Output:** Provides a visually appealing and easy-to-read output in your terminal.
+- **Contextual Hints:** Provide additional context to the LLM via the `--hint` flag to improve relevance.
+- **Git Hook Integration:** Easily install as a `prepare-commit-msg` hook to automatically generate summaries when you run `git commit`.
+- **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
 - **Auto-completion:** Supports shell auto-completion for flags in Bash and Zsh.
 - **Multiple LLM Providers:** Supports Google Gemini, OpenAI, OpenRouter, and local Llama.cpp instances.
+- **Raw Diff View:** Quickly review your staged changes with a colored diff directly within the editor.
 - **Setup Wizard:** Easy configuration with an interactive setup wizard.
 
 ![diff_view](./docs/diff_view.png)
@@ -105,20 +106,22 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 
 ## Flags
 
-| Flag             | Shorthand | Description                                                           |
-| :--------------- | :-------- | :-------------------------------------------------------------------- |
-| `--all`          | `-a`      | Add all tracked files to the commit                                   |
-| `--bash`         |           | Generate bash completion script                                       |
-| `--help`         | `-h`      | Show help                                                             |
-| `--hint`         | `-H`      | Provide contextual guidance for the commit summary generation         |
-| `--llm-provider` |           | Override the `LLM_PROVIDER` environment variable                      |
-| `--message`      | `-m`      | Append a message to the commit summary                                |
-| `--no-verify`    |           | Bypass pre-commit and commit-msg hooks                                |
-| `--setup-wizard` |           | Run the interactive setup wizard                                      |
-| `--skip-ci`      |           | Append `[skip ci]` to the first line of the commit message to skip CI |
-| `--version`      | `-v`      | Display version                                                       |
-| `--yolo`         |           | Commit immediately without asking for confirmation                    |
-| `--zsh`          |           | Generate zsh completion script                                        |
+| Flag               | Shorthand | Description                                                           |
+| :----------------- | :-------- | :-------------------------------------------------------------------- |
+| `--all`            | `-a`      | Add all tracked files to the commit                                   |
+| `--bash`           |           | Generate bash completion script                                       |
+| `--help`           | `-h`      | Show help                                                             |
+| `--hint`           | `-H`      | Provide contextual guidance for the commit summary generation         |
+| `--install-hook`   |           | Install as a `prepare-commit-msg` hook in the current repository      |
+| `--llm-provider`   |           | Override the `LLM_PROVIDER` environment variable                      |
+| `--message`        | `-m`      | Append a message to the commit summary                                |
+| `--no-verify`      |           | Bypass pre-commit and commit-msg hooks                                |
+| `--setup-wizard`   |           | Run the interactive setup wizard                                      |
+| `--skip-ci`        |           | Append `[skip ci]` to the first line of the commit message to skip CI |
+| `--uninstall-hook` |           | Remove the `prepare-commit-msg` hook from the current repository      |
+| `--version`        | `-v`      | Display version                                                       |
+| `--yolo`           |           | Commit immediately without asking for confirmation                    |
+| `--zsh`            |           | Generate zsh completion script                                        |
 
 ## Git Alias
 

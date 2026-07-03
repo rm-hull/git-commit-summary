@@ -9,9 +9,7 @@ The prompt is currently a simple string. Using the `text/template` package would
 - **Use the `text/template` package to parse and execute the template:** This will allow you to use variables and functions in the prompt.
 
 ## 2. Improve User Interaction
-The `internal.TextArea` function is not very descriptive.
-
-- **Rename `internal.TextArea` to `editCommitMessage`:** This will make the function's purpose more clear.
+~~Rename `internal.TextArea` to `editCommitMessage`~~
 - **Improve the user interface for editing the commit message:** Consider if a more robust editor integration (like calling `vim` or `nano`) is necessary, or if the current TUI is sufficient.
 
 ## 3. ~~Add a `Makefile`~~
