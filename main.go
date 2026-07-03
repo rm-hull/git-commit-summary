@@ -35,11 +35,11 @@ func main() {
 		Short: fmt.Sprintf("Generate a commit summary using Gemini, OpenAI, Llama.cpp, OpenRouter (version: %s)", versioninfo.Short()),
 		Run: func(cmd *cobra.Command, args []string) {
 			if *genBash {
-				cmd.GenBashCompletion(os.Stdout)
+				_ = cmd.GenBashCompletion(os.Stdout)
 				os.Exit(0)
 			}
 			if *genZsh {
-				cmd.GenZshCompletion(os.Stdout)
+				_ = cmd.GenZshCompletion(os.Stdout)
 				os.Exit(0)
 			}
 			if *showVersion {
