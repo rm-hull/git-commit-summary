@@ -24,6 +24,11 @@ func InstallHook() error {
 
 	content := fmt.Sprintf("#!/bin/sh\n%s --yolo \"$1\"\n", absExe)
 
+	err = os.MkdirAll(filepath.Dir(hookPath), 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create hooks directory: %w", err)
+	}
+
 	err = os.WriteFile(hookPath, []byte(content), 0755)
 	if err != nil {
 		return fmt.Errorf("failed to write hook file: %w", err)
