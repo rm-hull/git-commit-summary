@@ -76,6 +76,10 @@ func main() {
 			ctx := context.Background()
 
 			provider, err := llmprovider.NewProvider(ctx, cfg)
+			if errors.Is(err, interfaces.ErrAborted) && runOptions.CommitMsgFile != "" {
+				fmt.Println(ui.BoldRed.Render("ABORTED!"))
+				os.Exit(1)
+			}
 			handleError(err)
 
 			if len(args) > 0 {

@@ -44,7 +44,10 @@ func UninstallHook() error {
 		return fmt.Errorf("not a git repository: %w", err)
 	}
 
-	gitDirStr := string(gitDir[:len(gitDir)-1])
+	gitDirStr := string(gitDir)
+	for len(gitDirStr) > 0 && (gitDirStr[len(gitDirStr)-1] == '\n' || gitDirStr[len(gitDirStr)-1] == '\r') {
+		gitDirStr = gitDirStr[:len(gitDirStr)-1]
+	}
 	hookPath := filepath.Join(gitDirStr, "hooks", "prepare-commit-msg")
 	if _, err := os.Stat(hookPath); os.IsNotExist(err) {
 		fmt.Println(ui.BoldYellow.Render("Hook not found, nothing to uninstall."))
