@@ -25,6 +25,8 @@ func main() {
 	var runSetupWizard *bool
 	var showVersion *bool
 	var addAll *bool
+	var genBash *bool
+	var genZsh *bool
 
 	runOptions := app.RunOptions{}
 
@@ -32,6 +34,14 @@ func main() {
 		Use:   "git-commit-summary",
 		Short: fmt.Sprintf("Generate a commit summary using Gemini, OpenAI, Llama.cpp, OpenRouter (version: %s)", versioninfo.Short()),
 		Run: func(cmd *cobra.Command, args []string) {
+			if *genBash {
+				cmd.GenBashCompletion(os.Stdout)
+				os.Exit(0)
+			}
+			if *genZsh {
+				cmd.GenZshCompletion(os.Stdout)
+				os.Exit(0)
+			}
 			if *showVersion {
 				fmt.Println(versioninfo.Short())
 				os.Exit(0)
@@ -69,6 +79,8 @@ func main() {
 	}
 
 	showVersion = rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
+	genBash = rootCmd.PersistentFlags().Bool("bash", false, "Generate bash completion script")
+	genZsh = rootCmd.PersistentFlags().Bool("zsh", false, "Generate zsh completion script")
 	runSetupWizard = rootCmd.PersistentFlags().Bool("setup-wizard", false, "Run setup wizard")
 	addAll = rootCmd.PersistentFlags().BoolP("all", "a", false, "Add all tracked files to the commit")
 	rootCmd.PersistentFlags().BoolVar(&runOptions.Yolo, "yolo", false, "Commit immediately without asking for confirmation")
