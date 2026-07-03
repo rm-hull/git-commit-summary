@@ -36,7 +36,7 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
-		Short: "Generate a commit summary using Gemini or OpenAI",
+		Short: fmt.Sprintf("Generate a commit summary using Gemini, OpenAI, Llama.cpp, OpenRouter (version: %s)", versioninfo.Short()),
 		Run: func(cmd *cobra.Command, args []string) {
 			if *installHook {
 				err := setup.InstallHook()
