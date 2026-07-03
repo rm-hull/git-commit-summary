@@ -25,18 +25,13 @@ func InstallHook() error {
 			return fmt.Errorf("a prepare-commit-msg hook already exists at %s; please back up and remove it before installing", hookPath)
 		}
 	}
-	absExe, err := os.Executable()
-	if err != nil {
-		return fmt.Errorf("failed to get current executable path: %w", err)
-	}
-
-	content := fmt.Sprintf("#!/bin/sh\n\"%s\" --yolo \"$1\"\n", filepath.ToSlash(absExe))
 
 	err = os.MkdirAll(filepath.Dir(hookPath), 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create hooks directory: %w", err)
 	}
 
+	content := "#!/bin/sh\nCMD=$(which git-commit-summary)\nif [ -n \"$CMD\" ]; then\n  \"$CMD\" --yolo \"$1\"\nfi\n"
 	err = os.WriteFile(hookPath, []byte(content), 0755)
 	if err != nil {
 		return fmt.Errorf("failed to write hook file: %w", err)
