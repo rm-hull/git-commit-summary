@@ -85,10 +85,6 @@ func main() {
 			}
 			handleError(err)
 
-			if len(args) > 0 {
-				runOptions.CommitMsgFile = args[0]
-			}
-
 			application := app.NewApp(provider, git.NewClient(*addAll), cfg.Prompt, cfg.IncludeProjectContext, cfg.RecentCommitsCount)
 			err = application.Run(ctx, runOptions)
 			handleError(err)
