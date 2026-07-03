@@ -18,6 +18,10 @@ import (
 )
 
 func main() {
+	if os.Getenv("GIT_COMMIT_SUMMARY_IGNORE_HOOK") == "1" {
+		os.Exit(0)
+	}
+
 	cfg, err := config.Load()
 	handleError(err)
 
