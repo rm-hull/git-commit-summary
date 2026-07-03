@@ -31,6 +31,8 @@ func main() {
 	var runSetupWizard *bool
 	var showVersion *bool
 	var addAll *bool
+	var genBash *bool
+	var genZsh *bool
 	var installHook *bool
 	var uninstallHook *bool
 
@@ -49,6 +51,14 @@ func main() {
 			if *uninstallHook {
 				err := setup.UninstallHook()
 				runOpts.HandleError(err)
+				os.Exit(0)
+			}
+			if *genBash {
+				_ = cmd.GenBashCompletion(os.Stdout)
+				os.Exit(0)
+			}
+			if *genZsh {
+				_ = cmd.GenZshCompletion(os.Stdout)
 				os.Exit(0)
 			}
 			if *showVersion {
@@ -92,6 +102,8 @@ func main() {
 	}
 
 	showVersion = rootCmd.PersistentFlags().BoolP("version", "v", false, "Display version information")
+	genBash = rootCmd.PersistentFlags().Bool("bash", false, "Generate bash completion script")
+	genZsh = rootCmd.PersistentFlags().Bool("zsh", false, "Generate zsh completion script")
 	runSetupWizard = rootCmd.PersistentFlags().Bool("setup-wizard", false, "Run setup wizard")
 	addAll = rootCmd.PersistentFlags().BoolP("all", "a", false, "Add all tracked files to the commit")
 	rootCmd.PersistentFlags().BoolVar(&runOpts.Yolo, "yolo", false, "Commit immediately without asking for confirmation")

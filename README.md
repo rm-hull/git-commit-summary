@@ -11,6 +11,7 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 - **Contextual Hints:** Provide additional context to the LLM via the `--hint` flag to improve relevance.
 - **Git Hook Integration:** Easily install as a `prepare-commit-msg` hook to automatically generate summaries when you run `git commit`.
 - **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
+- **Auto-completion:** Supports shell auto-completion for flags in Bash and Zsh.
 - **Multiple LLM Providers:** Supports Google Gemini, OpenAI, OpenRouter, and local Llama.cpp instances.
 - **Raw Diff View:** Quickly review your staged changes with a colored diff directly within the editor.
 - **Setup Wizard:** Easy configuration with an interactive setup wizard.
@@ -108,6 +109,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | Flag               | Shorthand | Description                                                           |
 | :----------------- | :-------- | :-------------------------------------------------------------------- |
 | `--all`            | `-a`      | Add all tracked files to the commit                                   |
+| `--bash`           |           | Generate bash completion script                                       |
 | `--help`           | `-h`      | Show help                                                             |
 | `--hint`           | `-H`      | Provide contextual guidance for the commit summary generation         |
 | `--install-hook`   |           | Install as a `prepare-commit-msg` hook in the current repository      |
@@ -119,6 +121,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | `--uninstall-hook` |           | Remove the `prepare-commit-msg` hook from the current repository      |
 | `--version`        | `-v`      | Display version                                                       |
 | `--yolo`           |           | Commit immediately without asking for confirmation                    |
+| `--zsh`            |           | Generate zsh completion script                                        |
 
 ## Git Alias
 
@@ -129,6 +132,30 @@ git config --global alias.cs commit-summary
 ```
 
 Now you can just run `git cs`.
+
+## Auto-completion
+
+`git-commit-summary` supports shell auto-completion for flags.
+
+### Bash
+
+To enable auto-completion for the current session, run:
+
+```bash
+. <(git-commit-summary --bash)
+```
+
+To make it permanent, add the above line to your `~/.bashrc` or `~/.bash_profile`.
+
+### Zsh
+
+To enable auto-completion for the current session, run:
+
+```bash
+source <(git-commit-summary --zsh)
+```
+
+To make it permanent, add the above line to your `~/.zshrc`.
 
 ## Stats
 
