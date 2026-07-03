@@ -15,8 +15,15 @@ func InstallHook() error {
 		return fmt.Errorf("not a git repository: %w", err)
 	}
 
-	gitDirStr := string(gitDir[:len(gitDir)-1])
+	gitDirStr := strings.TrimSpace(string(gitDir))
 	hookPath := filepath.Join(gitDirStr, "hooks", "prepare-commit-msg")
+
+	if _, err := os.Stat(hookPath); err == nil {
+		existingContent, err := os.ReadFile(hookPath)
+		if err == nil && !strings.Contains(string(existingContent), "git-commit-summary") {
+			return fmt.Errorf("a prepare-commit-msg hook already exists at %s; please back up and remove it before installing", hookPath)
+		}
+	}
 	absExe, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("failed to get current executable path: %w", err)
