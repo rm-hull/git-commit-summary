@@ -89,7 +89,7 @@ func userHomeGitCommitSummaryIgnore() string {
 }
 
 func xdgConfigGitCommitSummaryIgnore() string {
-	config, err := xdg.ConfigFile("git-commit-summary/.gitcommitsummaryignore")
+	config, err := xdg.SearchConfigFile("git-commit-summary/.gitcommitsummaryignore")
 	if err != nil {
 		return ""
 	}
