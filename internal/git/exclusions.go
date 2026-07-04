@@ -66,8 +66,8 @@ func projectGitCommitSummaryIgnore() string {
 
 	for {
 		ignorePath := filepath.Join(cwd, ".gitcommitsummaryignore")
-		if content := readFileString(ignorePath); content != "" {
-			return content
+		if data, err := os.ReadFile(ignorePath); err == nil {
+			return string(data)
 		}
 
 		parent := filepath.Dir(cwd)
