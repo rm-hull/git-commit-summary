@@ -16,12 +16,7 @@ func TestProjectGitCommitSummaryIgnore(t *testing.T) {
 	ignoreFile := filepath.Join(tempDir, "repo", ".gitcommitsummaryignore")
 	assert.NoError(t, os.WriteFile(ignoreFile, []byte("ignored-file.txt\n"), 0o644))
 
-	current, err := os.Getwd()
-	assert.NoError(t, err)
-	assert.NoError(t, os.Chdir(repoDir))
-	defer func() {
-		_ = os.Chdir(current)
-	}()
+	t.Chdir(repoDir)
 
 	actual := projectGitCommitSummaryIgnore()
 	assert.Equal(t, "ignored-file.txt\n", actual)
