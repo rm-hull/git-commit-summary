@@ -24,7 +24,8 @@ func TestProjectGitCommitSummaryIgnore(t *testing.T) {
 
 func TestUserHomeGitCommitSummaryIgnore(t *testing.T) {
 	tempHome := t.TempDir()
-	assert.NoError(t, os.Setenv("HOME", tempHome))
+	t.Setenv("HOME", tempHome)
+	t.Setenv("USERPROFILE", tempHome)
 
 	ignoreFile := filepath.Join(tempHome, ".gitcommitsummaryignore")
 	assert.NoError(t, os.WriteFile(ignoreFile, []byte("*.secret\n"), 0o644))
