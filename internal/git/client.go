@@ -124,7 +124,7 @@ func (c *Client) diffArgs(color, exclude bool) []string {
 		args = append(args,
 			"--diff-filter=ACMRTUXBD",
 			"--", // separates options from pathspecs
-			".",  // include everything under the repo root
+			":/", // include everything under the repo root
 		)
 		args = append(args, exclusions()...)
 	}

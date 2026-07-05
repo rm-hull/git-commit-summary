@@ -6,6 +6,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestClient_diffArgs(t *testing.T) {
+	client := NewClient(false)
+	args := client.diffArgs(false, true)
+
+	// Check that :/ is in the args after the separator --
+	found := false
+	for i, arg := range args {
+		if arg == "--" && i+1 < len(args) && args[i+1] == ":/" {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "Expected :/ to be present after -- separator in diffArgs")
+}
+
 func TestClient_prepareCommitMessage(t *testing.T) {
 	client := NewClient(false)
 
