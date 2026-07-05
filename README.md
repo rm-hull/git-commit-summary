@@ -13,6 +13,7 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 - **Interactive Confirmation:** Prompts you to confirm the commit message before committing.
 - **Auto-completion:** Supports shell auto-completion for flags in Bash and Zsh.
 - **Multiple LLM Providers:** Supports Google Gemini, OpenAI, OpenRouter, and local Llama.cpp instances.
+- **Exclusion Lists:** Easily ignore specific files or patterns via `.gitcommitsummaryignore` files.
 - **Raw Diff View:** Quickly review your staged changes with a colored diff directly within the editor.
 - **Setup Wizard:** Easy configuration with an interactive setup wizard.
 
@@ -122,6 +123,10 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | `--version`        | `-v`      | Display version                                                       |
 | `--yolo`           |           | Commit immediately without asking for confirmation                    |
 | `--zsh`            |           | Generate zsh completion script                                        |
+
+## Ignoring Files
+
+You can exclude specific files or patterns from analysis by creating a `.gitcommitsummaryignore` file. For more details, see [docs/exclusions.md](./docs/exclusions.md).
 
 ## Git Alias
 
