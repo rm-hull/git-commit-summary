@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"fmt"
 	"io"
 	"os"
@@ -122,16 +123,10 @@ func (c *Client) diffArgs(color, exclude bool) []string {
 	if exclude {
 		args = append(args,
 			"--diff-filter=ACMRTUXBD",
-			"--",                 // separates options from pathspecs
-			":/",                 // include everything under the repo root
-			":(exclude)*-lock.*", // package-lock.json, pnpm-lock.yaml, etc.
-			":(exclude)*.lock",   // yarn.lock, poetry.lock, Cargo.lock, etc.
-			":(exclude)**/build/**",
-			":(exclude)**/dist/**",
-			":(exclude)**/target/**",
-			":(exclude)**/out/**",
-			":(exclude)go.sum",
+			"--", // separates options from pathspecs
+			":/", // include everything under the repo root
 		)
+		args = append(args, exclusions()...)
 	}
 	return args
 }
