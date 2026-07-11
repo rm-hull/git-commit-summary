@@ -58,14 +58,33 @@ def main():
 
     releases = fetch_releases(repo)
 
-    stats = [
-        {
-            "tag": r["tag_name"],
-            "downloads": sum(a["download_count"] for a in r["assets"]),
-        }
-        for r in releases
-    ]
-    stats = [s for s in stats if s["downloads"] > 0]
+    def get_arch(name: str) -> str | None:
+        if name == "checksums.txt":
+            return None
+        parts = name.split("_")
+        # Expecting: [app_name, version, os, arch.ext]
+        if len(parts) < 4:
+            return None
+        os_part = parts[-2]
+        arch_part = parts[-1].split(".")[0]
+        return f"{os_part}_{arch_part}"
+
+    stats = []
+    for r in releases:
+        arch_counts = {}
+        total_downloads = 0
+        for a in r["assets"]:
+            arch = get_arch(a["name"])
+            if arch:
+                count = a["download_count"]
+                arch_counts[arch] = arch_counts.get(arch, 0) + count
+                total_downloads += count
+        if total_downloads > 0:
+            stats.append({
+                "tag": r["tag_name"],
+                "downloads": total_downloads,
+                "arch_counts": arch_counts,
+            })
     stats.reverse()  # chronological order
 
     if not stats:
@@ -116,14 +135,14 @@ def main():
 
     fig, ax = plt.subplots(figsize=(max(10, len(tags) * 0.5), 5))
 
-    colors = []
-    for s in filtered:
-        if s["tag"] == latest["tag"] and not is_latest_in_top20:
-            colors.append("#73726c")  # gray — latest but not top 20
-        else:
-            colors.append("#378ADD")  # blue — top 20
+    all_archs = sorted({arch for s in filtered for arch in s["arch_counts"]})
+    bottoms = [0] * len(filtered)
+    cmap = plt.get_cmap("tab10")
 
-    bars = ax.bar(tags, counts, color=colors, width=0.7)
+    for i, arch in enumerate(all_archs):
+        arch_counts = [s["arch_counts"].get(arch, 0) for s in filtered]
+        ax.bar(tags, arch_counts, bottom=bottoms, label=arch, color=cmap(i), width=0.7)
+        bottoms = [b + c for b, c in zip(bottoms, arch_counts)]
 
     ax.set_title(f"Downloads per release — {repo}", fontsize=13, pad=12)
     ax.set_xlabel("Release", fontsize=10)
@@ -147,18 +166,9 @@ def main():
         fontsize=8,
     )
 
-    # Legend if latest is shown outside top 20
-    if not is_latest_in_top20:
-        from matplotlib.patches import Patch
-
-        ax.legend(
-            handles=[
-                Patch(color="#378ADD", label="top 20 by downloads"),
-                Patch(color="#73726c", label="latest release"),
-            ],
-            fontsize=9,
-            frameon=False,
-        )
+    # Legend for architectures
+    if all_archs:
+        ax.legend(fontsize=9, frameon=False, loc="upper left", bbox_to_anchor=(1, 1))
 
     fig.tight_layout()
     fig.savefig(OUTPUT, dpi=150, bbox_inches="tight")
