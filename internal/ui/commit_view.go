@@ -246,10 +246,7 @@ func (m *commitViewModel) View() tea.View {
 		"─", m.textarea.Width()-lipgloss.Width(title)-lipgloss.Width(durationStr)+2) + durationStr
 
 	if lintErr := m.commitLint(m.textarea.Value()); lintErr != "" {
-		padding := m.textarea.Width() - lipgloss.Width(lintErr)
-		if padding < 0 {
-			padding = 0
-		}
+		padding := max(m.textarea.Width()-lipgloss.Width(lintErr), 0)
 		titleBorder.Bottom = strings.Repeat("─", padding) + lintErr
 	}
 
