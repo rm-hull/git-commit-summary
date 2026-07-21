@@ -16,4 +16,6 @@ var (
 	Background    = lipgloss.NewStyle().Background(compat.AdaptiveColor{Light: lipgloss.Color("#DDDDDD"), Dark: lipgloss.Color("#222222")}).Bold(true)
 	Strikethrough = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Strikethrough(true)
 	WhiteBold     = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).Bold(true).Underline(true)
+
+	YellowBackground = lipgloss.NewStyle().Background(compat.AdaptiveColor{Light: lipgloss.Color("#FFD700"), Dark: lipgloss.Color("#FFFF00")}).Bold(true)
 )

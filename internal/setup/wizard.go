@@ -191,6 +191,11 @@ func options(cfg *config.Config, provider string) []huh.Option[string] {
 		if opt.Deprecated {
 			name = ui.Strikethrough.Render(name) + " (deprecated)"
 		}
+
+		if opt.Tag != "" {
+			name += " " + ui.YellowBackground.Render(" "+opt.Tag+" ")
+		}
+
 		options = append(options, huh.NewOption(name, opt.Model))
 	}
 
