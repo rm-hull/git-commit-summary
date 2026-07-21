@@ -3,6 +3,16 @@
     "providers": {
         "google": [
             {
+                "name": "Gemini 3.6 Flash",
+                "model": "gemini-3.6-flash",
+                "tag": "NEW!"
+            },
+            {
+                "name": "Gemini 3.5 Flash Lite",
+                "model": "gemini-3.5-flash-lite",
+                "tag": "NEW!"
+            },
+            {
                 "name": "Gemini 3.5 Flash",
                 "model": "gemini-3.5-flash"
             },
