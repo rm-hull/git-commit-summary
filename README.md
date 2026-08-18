@@ -14,7 +14,7 @@ Tired of writing git commit messages? This tool uses AI ✨ to automatically gen
 - **Auto-completion:** Supports shell auto-completion for flags in Bash and Zsh.
 - **Multiple LLM Providers:** Supports Google Gemini, OpenAI, OpenRouter, and local Llama.cpp instances.
 - **Exclusion Lists:** Easily ignore specific files or patterns via `.gitcommitsummaryignore` files.
-- **Raw Diff View:** Quickly review your staged changes with a colored diff directly within the editor.
+- **Diff View:** Quickly review your staged changes with a colored raw diff or compact summary directly within the editor.
 - **Setup Wizard:** Easy configuration with an interactive setup wizard.
 
 ![diff_view](./docs/diff_view.png)
@@ -102,8 +102,8 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
     - `CTRL+K`: Clear the generated commit message
     - `CTRL+X`: Cut line and copy to clipboard
     - `CTRL+P`: Toggle preview mode
-    - `CTRL+D`: View raw colored diff of staged changes
-    - `ESC`: Abort
+    - `CTRL+D`: Open the raw colored diff; toggle between raw diff and compact summary while viewing the diff
+    - `ESC`: Return from the diff view, or abort the editor
 
 ## Flags
 

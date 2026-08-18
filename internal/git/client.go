@@ -101,6 +101,17 @@ func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) 
 	return strings.ReplaceAll(output, "\t", "    "), nil
 }
 
+func (c *Client) DiffCompactSummary(ctx context.Context) (string, error) {
+	args := c.diffArgs(true, false)
+	args = append(args, "--compact-summary")
+
+	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
+	if err != nil {
+		return "", errors.Wrap(err, "git diff compact summary failed")
+	}
+	return strings.ReplaceAll(string(result), "\t", "    "), nil
+}
+
 func (c *Client) diffArgs(color, exclude bool) []string {
 	args := []string{
 		"--no-pager",

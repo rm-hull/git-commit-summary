@@ -33,15 +33,17 @@ type (
 		content  string
 		duration time.Duration
 	}
-	commitMsg            string
-	diffColorMsg         string
-	errMsg               struct{ err error }
-	abortMsg             struct{}
-	regenerateMsg        struct{}
-	cancelRegenPromptMsg struct{}
-	showDiffViewMsg      struct{}
-	cancelDiffViewMsg    struct{}
-	userResponseMsg      string
+	commitMsg              string
+	diffColorMsg           string
+	diffSummaryMsg         string
+	errMsg                 struct{ err error }
+	abortMsg               struct{}
+	regenerateMsg          struct{}
+	cancelRegenPromptMsg   struct{}
+	showDiffViewMsg        struct{}
+	showDiffSummaryViewMsg struct{}
+	cancelDiffViewMsg      struct{}
+	userResponseMsg        string
 )
 
 type Action int
@@ -199,14 +201,26 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.commitView.Init()
 
 	case showDiffViewMsg:
+		if m.state == showDiffView && m.diffLoaded {
+			m.diffView, cmd = m.diffView.Update(msg)
+			return m, cmd
+		}
 		m.state = showDiffView
 		if !m.diffLoaded {
 			return m, m.getFullDiffWithColor
 		}
 		return m, m.diffView.Init()
 
+	case showDiffSummaryViewMsg:
+		m.state = showDiffView
+		return m, m.getDiffCompactSummary
+
 	case diffColorMsg:
 		m.diffLoaded = true
+		m.diffView, cmd = m.diffView.Update(msg)
+		return m, cmd
+
+	case diffSummaryMsg:
 		m.diffView, cmd = m.diffView.Update(msg)
 		return m, cmd
 
@@ -292,6 +306,16 @@ func (m *Model) getFullDiffWithColor() tea.Msg {
 		return errMsg{err}
 	}
 	return diffColorMsg(diff)
+}
+
+func (m *Model) getDiffCompactSummary() tea.Msg {
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	defer cancel()
+	diff, err := m.gitClient.DiffCompactSummary(ctx)
+	if err != nil {
+		return errMsg{err}
+	}
+	return diffSummaryMsg(diff)
 }
 
 func (m *Model) getGitDiffForLLM() tea.Msg {

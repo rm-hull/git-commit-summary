@@ -57,6 +57,11 @@ func (m *MockGitClient) Diff(ctx context.Context, color, exclude bool) (string, 
 	return args.String(0), args.Error(1)
 }
 
+func (m *MockGitClient) DiffCompactSummary(ctx context.Context) (string, error) {
+	args := m.Called(ctx)
+	return args.String(0), args.Error(1)
+}
+
 func (m *MockGitClient) Commit(ctx context.Context, message string, skipCI, noVerify bool) error {
 	args := m.Called(ctx, message, skipCI, noVerify)
 	return args.Error(0)
@@ -252,6 +257,20 @@ func TestModel_Update(t *testing.T) {
 		assert.Equal(t, showCommitView, updatedModel.(*Model).state)
 		assert.True(t, cv.helpText)
 		assert.NotNil(t, cmd)
+	})
+
+	t.Run("showDiffSummaryViewMsg - loads compact summary", func(t *testing.T) {
+		llm, git := new(MockLLMProvider), new(MockGitClient)
+		m := initialModel(llm, git)
+		m.state = showCommitView
+		git.On("DiffCompactSummary", mock.Anything).Return("file.go | 2 +-", nil).Once()
+
+		updatedModel, cmd := m.Update(showDiffSummaryViewMsg{})
+
+		assert.Equal(t, showDiffView, updatedModel.(*Model).state)
+		assert.NotNil(t, cmd)
+		assert.Equal(t, diffSummaryMsg("file.go | 2 +-"), cmd())
+		git.AssertExpectations(t)
 	})
 
 	t.Run("errMsg", func(t *testing.T) {
