@@ -1,8 +1,12 @@
 *-lock.*
 *.lock
 .yarn/releases/**
-**/build/**
-**/dist/**
-**/target/**
-**/out/**
+**/build/
+build/
+**/dist/
+dist/
+**/target/
+target/
+**/out/
+out/
 go.sum
