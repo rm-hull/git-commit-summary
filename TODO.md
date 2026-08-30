@@ -21,7 +21,7 @@ A `Makefile` would automate common development tasks, such as building, testing,
 ## 4. Error Handling
 - **Provide more context for errors:** When an error occurs, log the error message and any relevant context, such as the file or line number where the error occurred.
 
-## 5. Repository-Specific Configuration
+## 5. ~~Repository-Specific Configuration~~
 Allow projects to define their own commit standards.
 
 - **Support local configuration:** Check for `.git-commit-summary.yaml` in the current working directory.
@@ -32,7 +32,7 @@ Improve perceived latency by streaming LLM output.
 
 - **Integrate streaming:** Hook into `bubbletea` to render tokens as they arrive from the LLM provider.
 
-## 7. Git Hook Integration
+## 7. ~~Git Hook Integration~~
 Automate the workflow for developers.
 
 - **Create `install-hook` command:** Implement a flag or command that generates a `.git/hooks/prepare-commit-msg` script.
