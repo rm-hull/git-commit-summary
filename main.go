@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"os"
 
@@ -10,12 +11,16 @@ import (
 	"github.com/rm-hull/git-commit-summary/internal/app"
 	"github.com/rm-hull/git-commit-summary/internal/config"
 	"github.com/rm-hull/git-commit-summary/internal/git"
+	"github.com/rm-hull/git-commit-summary/internal/help"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 	llmprovider "github.com/rm-hull/git-commit-summary/internal/llm_provider"
 	"github.com/rm-hull/git-commit-summary/internal/setup"
 	"github.com/rm-hull/git-commit-summary/internal/ui"
 	"github.com/spf13/cobra"
 )
+
+//go:embed HELP.md
+var helpText string
 
 func main() {
 	if os.Getenv("GIT_COMMIT_SUMMARY_IGNORE_HOOK") == "1" {
@@ -39,6 +44,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
 		Short: fmt.Sprintf("Generate a commit summary using Gemini, OpenAI, Llama.cpp, OpenRouter (version: %s)", versioninfo.Short()),
+		Long:  help.RenderMarkdownHelp(helpText, help.TerminalWidth()),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
 				runOpts.CommitMsgFile = args[0]

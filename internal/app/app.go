@@ -34,7 +34,7 @@ type RunOptions struct {
 	NoVerify      bool
 }
 
-func(ro *RunOptions) HandleError(err error) {
+func (ro *RunOptions) HandleError(err error) {
 	if err != nil {
 		if errors.Is(err, interfaces.ErrAborted) {
 			fmt.Println(ui.BoldRed.Render("ABORTED!"))
