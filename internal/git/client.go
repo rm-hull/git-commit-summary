@@ -10,7 +10,9 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/adrg/xdg"
 	"github.com/cockroachdb/errors"
 	"github.com/creack/pty"
 	"github.com/rm-hull/git-commit-summary/internal/interfaces"
@@ -29,12 +31,19 @@ func NewClient(addAll bool, maxTokens int) *Client {
 }
 
 func (c *Client) IsInWorkTree(ctx context.Context) error {
-	result, err := exec.CommandContext(ctx,
-		"git",
-		"rev-parse",
-		"--is-inside-work-tree",
-	).CombinedOutput()
+	args := []string{"rev-parse", "--is-inside-work-tree"}
+	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
 	output := strings.Trim(string(result), "\n")
+
+	exitCode := 0
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		} else {
+			exitCode = -1
+		}
+	}
+	appendCmdToActivityLog("IsInWorkTree", args, exitCode)
 
 	if err != nil {
 		fmt.Println(output)
@@ -57,6 +66,15 @@ func (c *Client) ModifiedFiles(ctx context.Context) ([]string, error) {
 	}
 
 	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
+	exitCode := 0
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		} else {
+			exitCode = -1
+		}
+	}
+	appendCmdToActivityLog("ModifiedFiles", args, exitCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "listing modified files failed")
 	}
@@ -87,6 +105,15 @@ func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) 
 	cmd := exec.CommandContext(ctx, "git", args...)
 	if !color {
 		result, err := cmd.CombinedOutput()
+		exitCode := 0
+		if err != nil {
+			if exitError, ok := err.(*exec.ExitError); ok {
+				exitCode = exitError.ExitCode()
+			} else {
+				exitCode = -1
+			}
+		}
+		appendCmdToActivityLog("Diff", args, exitCode)
 		if err != nil {
 			return "", errors.Wrap(err, "git diff failed")
 		}
@@ -103,6 +130,16 @@ func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) 
 	var buf bytes.Buffer
 	_, copyErr := io.Copy(&buf, ptmx)
 	waitErr := cmd.Wait()
+
+	exitCode := 0
+	if waitErr != nil {
+		if exitError, ok := waitErr.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		} else {
+			exitCode = -1
+		}
+	}
+	appendCmdToActivityLog("StagedCharDiffs", args, exitCode)
 
 	if copyErr != nil && !errors.Is(copyErr, syscall.EIO) {
 		return "", errors.Wrap(copyErr, "reading git diff output failed")
@@ -126,6 +163,15 @@ func (c *Client) StagedCharDiffs(ctx context.Context) (map[string][2]int, error)
 	}
 
 	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
+	exitCode := 0
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		} else {
+			exitCode = -1
+		}
+	}
+	appendCmdToActivityLog("StagedCharDiffs", args, exitCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "git diff failed")
 	}
@@ -180,6 +226,15 @@ func (c *Client) DiffCompactSummary(ctx context.Context) (string, error) {
 	args = append(args, "--compact-summary")
 
 	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
+	exitCode := 0
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		} else {
+			exitCode = -1
+		}
+	}
+	appendCmdToActivityLog("DiffCompactSummary", args, exitCode)
 	if err != nil {
 		return "", errors.Wrap(err, "git diff compact summary failed")
 	}
@@ -271,8 +326,18 @@ func (c *Client) Commit(ctx context.Context, message string, opts interfaces.Com
 	cmd.Stdin = os.Stdin // allow interactive prompts (e.g., GPG signing, editor, etc.)
 
 	// Run the command
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "git commit failed")
+	runErr := cmd.Run()
+	exitCode := 0
+	if runErr != nil {
+		if exitError, ok := runErr.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		} else {
+			exitCode = -1
+		}
+	}
+	appendCmdToActivityLog("Commit", args, exitCode)
+	if runErr != nil {
+		return errors.Wrap(runErr, "git commit failed")
 	}
 
 	return nil
@@ -289,6 +354,15 @@ func (c *Client) RecentCommits(ctx context.Context, count int) ([]string, error)
 		"--no-merges",
 	}
 	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
+	exitCode := 0
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		} else {
+			exitCode = -1
+		}
+	}
+	appendCmdToActivityLog("RecentCommits", args, exitCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "fetching recent commits failed")
 	}
@@ -297,4 +371,25 @@ func (c *Client) RecentCommits(ctx context.Context, count int) ([]string, error)
 		return nil, nil
 	}
 	return strings.Split(trimmed, "\n"), nil
+}
+
+func appendCmdToActivityLog(method string, args []string, exitCode int) {
+	logFile, err := xdg.ConfigFile("git-commit-summary/activity.log")
+	if err != nil {
+		return
+	}
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return
+	}
+	defer func() { _ = f.Close() }()
+
+	cwd, _ := os.Getwd()
+	_, _ = fmt.Fprintf(f, "%s | %s | CWD: %s | git %s | EXIT: %d\n",
+		time.Now().Format(time.RFC3339),
+		method,
+		cwd,
+		strings.Join(args, " "),
+		exitCode,
+	)
 }
