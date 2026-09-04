@@ -13,6 +13,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/creack/pty"
+	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 )
 
 type Client struct {
@@ -215,8 +216,8 @@ func (c *Client) diffArgs(color, exclude bool) []string {
 	return args
 }
 
-func (c *Client) prepareCommitMessage(message string, skipCI bool, fixes string) string {
-	if skipCI && !strings.Contains(message, "[skip ci]") {
+func (c *Client) prepareCommitMessage(message string, opts interfaces.CommitOptions) string {
+	if opts.SkipCI && !strings.Contains(message, "[skip ci]") {
 		lines := strings.SplitN(message, "\n", 2)
 		subject := strings.TrimRight(lines[0], " \t")
 		if len(lines) == 1 {
@@ -226,15 +227,15 @@ func (c *Client) prepareCommitMessage(message string, skipCI bool, fixes string)
 		}
 	}
 
-	if fixes != "" {
-		message = fmt.Sprintf("%s\n\nFixes %s", message, fixes)
+	if opts.Fixes != "" {
+		message = fmt.Sprintf("%s\n\nFixes %s", message, opts.Fixes)
 	}
 
 	return message
 }
 
-func (c *Client) Commit(ctx context.Context, message string, skipCI, noVerify bool, fixes string) error {
-	message = c.prepareCommitMessage(message, skipCI, fixes)
+func (c *Client) Commit(ctx context.Context, message string, opts interfaces.CommitOptions) error {
+	message = c.prepareCommitMessage(message, opts)
 
 	tmpfile, err := os.CreateTemp("", "gitmsg-*.txt")
 	if err != nil {
@@ -256,7 +257,7 @@ func (c *Client) Commit(ctx context.Context, message string, skipCI, noVerify bo
 	if c.addAll {
 		args = append(args, "-a")
 	}
-	if noVerify {
+	if opts.NoVerify {
 		args = append(args, "--no-verify")
 	}
 	args = append(args, "-F", tmpfile.Name())

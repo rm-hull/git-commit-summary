@@ -62,8 +62,8 @@ func (m *MockGitClient) DiffCompactSummary(ctx context.Context) (string, error) 
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockGitClient) Commit(ctx context.Context, message string, skipCI, noVerify bool, fixes string) error {
-	args := m.Called(ctx, message, skipCI, noVerify, fixes)
+func (m *MockGitClient) Commit(ctx context.Context, message string, opts interfaces.CommitOptions) error {
+	args := m.Called(ctx, message, opts)
 	return args.Error(0)
 }
 

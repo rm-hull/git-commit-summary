@@ -3,6 +3,7 @@ package git
 import (
 	"testing"
 
+	"github.com/rm-hull/git-commit-summary/internal/interfaces"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -78,71 +79,62 @@ func TestClient_prepareCommitMessage(t *testing.T) {
 	tests := []struct {
 		name     string
 		message  string
-		skipCI   bool
-		fixes    string
+		opts     interfaces.CommitOptions
 		expected string
 	}{
 		{
 			name:     "Single line message with skipCI",
 			message:  "feat: something",
-			skipCI:   true,
-			fixes:    "",
+			opts:     interfaces.CommitOptions{SkipCI: true},
 			expected: "feat: something [skip ci]",
 		},
 		{
 			name:     "Multi-line message with skipCI",
 			message:  "feat: something\n\nDetailed description",
-			skipCI:   true,
-			fixes:    "",
+			opts:     interfaces.CommitOptions{SkipCI: true},
 			expected: "feat: something [skip ci]\n\nDetailed description",
 		},
 		{
 			name:     "Single line message without skipCI",
 			message:  "feat: something",
-			skipCI:   false,
-			fixes:    "",
+			opts:     interfaces.CommitOptions{},
 			expected: "feat: something",
 		},
 		{
 			name:     "Multi-line message without skipCI",
 			message:  "feat: something\n\nDetailed description",
-			skipCI:   false,
-			fixes:    "",
+			opts:     interfaces.CommitOptions{},
 			expected: "feat: something\n\nDetailed description",
 		},
 		{
 			name:     "Empty message with skipCI",
 			message:  "",
-			skipCI:   true,
-			fixes:    "",
+			opts:     interfaces.CommitOptions{SkipCI: true},
 			expected: " [skip ci]",
 		},
 		{
 			name:     "Message with fixes",
 			message:  "feat: something",
-			skipCI:   false,
-			fixes:    "#123",
+			opts:     interfaces.CommitOptions{Fixes: "#123"},
 			expected: "feat: something\n\nFixes #123",
 		},
 		{
 			name:     "Message with skipCI and fixes",
 			message:  "feat: something",
-			skipCI:   true,
-			fixes:    "#123",
+			opts:     interfaces.CommitOptions{SkipCI: true, Fixes: "#123"},
 			expected: "feat: something [skip ci]\n\nFixes #123",
 		},
 		{
 			name:     "Multi-line message with fixes",
 			message:  "feat: something\n\nDetailed description",
-			skipCI:   false,
-			fixes:    "GH-456",
+			opts:     interfaces.CommitOptions{Fixes: "GH-456"},
 			expected: "feat: something\n\nDetailed description\n\nFixes GH-456",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := client.prepareCommitMessage(tt.message, tt.skipCI, tt.fixes)
+			actual := client.prepareCommitMessage(tt.message, tt.opts)
 			assert.Equal(t, tt.expected, actual)
 		})
 	}

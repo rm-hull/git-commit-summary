@@ -104,7 +104,11 @@ func (app *App) Run(ctx context.Context, opts RunOptions) error {
 				fmt.Println(m.CommitMessage())
 				fmt.Println()
 			}
-			err = app.git.Commit(ctx, m.CommitMessage(), opts.SkipCI, opts.NoVerify, opts.Fixes)
+			err = app.git.Commit(ctx, m.CommitMessage(), interfaces.CommitOptions{
+				SkipCI:   opts.SkipCI,
+				NoVerify: opts.NoVerify,
+				Fixes:    opts.Fixes,
+			})
 			if err != nil {
 				return err
 			}
