@@ -79,43 +79,70 @@ func TestClient_prepareCommitMessage(t *testing.T) {
 		name     string
 		message  string
 		skipCI   bool
+		fixes    string
 		expected string
 	}{
 		{
 			name:     "Single line message with skipCI",
 			message:  "feat: something",
 			skipCI:   true,
+			fixes:    "",
 			expected: "feat: something [skip ci]",
 		},
 		{
 			name:     "Multi-line message with skipCI",
 			message:  "feat: something\n\nDetailed description",
 			skipCI:   true,
+			fixes:    "",
 			expected: "feat: something [skip ci]\n\nDetailed description",
 		},
 		{
 			name:     "Single line message without skipCI",
 			message:  "feat: something",
 			skipCI:   false,
+			fixes:    "",
 			expected: "feat: something",
 		},
 		{
 			name:     "Multi-line message without skipCI",
 			message:  "feat: something\n\nDetailed description",
 			skipCI:   false,
+			fixes:    "",
 			expected: "feat: something\n\nDetailed description",
 		},
 		{
 			name:     "Empty message with skipCI",
 			message:  "",
 			skipCI:   true,
+			fixes:    "",
 			expected: " [skip ci]",
+		},
+		{
+			name:     "Message with fixes",
+			message:  "feat: something",
+			skipCI:   false,
+			fixes:    "#123",
+			expected: "feat: something\n\nFixes #123",
+		},
+		{
+			name:     "Message with skipCI and fixes",
+			message:  "feat: something",
+			skipCI:   true,
+			fixes:    "#123",
+			expected: "feat: something [skip ci]\n\nFixes #123",
+		},
+		{
+			name:     "Multi-line message with fixes",
+			message:  "feat: something\n\nDetailed description",
+			skipCI:   false,
+			fixes:    "GH-456",
+			expected: "feat: something\n\nDetailed description\n\nFixes GH-456",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := client.prepareCommitMessage(tt.message, tt.skipCI)
+			actual := client.prepareCommitMessage(tt.message, tt.skipCI, tt.fixes)
 			assert.Equal(t, tt.expected, actual)
 		})
 	}

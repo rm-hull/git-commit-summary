@@ -215,20 +215,26 @@ func (c *Client) diffArgs(color, exclude bool) []string {
 	return args
 }
 
-func (c *Client) prepareCommitMessage(message string, skipCI bool) string {
+func (c *Client) prepareCommitMessage(message string, skipCI bool, fixes string) string {
 	if skipCI && !strings.Contains(message, "[skip ci]") {
 		lines := strings.SplitN(message, "\n", 2)
 		subject := strings.TrimRight(lines[0], " \t")
 		if len(lines) == 1 {
-			return fmt.Sprintf("%s [skip ci]", subject)
+			message = fmt.Sprintf("%s [skip ci]", subject)
+		} else {
+			message = fmt.Sprintf("%s [skip ci]\n%s", subject, lines[1])
 		}
-		return fmt.Sprintf("%s [skip ci]\n%s", subject, lines[1])
 	}
+
+	if fixes != "" {
+		message = fmt.Sprintf("%s\n\nFixes %s", message, fixes)
+	}
+
 	return message
 }
 
-func (c *Client) Commit(ctx context.Context, message string, skipCI, noVerify bool) error {
-	message = c.prepareCommitMessage(message, skipCI)
+func (c *Client) Commit(ctx context.Context, message string, skipCI, noVerify bool, fixes string) error {
+	message = c.prepareCommitMessage(message, skipCI, fixes)
 
 	tmpfile, err := os.CreateTemp("", "gitmsg-*.txt")
 	if err != nil {

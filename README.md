@@ -119,6 +119,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | :----------------- | :-------- | :-------------------------------------------------------------------- |
 | `--all`            | `-a`      | Add all tracked files to the commit                                   |
 | `--bash`           |           | Generate bash completion script                                       |
+| `--fixes`          |           | Append 'Fixes <ref>' to the commit message body (e.g. '#123')         |
 | `--help`           | `-h`      | Show help                                                             |
 | `--hint`           | `-H`      | Provide contextual guidance for the commit summary generation         |
 | `--install-hook`   |           | Install as a `prepare-commit-msg` hook in the current repository      |

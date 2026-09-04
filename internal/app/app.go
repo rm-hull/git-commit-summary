@@ -32,6 +32,7 @@ type RunOptions struct {
 	Yolo          bool
 	SkipCI        bool
 	NoVerify      bool
+	Fixes         string
 }
 
 func (ro *RunOptions) HandleError(err error) {
@@ -103,7 +104,7 @@ func (app *App) Run(ctx context.Context, opts RunOptions) error {
 				fmt.Println(m.CommitMessage())
 				fmt.Println()
 			}
-			err = app.git.Commit(ctx, m.CommitMessage(), opts.SkipCI, opts.NoVerify)
+			err = app.git.Commit(ctx, m.CommitMessage(), opts.SkipCI, opts.NoVerify, opts.Fixes)
 			if err != nil {
 				return err
 			}

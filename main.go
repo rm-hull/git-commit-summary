@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/cockroachdb/errors"
 	"github.com/earthboundkid/versioninfo/v2"
@@ -41,6 +42,7 @@ func main() {
 	var installHook *bool
 	var uninstallHook *bool
 	var maxTokens int
+	var fixes string
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
@@ -107,6 +109,16 @@ func main() {
 			if cmd.Flags().Changed("max-tokens") {
 				finalMaxTokens = maxTokens
 			}
+
+			// Handle --fixes flag - if numeric, prepend # for GitHub-style references
+			if fixes != "" {
+				if _, err := strconv.Atoi(fixes); err == nil {
+					runOpts.Fixes = "#" + fixes
+				} else {
+					runOpts.Fixes = fixes
+				}
+			}
+
 			application := app.NewApp(provider, git.NewClient(*addAll, finalMaxTokens), cfg.Prompt, cfg.IncludeProjectContext, cfg.RecentCommitsCount)
 			err = application.Run(ctx, runOpts)
 			runOpts.HandleError(err)
@@ -118,6 +130,7 @@ func main() {
 	genZsh = rootCmd.PersistentFlags().Bool("zsh", false, "Generate zsh completion script")
 	runSetupWizard = rootCmd.PersistentFlags().Bool("setup-wizard", false, "Run setup wizard")
 	addAll = rootCmd.PersistentFlags().BoolP("all", "a", false, "Add all tracked files to the commit")
+	rootCmd.PersistentFlags().StringVar(&fixes, "fixes", "", "Append 'Fixes <ref>' to the commit message body (e.g. '#123' or 'GH-123')")
 	rootCmd.PersistentFlags().BoolVar(&runOpts.Yolo, "yolo", false, "Commit immediately without asking for confirmation")
 	rootCmd.PersistentFlags().BoolVar(&runOpts.SkipCI, "skip-ci", false, "Append [skip ci] to the commit message")
 	rootCmd.PersistentFlags().BoolVar(&runOpts.NoVerify, "no-verify", false, "Bypass pre-commit and commit-msg hooks")
