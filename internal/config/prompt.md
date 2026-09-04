@@ -16,4 +16,10 @@ For complex changes—such as architectural modifications, new data flows, or si
 %s
 ```
 
+Note that some large files may be excluded to stop excessive/unnecessary token consumption. The following compact summary shows the full list of changed files with stats for lines added/removed:
+
+```
+%s
+```
+
 If the diff is empty, just reply with a blank response.

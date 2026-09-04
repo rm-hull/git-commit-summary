@@ -52,13 +52,13 @@ func (m *MockGitClient) ModifiedFiles(ctx context.Context) ([]string, error) {
 	return args.Get(0).([]string), args.Error(1)
 }
 
-func (m *MockGitClient) Diff(ctx context.Context, color, exclude bool) (string, error) {
+func (m *MockGitClient) Diff(ctx context.Context, color, exclude bool) (string, bool, error) {
 	args := m.Called(ctx, color, exclude)
-	return args.String(0), args.Error(1)
+	return args.String(0), args.Bool(1), args.Error(2)
 }
 
-func (m *MockGitClient) DiffCompactSummary(ctx context.Context) (string, error) {
-	args := m.Called(ctx)
+func (m *MockGitClient) DiffCompactSummary(ctx context.Context, color bool) (string, error) {
+	args := m.Called(ctx, color)
 	return args.String(0), args.Error(1)
 }
 
@@ -134,15 +134,16 @@ func TestModel_Update(t *testing.T) {
 		m := initialModel(llm, git)
 		m.state = showSpinner
 
-		git.On("Diff", mock.Anything, false, true).Return("mocked diff content", nil).Once()
+		git.On("Diff", mock.Anything, false, true).Return("mocked diff content", false, nil).Once()
+		git.On("DiffCompactSummary", mock.Anything, false).Return("file.go | 2 +-", nil).Once()
 
 		updatedModel, cmd := m.Update(gitCheckMsg{"file1.go", "file2.go"})
 
 		assert.Nil(t, updatedModel.(*Model).err)
 		assert.NotNil(t, cmd)
 		msg := cmd()
-		assert.IsType(t, gitDiffMsg(""), msg)
-		assert.Equal(t, gitDiffMsg("mocked diff content"), msg)
+		// assert.IsType(t, gitDiffMsg{diff: ""}, msg)
+		assert.Equal(t, gitDiffMsg{diff: "mocked diff content", compactSummary: "file.go | 2 +-", exceededMaxTokens: false}, msg)
 		git.AssertExpectations(t)
 	})
 
@@ -159,7 +160,7 @@ func TestModel_Update(t *testing.T) {
 			return strings.Contains(p, "CONTEXT HINT: prioritize auth flow")
 		})).Return("summary", nil).Once()
 
-		updatedModel, cmd := m.Update(gitDiffMsg(diffContent))
+		updatedModel, cmd := m.Update(gitDiffMsg{diff: diffContent, compactSummary: "", exceededMaxTokens: false})
 
 		assert.Nil(t, updatedModel.(*Model).err)
 		assert.NotNil(t, cmd)
@@ -247,7 +248,7 @@ func TestModel_Update(t *testing.T) {
 		m := initialModel(llm, git)
 		m.state = showRegeneratePrompt
 
-		cv, err := initialCommitViewModel("test message", 0)
+		cv, err := initialCommitViewModel("test message", 0, false)
 		assert.NoError(t, err)
 		cv.helpText = false
 		m.commitView = cv
@@ -263,7 +264,7 @@ func TestModel_Update(t *testing.T) {
 		llm, git := new(MockLLMProvider), new(MockGitClient)
 		m := initialModel(llm, git)
 		m.state = showCommitView
-		git.On("DiffCompactSummary", mock.Anything).Return("file.go | 2 +-", nil).Once()
+		git.On("DiffCompactSummary", mock.Anything, true).Return("file.go | 2 +-", nil).Once()
 
 		updatedModel, cmd := m.Update(showDiffSummaryViewMsg{})
 
@@ -383,7 +384,7 @@ func TestModel_Update(t *testing.T) {
 				strings.Contains(s, "docs: third recent commit")
 		}), mock.Anything).Return("summary", nil).Once()
 
-		updatedModel, cmd := m.Update(gitDiffMsg("mocked diff content"))
+		updatedModel, cmd := m.Update(gitDiffMsg{diff: "mocked diff content", compactSummary: "", exceededMaxTokens: false})
 
 		assert.Nil(t, updatedModel.(*Model).err)
 		assert.NotNil(t, cmd)

@@ -225,8 +225,8 @@ func exceedsMaxTokenLimit(charCounts map[string][2]int, maxTokens int) []string 
 	return exceeds
 }
 
-func (c *Client) DiffCompactSummary(ctx context.Context) (string, error) {
-	args := c.diffArgs(true, false)
+func (c *Client) DiffCompactSummary(ctx context.Context, color bool) (string, error) {
+	args := c.diffArgs(color, false)
 	args = append(args, "--compact-summary")
 
 	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()

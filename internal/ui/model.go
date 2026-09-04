@@ -30,6 +30,7 @@ type (
 	gitCheckMsg []string
 	gitDiffMsg  struct {
 		diff              string
+		compactSummary    string
 		exceededMaxTokens bool
 	}
 	llmResultMsg struct {
@@ -66,6 +67,7 @@ type Model struct {
 	userMessage           string
 	hint                  string
 	diff                  string
+	compactSummary        string
 	spinner               spinner.Model
 	spinnerMessage        string
 	latestVersion         string
@@ -140,8 +142,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Blue.Render(")"),
 		)
 		m.diff = msg.diff
+		m.compactSummary = msg.compactSummary
 		m.exceededMaxTokens = msg.exceededMaxTokens
-		return m, m.generateSummary(m.diff)
+		return m, m.generateSummary(m.diff, m.compactSummary)
 
 	case llmResultMsg:
 		commitMessage := msg.content
@@ -200,7 +203,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Blue.Render(")"),
 		)
 		m.hint = string(msg)
-		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff))
+		return m, tea.Batch(m.spinner.Tick, m.generateSummary(m.diff, m.compactSummary))
 
 	case cancelRegenPromptMsg, cancelDiffViewMsg:
 		m.state = showCommitView
@@ -317,7 +320,7 @@ func (m *Model) getFullDiffWithColor() tea.Msg {
 func (m *Model) getDiffCompactSummary() tea.Msg {
 	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
 	defer cancel()
-	diff, err := m.gitClient.DiffCompactSummary(ctx)
+	diff, err := m.gitClient.DiffCompactSummary(ctx, true)
 	if err != nil {
 		return errMsg{err}
 	}
@@ -331,15 +334,23 @@ func (m *Model) getGitDiffForLLM() tea.Msg {
 	if err != nil {
 		return errMsg{err}
 	}
-	return gitDiffMsg{diff: diff, exceededMaxTokens: exceeded}
+
+	compactSummary, err := m.gitClient.DiffCompactSummary(ctx, false)
+	if err != nil {
+		return errMsg{err}
+	}
+	return gitDiffMsg{
+		diff:              diff,
+		compactSummary:    compactSummary,
+		exceededMaxTokens: exceeded,
+	}
 }
 
-func (m *Model) generateSummary(diff string) tea.Cmd {
+func (m *Model) generateSummary(diff, compactSummary string) tea.Cmd {
 	var systemInstruction string
 	var userPrompt string
 
 	// Split the systemPrompt into instructions and the diff template.
-	// The prompt.md format is: [Instructions] \n\n Diff follows: \n\n ```diff %s ``` ...
 	parts := strings.SplitN(m.systemPrompt, "### Diff", 2)
 	if len(parts) < 2 {
 		// Fallback if "### Diff" is not found in the prompt template.
@@ -347,7 +358,7 @@ func (m *Model) generateSummary(diff string) tea.Cmd {
 		userPrompt = fmt.Sprintf(m.systemPrompt, diff)
 	} else {
 		systemInstruction = strings.TrimSpace(parts[0])
-		userPrompt = fmt.Sprintf(parts[1], diff)
+		userPrompt = fmt.Sprintf(parts[1], diff, compactSummary)
 	}
 
 	if m.includeProjectContext {
