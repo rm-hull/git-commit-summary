@@ -27,9 +27,10 @@ type commitViewModel struct {
 	duration     time.Duration
 	renderer     *glamour.TermRenderer
 	commitParser conventionalcommits.Machine
+	showExceeded bool
 }
 
-func initialCommitViewModel(message string, duration time.Duration) (*commitViewModel, error) {
+func initialCommitViewModel(message string, duration time.Duration, showExceeded bool) (*commitViewModel, error) {
 	ta := textarea.New()
 	ta.CharLimit = 0
 	ta.ShowLineNumbers = false
@@ -84,6 +85,7 @@ func initialCommitViewModel(message string, duration time.Duration) (*commitView
 		duration:     duration,
 		renderer:     renderer,
 		commitParser: parser.NewMachine(parser.WithTypes(conventionalcommits.TypesConventional)),
+		showExceeded: showExceeded,
 	}, nil
 }
 
@@ -250,9 +252,20 @@ func (m *commitViewModel) View() tea.View {
 		titleBorder.Bottom = strings.Repeat("─", padding) + lintErr
 	}
 
-	return tea.NewView(m.boxStyle.
+	content := m.boxStyle.
 		BorderStyle(titleBorder).
-		Render(view) + "\n" + m.helpTextView())
+		Render(view) + "\n" + m.helpTextView()
+
+	if m.showExceeded {
+		content = m.renderExceededModal() + "\n" + content
+	}
+
+	return tea.NewView(content)
+}
+
+func (m *commitViewModel) renderExceededModal() string {
+	return BoldOrange.Render("WARNING:") + Muted.Render(" Large files were automatically excluded from the summary.\n"+
+		"         To include them, increase the max-token limit.")
 }
 
 func (m *commitViewModel) helpTextView() string {

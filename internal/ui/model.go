@@ -27,8 +27,11 @@ const (
 )
 
 type (
-	gitCheckMsg  []string
-	gitDiffMsg   string
+	gitCheckMsg []string
+	gitDiffMsg  struct {
+		diff              string
+		exceededMaxTokens bool
+	}
 	llmResultMsg struct {
 		content  string
 		duration time.Duration
@@ -76,6 +79,7 @@ type Model struct {
 	yolo                  bool
 	includeProjectContext bool
 	recentCommitsCount    int
+	exceededMaxTokens     bool
 }
 
 func InitialModel(
@@ -104,6 +108,7 @@ func InitialModel(
 		yolo:                  yolo,
 		includeProjectContext: includeProjectContext,
 		recentCommitsCount:    recentCommitsCount,
+		exceededMaxTokens:     false,
 	}
 }
 
@@ -134,7 +139,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Blue.Bold(true).Underline(true).Render(m.llmProvider.Model()),
 			Blue.Render(")"),
 		)
-		m.diff = string(msg)
+		m.diff = msg.diff
+		m.exceededMaxTokens = msg.exceededMaxTokens
 		return m, m.generateSummary(m.diff)
 
 	case llmResultMsg:
@@ -165,7 +171,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.state = showCommitView
-		m.commitView, m.err = initialCommitViewModel(commitMessage, msg.duration)
+		m.commitView, m.err = initialCommitViewModel(commitMessage, msg.duration, m.exceededMaxTokens)
 		if m.err != nil {
 			return m, tea.Quit
 		}
@@ -301,7 +307,7 @@ func (m *Model) checkGitStatus() tea.Msg {
 func (m *Model) getFullDiffWithColor() tea.Msg {
 	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
 	defer cancel()
-	diff, err := m.gitClient.Diff(ctx, true, false)
+	diff, _, err := m.gitClient.Diff(ctx, true, false)
 	if err != nil {
 		return errMsg{err}
 	}
@@ -321,11 +327,11 @@ func (m *Model) getDiffCompactSummary() tea.Msg {
 func (m *Model) getGitDiffForLLM() tea.Msg {
 	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
 	defer cancel()
-	diff, err := m.gitClient.Diff(ctx, false, true)
+	diff, exceeded, err := m.gitClient.Diff(ctx, false, true)
 	if err != nil {
 		return errMsg{err}
 	}
-	return gitDiffMsg(diff)
+	return gitDiffMsg{diff: diff, exceededMaxTokens: exceeded}
 }
 
 func (m *Model) generateSummary(diff string) tea.Cmd {

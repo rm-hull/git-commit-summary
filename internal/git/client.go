@@ -86,17 +86,21 @@ func (c *Client) ModifiedFiles(ctx context.Context) ([]string, error) {
 	return strings.Split(trimmed, "\n"), nil
 }
 
-func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) {
+func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, bool, error) {
 	args := c.diffArgs(color, exclude)
 
+	exceeded := false
 	// If maxTokens is set, identify and exclude files with excessive churn
 	if exclude && c.maxTokens > 0 {
 		var excludedFiles []string
 		charCounts, err := c.StagedCharDiffs(ctx)
 		if err != nil {
-			return "", errors.Wrap(err, "failed to calculate character diffs for token limiting")
+			return "", false, errors.Wrap(err, "failed to calculate character diffs for token limiting")
 		}
 		excludedFiles = exceedsMaxTokenLimit(charCounts, c.maxTokens)
+		if len(excludedFiles) > 0 {
+			exceeded = true
+		}
 		for _, file := range excludedFiles {
 			args = append(args, ":(exclude)"+file)
 		}
@@ -115,9 +119,9 @@ func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) 
 		}
 		appendCmdToActivityLog("Diff", args, exitCode)
 		if err != nil {
-			return "", errors.Wrap(err, "git diff failed")
+			return "", false, errors.Wrap(err, "git diff failed")
 		}
-		return strings.ReplaceAll(string(result), "\t", "    "), nil
+		return strings.ReplaceAll(string(result), "\t", "    "), exceeded, nil
 	}
 
 	ptmx, err := pty.Start(cmd)
@@ -142,16 +146,16 @@ func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) 
 	appendCmdToActivityLog("StagedCharDiffs", args, exitCode)
 
 	if copyErr != nil && !errors.Is(copyErr, syscall.EIO) {
-		return "", errors.Wrap(copyErr, "reading git diff output failed")
+		return "", false, errors.Wrap(copyErr, "reading git diff output failed")
 	}
 
 	if waitErr != nil {
-		return "", errors.Wrap(waitErr, "waiting for git diff command failed")
+		return "", false, errors.Wrap(waitErr, "waiting for git diff command failed")
 	}
 
 	output := buf.String()
 	output = strings.ReplaceAll(output, "\r", "")
-	return strings.ReplaceAll(output, "\t", "    "), nil
+	return strings.ReplaceAll(output, "\t", "    "), exceeded, nil
 }
 
 func (c *Client) StagedCharDiffs(ctx context.Context) (map[string][2]int, error) {
