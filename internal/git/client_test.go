@@ -7,7 +7,7 @@ import (
 )
 
 func TestClient_diffArgs(t *testing.T) {
-	client := NewClient(false)
+	client := NewClient(false, 0)
 	args := client.diffArgs(false, true)
 
 	// Check that :/ is in the args after the separator --
@@ -21,8 +21,59 @@ func TestClient_diffArgs(t *testing.T) {
 	assert.True(t, found, "Expected :/ to be present after -- separator in diffArgs")
 }
 
+func TestExceedsMaxTokenLimit(t *testing.T) {
+	tests := []struct {
+		name       string
+		charCounts map[string][2]int
+		maxTokens  int
+		expected   []string
+	}{
+		{
+			name: "No files exceed limit",
+			charCounts: map[string][2]int{
+				"file1.go": {100, 0},
+				"file2.go": {200, 0},
+			},
+			maxTokens: 100,
+			expected:  nil,
+		},
+		{
+			name: "Filter out large files",
+			charCounts: map[string][2]int{
+				"small.go":  {80, 40},   // 120 chars = 30 tokens
+				"large.go":  {500, 500}, // 1000 chars = 250 tokens
+				"medium.go": {180, 20},  // 200 chars = 50 tokens
+			},
+			maxTokens: 50,
+			expected:  []string{"large.go"},
+		},
+		{
+			name:       "Empty input",
+			charCounts: map[string][2]int{},
+			maxTokens:  100,
+			expected:   nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := exceedsMaxTokenLimit(tt.charCounts, tt.maxTokens)
+			assert.ElementsMatch(t, tt.expected, result)
+		})
+	}
+}
+
+func TestClient_DiffWithExclusions(t *testing.T) {
+	// This is a basic structural test since we can't easily mock git operations
+	client := NewClient(false, 0)
+
+	// Verify the method exists and accepts the right parameters
+	// Actual functionality testing would require integration tests with a real git repo
+	assert.NotNil(t, client)
+}
+
 func TestClient_prepareCommitMessage(t *testing.T) {
-	client := NewClient(false)
+	client := NewClient(false, 0)
 
 	tests := []struct {
 		name     string

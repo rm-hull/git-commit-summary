@@ -44,6 +44,7 @@ type Config struct {
 	BaseURL               string `validate:"required_if=LLMProvider llama.cpp"`
 	IncludeProjectContext bool
 	RecentCommitsCount    int `validate:"min=0"`
+	MaxTokens             int `validate:"min=0"`
 	Models                Models
 	Prompt                string
 	validate              *validator.Validate
@@ -68,12 +69,18 @@ func Load() (*Config, error) {
 	// Default to true if not specified.
 	cfg.IncludeProjectContext = true
 	cfg.RecentCommitsCount = 5
+	cfg.MaxTokens = 0
 	if val := strings.ToLower(os.Getenv("INCLUDE_PROJECT_CONTEXT")); val == "false" || val == "0" || val == "f" {
 		cfg.IncludeProjectContext = false
 	}
 	if val := os.Getenv("RECENT_COMMITS_COUNT"); val != "" {
 		if _, err := fmt.Sscanf(val, "%d", &cfg.RecentCommitsCount); err != nil {
 			return nil, errors.Wrapf(err, "invalid RECENT_COMMITS_COUNT value: %s", val)
+		}
+	}
+	if val := os.Getenv("MAX_TOKENS"); val != "" {
+		if _, err := fmt.Sscanf(val, "%d", &cfg.MaxTokens); err != nil {
+			return nil, errors.Wrapf(err, "invalid MAX_TOKENS value: %s", val)
 		}
 	}
 	err = json.Unmarshal(models_raw, &cfg.Models)
@@ -135,6 +142,7 @@ func (cfg *Config) Save() error {
 			"GEMINI_MODEL":            cfg.Model,
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
+			"MAX_TOKENS":              fmt.Sprintf("%d", cfg.MaxTokens),
 		})
 	case "openai":
 		return updateProperties(configPath, map[string]string{
@@ -143,6 +151,7 @@ func (cfg *Config) Save() error {
 			"OPENAI_MODEL":            cfg.Model,
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
+			"MAX_TOKENS":              fmt.Sprintf("%d", cfg.MaxTokens),
 		})
 	case "openrouter":
 		return updateProperties(configPath, map[string]string{
@@ -151,6 +160,7 @@ func (cfg *Config) Save() error {
 			"OPENROUTER_MODEL":        cfg.Model,
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
+			"MAX_TOKENS":              fmt.Sprintf("%d", cfg.MaxTokens),
 		})
 	case "llama.cpp":
 		return updateProperties(configPath, map[string]string{
@@ -160,12 +170,14 @@ func (cfg *Config) Save() error {
 			"LLAMACPP_BASE_URL":       cfg.BaseURL,
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
+			"MAX_TOKENS":              fmt.Sprintf("%d", cfg.MaxTokens),
 		})
 	case "test":
 		return updateProperties(configPath, map[string]string{
 			"LLM_PROVIDER":            "test",
 			"INCLUDE_PROJECT_CONTEXT": fmt.Sprintf("%t", cfg.IncludeProjectContext),
 			"RECENT_COMMITS_COUNT":    fmt.Sprintf("%d", cfg.RecentCommitsCount),
+			"MAX_TOKENS":              fmt.Sprintf("%d", cfg.MaxTokens),
 		})
 	default:
 		return errors.Newf("unknown LLM provider: %s", cfg.LLMProvider)

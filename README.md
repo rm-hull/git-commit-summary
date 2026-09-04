@@ -71,6 +71,14 @@ You can also use a `.env` file in your git repository root for project-specific 
 | **OpenRouter**    | `LLM_PROVIDER="openrouter"`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`                               |
 | **Llama.cpp**     | `LLM_PROVIDER="llama.cpp"`, `LLAMACPP_BASE_URL`, `LLAMACPP_MODEL`, `LLAMACPP_API_KEY` (if required) |
 
+##### Additional Configuration Options
+
+| Environment Variable          | Default | Description                                                                                                 |
+| :---------------------------- | :------ | :---------------------------------------------------------------------------------------------------------- |
+| `INCLUDE_PROJECT_CONTEXT`   | `true`  | Whether to include project context (README.md or PROJECT.md) in prompts.                                    |
+| `RECENT_COMMITS_COUNT`      | `5`     | Number of recent commits to include as context to help the LLM understand project trajectory.              |
+| `MAX_TOKENS`                | `0`     | Maximum number of tokens to spend on each file's diff. Files exceeding this limit are excluded (0 = no limit). Uses ~4 chars/token heuristic. |
+
 #### Local Llama.cpp Example
 
 To point to a local [llama.cpp](https://github.com/ggml-org/llama.cpp) service, use the following config:
@@ -115,6 +123,7 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | `--hint`           | `-H`      | Provide contextual guidance for the commit summary generation         |
 | `--install-hook`   |           | Install as a `prepare-commit-msg` hook in the current repository      |
 | `--llm-provider`   |           | Override the `LLM_PROVIDER` environment variable                      |
+| `--max-tokens`     |           | Override the `MAX_TOKENS` environment variable (per-file diff limit) |
 | `--message`        | `-m`      | Append a message to the commit summary                                |
 | `--no-verify`      |           | Bypass pre-commit and commit-msg hooks                                |
 | `--setup-wizard`   |           | Run the interactive setup wizard                                      |

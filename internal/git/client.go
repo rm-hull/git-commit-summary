@@ -16,12 +16,14 @@ import (
 )
 
 type Client struct {
-	addAll bool
+	addAll    bool
+	maxTokens int
 }
 
-func NewClient(addAll bool) *Client {
+func NewClient(addAll bool, maxTokens int) *Client {
 	return &Client{
-		addAll: addAll,
+		addAll:    addAll,
+		maxTokens: maxTokens,
 	}
 }
 
@@ -68,6 +70,19 @@ func (c *Client) ModifiedFiles(ctx context.Context) ([]string, error) {
 func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) {
 	args := c.diffArgs(color, exclude)
 
+	// If maxTokens is set, identify and exclude files with excessive churn
+	if exclude && c.maxTokens > 0 {
+		var excludedFiles []string
+		charCounts, err := c.StagedCharDiffs(ctx)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to calculate character diffs for token limiting")
+		}
+		excludedFiles = exceedsMaxTokenLimit(charCounts, c.maxTokens)
+		for _, file := range excludedFiles {
+			args = append(args, ":(exclude)"+file)
+		}
+	}
+
 	cmd := exec.CommandContext(ctx, "git", args...)
 	if !color {
 		result, err := cmd.CombinedOutput()
@@ -99,6 +114,64 @@ func (c *Client) Diff(ctx context.Context, color, exclude bool) (string, error) 
 	output := buf.String()
 	output = strings.ReplaceAll(output, "\r", "")
 	return strings.ReplaceAll(output, "\t", "    "), nil
+}
+
+func (c *Client) StagedCharDiffs(ctx context.Context) (map[string][2]int, error) {
+	args := []string{"diff"}
+	if c.addAll {
+		args = append(args, "HEAD")
+	} else {
+		args = append(args, "--staged")
+	}
+
+	result, err := exec.CommandContext(ctx, "git", args...).CombinedOutput()
+	if err != nil {
+		return nil, errors.Wrap(err, "git diff failed")
+	}
+
+	charCounts := make(map[string][2]int) // [added, deleted]
+	diffText := string(result)
+	lines := strings.Split(diffText, "\n")
+	var currentFile string
+	for _, line := range lines {
+		if strings.HasPrefix(line, "diff --git ") {
+			currentFile = strings.TrimSpace(strings.TrimPrefix(line, "diff --git "))
+			if parts := strings.SplitN(currentFile, " b/", 2); len(parts) == 2 {
+				currentFile = parts[1]
+			} else if parts := strings.SplitN(currentFile, " a/", 2); len(parts) == 2 {
+				currentFile = parts[1]
+			}
+		} else if currentFile != "" {
+			var count [2]int
+			if val, ok := charCounts[currentFile]; ok {
+				count = val
+			}
+			if len(line) > 0 {
+				if line[0] == '+' && !strings.HasPrefix(line, "+++") {
+					count[0] += len(line[1:])
+				} else if line[0] == '-' && !strings.HasPrefix(line, "---") {
+					count[1] += len(line[1:])
+				}
+				charCounts[currentFile] = count
+			}
+		}
+	}
+	return charCounts, nil
+}
+
+func exceedsMaxTokenLimit(charCounts map[string][2]int, maxTokens int) []string {
+	var exceeds []string
+	for file, counts := range charCounts {
+		added, deleted := counts[0], counts[1]
+		totalChars := added + deleted
+
+		// rough heuristic: assume 1 token is approximately 4 characters
+		estimatedTokens := (totalChars + 3) / 4
+		if estimatedTokens > maxTokens {
+			exceeds = append(exceeds, file)
+		}
+	}
+	return exceeds
 }
 
 func (c *Client) DiffCompactSummary(ctx context.Context) (string, error) {

@@ -2,6 +2,7 @@ package setup
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"charm.land/huh/v2"
@@ -15,6 +16,7 @@ import (
 func Run(cfg *config.Config) (*config.Config, error) {
 
 	var confirm bool
+	var maxTokensStr string
 
 	options := []huh.Option[string]{
 		huh.NewOption("Google (Gemini)", "google"),
@@ -25,6 +27,10 @@ func Run(cfg *config.Config) (*config.Config, error) {
 
 	if cfg.IsTestMode() {
 		options = append(options, huh.NewOption("Test", "test"))
+	}
+
+	if cfg.MaxTokens > 0 {
+		maxTokensStr = fmt.Sprintf("%d", cfg.MaxTokens)
 	}
 
 	form := huh.NewForm(
@@ -45,6 +51,24 @@ func Run(cfg *config.Config) (*config.Config, error) {
 					huh.NewOption("5", 5),
 				).
 				Value(&cfg.RecentCommitsCount),
+			huh.NewInput().
+				Title("Maximum tokens for diff processing (per file)").
+				Description("Maximum number of tokens to spend on each file's diff.\nFiles exceeding this limit will be excluded from the\nsummary to save tokens. Leave blank for no limit.").
+				Placeholder("No limit").
+				Value(&maxTokensStr).
+				Validate(func(s string) error {
+					if s == "" {
+						return nil
+					}
+					val, err := strconv.Atoi(s)
+					if err != nil {
+						return fmt.Errorf("invalid number: %s", s)
+					}
+					if val < 0 {
+						return fmt.Errorf("value must be non-negative")
+					}
+					return nil
+				}),
 		),
 
 		huh.NewGroup(
@@ -58,7 +82,7 @@ func Run(cfg *config.Config) (*config.Config, error) {
 		openrouterGroup(cfg),
 		llamacppGroup(cfg),
 		validationGroup(cfg),
-		submitGroup(cfg, &confirm),
+		submitGroup(cfg, &maxTokensStr, &confirm),
 	)
 
 	err := form.Run()
@@ -72,6 +96,13 @@ func Run(cfg *config.Config) (*config.Config, error) {
 
 	if !confirm {
 		return nil, interfaces.ErrAborted
+	}
+
+	// Convert maxTokensStr to int
+	if maxTokensStr != "" {
+		if val, err := strconv.Atoi(maxTokensStr); err == nil && val >= 0 {
+			cfg.MaxTokens = val
+		}
 	}
 
 	return cfg, nil
@@ -136,7 +167,7 @@ func llamacppGroup(cfg *config.Config) *huh.Group {
 	})
 }
 
-func submitGroup(cfg *config.Config, confirm *bool) *huh.Group {
+func submitGroup(cfg *config.Config, maxTokensStr *string, confirm *bool) *huh.Group {
 	return huh.NewGroup(
 		huh.NewConfirm().
 			Title("Confirm overwrite settings?").
@@ -148,9 +179,15 @@ func submitGroup(cfg *config.Config, confirm *bool) *huh.Group {
 				if cfg.IncludeProjectContext {
 					contextStr = "YES"
 				}
+				maxTokensDisplay := "No limit"
+				if len(*maxTokensStr) > 0 {
+					if val, err := strconv.Atoi(*maxTokensStr); err == nil && val > 0 {
+						maxTokensDisplay = fmt.Sprintf("%d", val)
+					}
+				}
 				return fmt.Sprintf(
-					"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)\n  - Include project context (%s)\n  - Recent commits count (%d)",
-					cfg.LLMProvider, cfg.APIKey, cfg.Model, contextStr, cfg.RecentCommitsCount)
+					"Using \"%s\" provider with:\n  - API Key (%s)\n  - Model (%s)\n  - Include project context (%s)\n  - Recent commits count (%d)\n  - Max tokens per file (%s)",
+					cfg.LLMProvider, cfg.APIKey, cfg.Model, contextStr, cfg.RecentCommitsCount, maxTokensDisplay)
 
 			}, cfg),
 	).WithHideFunc(func() bool {

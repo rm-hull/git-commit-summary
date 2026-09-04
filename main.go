@@ -40,6 +40,7 @@ func main() {
 	var genZsh *bool
 	var installHook *bool
 	var uninstallHook *bool
+	var maxTokens int
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
@@ -101,7 +102,12 @@ func main() {
 			}
 			runOpts.HandleError(err)
 
-			application := app.NewApp(provider, git.NewClient(*addAll), cfg.Prompt, cfg.IncludeProjectContext, cfg.RecentCommitsCount)
+			// Use config default, but allow CLI flag to override
+			finalMaxTokens := cfg.MaxTokens
+			if cmd.Flags().Changed("max-tokens") {
+				finalMaxTokens = maxTokens
+			}
+			application := app.NewApp(provider, git.NewClient(*addAll, finalMaxTokens), cfg.Prompt, cfg.IncludeProjectContext, cfg.RecentCommitsCount)
 			err = application.Run(ctx, runOpts)
 			runOpts.HandleError(err)
 		},
@@ -120,6 +126,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 	installHook = rootCmd.PersistentFlags().Bool("install-hook", false, "Install git-commit-summary as a prepare-commit-msg hook")
 	uninstallHook = rootCmd.PersistentFlags().Bool("uninstall-hook", false, "Uninstall git-commit-summary as a prepare-commit-msg hook")
+	rootCmd.PersistentFlags().IntVar(&maxTokens, "max-tokens", 0, "Maximum number of tokens to spend for per-file diff processing")
 
 	_ = rootCmd.Execute()
 }
