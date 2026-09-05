@@ -139,6 +139,20 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 
 You can exclude specific files or patterns from analysis by creating a `.gitcommitsummaryignore` file. For more details, see [docs/exclusions.md](./docs/exclusions.md).
 
+## Git Activity Log
+
+All git commands executed by `git-commit-summary` are logged to an activity log file for debugging and auditing purposes. The log includes timestamps, exit codes, and working directories.
+
+The log file is located at an XDG-compliant path:
+- **Linux**: `~/.config/git-commit-summary/activity.log`
+- **MacOS**: `~/Library/Application Support/git-commit-summary/activity.log`
+- **Windows**: `%USERPROFILE%\.config\git-commit-summary\activity.log`
+
+Each log entry follows the format:
+```
+2024-01-15T10:30:00Z | MethodName | CWD: /path/to/repo | git diff --staged | EXIT: 0
+```
+
 ## Git Alias
 
 Add an alias to your `~/.gitconfig` for faster access:
