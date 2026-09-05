@@ -41,8 +41,9 @@ func main() {
 	var genZsh *bool
 	var installHook *bool
 	var uninstallHook *bool
-	var maxTokens int
+	var debugPrompt *bool
 	var fixes string
+	var maxTokens int
 
 	rootCmd := &cobra.Command{
 		Use:   "git-commit-summary",
@@ -110,6 +111,29 @@ func main() {
 				finalMaxTokens = maxTokens
 			}
 
+			if *debugPrompt {
+				ctx := context.Background()
+				gitClient := git.NewClient(*addAll, finalMaxTokens)
+				modifiedFiles, err := gitClient.ModifiedFiles(ctx)
+				runOpts.HandleError(err)
+				if len(modifiedFiles) == 0 {
+					runOpts.HandleError(errors.New("no changes detected"))
+				}
+				diff, exceeded, err := gitClient.Diff(ctx, false, true)
+				runOpts.HandleError(err)
+				compactSummary, err := gitClient.DiffCompactSummary(ctx, false)
+				runOpts.HandleError(err)
+
+				sys, usr := ui.GetPrompts(ctx, cfg.Prompt, diff, compactSummary, cfg.IncludeProjectContext, gitClient, cfg.RecentCommitsCount, runOpts.UserMessage, exceeded)
+
+				sysFile := writeDebugFile(&runOpts, "git-commit-summary-system-*.md", sys)
+				usrFile := writeDebugFile(&runOpts, "git-commit-summary-user-*.md", usr)
+
+				fmt.Printf("System prompt saved to: %s\n", ui.BoldWhite.Render(sysFile))
+				fmt.Printf("User prompt saved to: %s\n", ui.BoldWhite.Render(usrFile))
+				os.Exit(0)
+			}
+
 			// Handle --fixes flag - if numeric, prepend # for GitHub-style references
 			if fixes != "" {
 				if _, err := strconv.Atoi(fixes); err == nil {
@@ -139,7 +163,17 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&llmProvider, "llm-provider", cfg.LLMProvider, "Use specific LLM provider, overrides environment variable LLM_PROVIDER")
 	installHook = rootCmd.PersistentFlags().Bool("install-hook", false, "Install git-commit-summary as a prepare-commit-msg hook")
 	uninstallHook = rootCmd.PersistentFlags().Bool("uninstall-hook", false, "Uninstall git-commit-summary as a prepare-commit-msg hook")
+	debugPrompt = rootCmd.PersistentFlags().Bool("debug-prompt", false, "Save system/user prompts to temporary files and exit")
 	rootCmd.PersistentFlags().IntVar(&maxTokens, "max-tokens", 0, "Maximum number of tokens to spend for per-file diff processing")
 
 	_ = rootCmd.Execute()
+}
+
+func writeDebugFile(runOpts *app.RunOptions, pattern, content string) string {
+	file, err := os.CreateTemp("", pattern)
+	runOpts.HandleError(err)
+	defer func() { _ = file.Close() }()
+	_, err = file.WriteString(content)
+	runOpts.HandleError(err)
+	return file.Name()
 }

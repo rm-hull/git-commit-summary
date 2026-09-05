@@ -347,38 +347,8 @@ func (m *Model) getGitDiffForLLM() tea.Msg {
 }
 
 func (m *Model) generateSummary(diff, compactSummary string) tea.Cmd {
-	var systemInstruction string
-	var userPrompt string
+	systemInstruction, userPrompt := GetPrompts(m.ctx, m.systemPrompt, diff, compactSummary, m.includeProjectContext, m.gitClient, m.recentCommitsCount, m.hint, m.exceededMaxTokens)
 
-	// Split the systemPrompt into instructions and the diff template.
-	parts := strings.SplitN(m.systemPrompt, "### Diff", 2)
-	if len(parts) < 2 {
-		// Fallback if "### Diff" is not found in the prompt template.
-		systemInstruction = ""
-		userPrompt = fmt.Sprintf(m.systemPrompt, diff)
-	} else {
-		systemInstruction = strings.TrimSpace(parts[0])
-		userPrompt = fmt.Sprintf(parts[1], diff, compactSummary)
-	}
-
-	if m.includeProjectContext {
-		if projCtx := m.getProjectContext(); projCtx != "" {
-			systemInstruction += "\n\n### Project Context\n````markdown\n" + projCtx + "\n````"
-		}
-	}
-
-	if m.hint != "" {
-		userPrompt += "\n\nCONTEXT HINT: " + m.hint
-	}
-
-	if m.recentCommitsCount > 0 {
-		ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
-		defer cancel()
-		recent, err := m.gitClient.RecentCommits(ctx, m.recentCommitsCount)
-		if err == nil && len(recent) > 0 {
-			systemInstruction += "\n\n### Recent Commit Style Examples\n````text\n" + strings.Join(recent, "\n") + "\n````"
-		}
-	}
 	return func() tea.Msg {
 		start := time.Now()
 		ctx, cancel := context.WithTimeout(m.ctx, 60*time.Second)
@@ -392,7 +362,43 @@ func (m *Model) generateSummary(diff, compactSummary string) tea.Cmd {
 	}
 }
 
-func (m *Model) getProjectContext() string {
+func GetPrompts(ctx context.Context, prompt, diff, compactSummary string, includeProjectContext bool, gitClient interfaces.GitClient, recentCommitsCount int, hint string, exceededMaxTokens bool) (string, string) {
+	var systemInstruction string
+	var userPrompt string
+
+	// Split the systemPrompt into instructions and the diff template.
+	parts := strings.SplitN(prompt, "<!-- User prompt -->\n", 2)
+	if len(parts) < 2 {
+		// Fallback if comment is not found in the prompt template.
+		systemInstruction = ""
+		userPrompt = fmt.Sprintf(prompt, diff, compactSummary)
+	} else {
+		systemInstruction = strings.TrimSpace(parts[0])
+		userPrompt = fmt.Sprintf(parts[1], diff, compactSummary)
+	}
+
+	if includeProjectContext {
+		if projCtx := getProjectContext(); projCtx != "" {
+			systemInstruction += "\n\n### Project Context\n````markdown\n" + projCtx + "\n````"
+		}
+	}
+
+	if hint != "" {
+		userPrompt += "\n\nCONTEXT HINT: " + hint
+	}
+
+	if recentCommitsCount > 0 {
+		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+		recent, err := gitClient.RecentCommits(ctx, recentCommitsCount)
+		if err == nil && len(recent) > 0 {
+			systemInstruction += "\n\n### Recent Commit Style Examples\n````text\n" + strings.Join(recent, "\n") + "\n````"
+		}
+	}
+	return systemInstruction, userPrompt
+}
+
+func getProjectContext() string {
 	files := []string{".project-context.md", "README.md"}
 	for _, file := range files {
 		data, err := os.ReadFile(file)

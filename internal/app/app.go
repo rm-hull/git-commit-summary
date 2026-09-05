@@ -80,7 +80,7 @@ func (app *App) Run(ctx context.Context, opts RunOptions) error {
 	if latest := m.LatestVersion(); latest != "" {
 		fmt.Printf("%s a new version of %s is available (%s)\n",
 			ui.Blue.Bold(true).Render("NOTICE:"),
-			ui.WhiteBold.Render("git-commit-summary"),
+			ui.BoldWhite.Render("git-commit-summary"),
 			latest)
 	}
 

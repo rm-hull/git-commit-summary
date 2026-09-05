@@ -119,12 +119,13 @@ LLAMACPP_MODEL="Meta-Llama-3.1-8B-Instruct-Q4_K_M"
 | :----------------- | :-------- | :-------------------------------------------------------------------- |
 | `--all`            | `-a`      | Add all tracked files to the commit                                   |
 | `--bash`           |           | Generate bash completion script                                       |
+| `--debug-prompt`   |           | Save system & user prompts to temporary files and exit                |
 | `--fixes`          |           | Append 'Fixes <ref>' to the commit message body (e.g. '#123')         |
 | `--help`           | `-h`      | Show help                                                             |
 | `--hint`           | `-H`      | Provide contextual guidance for the commit summary generation         |
 | `--install-hook`   |           | Install as a `prepare-commit-msg` hook in the current repository      |
 | `--llm-provider`   |           | Override the `LLM_PROVIDER` environment variable                      |
-| `--max-tokens`     |           | Override the `MAX_TOKENS` environment variable (per-file diff limit) |
+| `--max-tokens`     |           | Override the `MAX_TOKENS` environment variable (per-file diff limit)  |
 | `--message`        | `-m`      | Append a message to the commit summary                                |
 | `--no-verify`      |           | Bypass pre-commit and commit-msg hooks                                |
 | `--setup-wizard`   |           | Run the interactive setup wizard                                      |
