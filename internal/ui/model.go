@@ -26,6 +26,8 @@ const (
 	showDiffView
 )
 
+const timerUpdateInterval = time.Second / 3
+
 type (
 	gitCheckMsg []string
 	gitDiffMsg  struct {
@@ -70,6 +72,7 @@ type Model struct {
 	compactSummary        string
 	spinner               spinner.Model
 	spinnerMessage        string
+	spinnerStartTime      time.Time
 	latestVersion         string
 	commitView            tea.Model
 	diffView              tea.Model
@@ -105,6 +108,7 @@ func InitialModel(
 		hint:                  hint,
 		spinner:               spinner.New(spinner.WithSpinner(spinner.MiniDot)),
 		spinnerMessage:        Magenta.Render("Checking whether a newer version exists..."),
+		spinnerStartTime:      time.Now(),
 		diffView:              initialDiffViewModel(72, 20),
 		action:                None,
 		yolo:                  yolo,
@@ -275,7 +279,13 @@ func (m *Model) LatestVersion() string {
 func (m *Model) View() tea.View {
 	switch m.state {
 	case showSpinner:
-		return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
+		msg := m.spinner.View() + " " + m.spinnerMessage
+		waitingTime := time.Since(m.spinnerStartTime)
+		if waitingTime > 5*time.Second {
+			displayedTime := (waitingTime + timerUpdateInterval - 1) / timerUpdateInterval * timerUpdateInterval
+			msg += BoldOrange.Render(fmt.Sprintf(" (working... %.1fs)", displayedTime.Seconds()))
+		}
+		return tea.NewView(msg)
 	case showCommitView:
 		if m.commitView == nil {
 			return tea.NewView(m.spinner.View() + " " + m.spinnerMessage)
