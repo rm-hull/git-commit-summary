@@ -15,10 +15,10 @@ require (
 	github.com/creack/pty v1.1.24
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
 	github.com/galactixx/stringwrap v1.0.4
-	github.com/go-playground/validator/v10 v10.30.4
+	github.com/go-playground/validator/v10 v10.30.5
 	github.com/joho/godotenv v1.5.1
 	github.com/leodido/go-conventionalcommits v0.13.0
-	github.com/openai/openai-go/v3 v3.61.0
+	github.com/openai/openai-go/v3 v3.64.0
 	github.com/revrost/go-openrouter v1.8.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
@@ -28,8 +28,8 @@ require (
 
 require (
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/auth v0.23.2 // indirect
-	cloud.google.com/go/compute/metadata v0.9.0 // indirect
+	cloud.google.com/go/auth v0.23.3 // indirect
+	cloud.google.com/go/compute/metadata v0.9.1 // indirect
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
@@ -38,7 +38,7 @@ require (
 	github.com/charmbracelet/ultraviolet v0.0.0-20260910203606-6c9e17dc7a16 // indirect
 	github.com/charmbracelet/x/ansi v0.11.8 // indirect
 	github.com/charmbracelet/x/exp/ordered v0.1.0 // indirect
-	github.com/charmbracelet/x/exp/slice v0.0.0-20260913004009-c615ff2f7805 // indirect
+	github.com/charmbracelet/x/exp/slice v0.0.0-20260920004010-53e2afe73ae5 // indirect
 	github.com/charmbracelet/x/exp/strings v0.1.0 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
@@ -46,8 +46,9 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
+	github.com/coder/websocket v1.8.15 // indirect
 	github.com/dlclark/regexp2/v2 v2.8.0 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
 	github.com/galactixx/ansiwalker v1.0.0 // indirect
@@ -55,10 +56,10 @@ require (
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
-	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/universal-translator v0.18.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/s2a-go v0.1.9 // indirect
+	github.com/google/s2a-go v0.1.10 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.22 // indirect
 	github.com/googleapis/gax-go/v2 v2.24.1 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
@@ -96,9 +97,9 @@ require (
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	google.golang.org/api v0.297.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260911204522-f61a6ca850bd // indirect
-	google.golang.org/grpc v1.83.2 // indirect
+	google.golang.org/api v0.298.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260918162117-cecb64721679 // indirect
+	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
 
