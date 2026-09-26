@@ -18,7 +18,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/joho/godotenv v1.5.1
 	github.com/leodido/go-conventionalcommits v0.13.0
-	github.com/openai/openai-go/v3 v3.64.0
+	github.com/openai/openai-go/v3 v3.64.3
 	github.com/revrost/go-openrouter v1.8.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
