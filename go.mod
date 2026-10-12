@@ -18,7 +18,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/joho/godotenv v1.5.1
 	github.com/leodido/go-conventionalcommits v0.13.0
-	github.com/openai/openai-go/v3 v3.76.0
+	github.com/openai/openai-go/v3 v3.77.0
 	github.com/revrost/go-openrouter v1.8.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
@@ -103,5 +103,3 @@ require (
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
-
-replace github.com/charmbracelet/ultraviolet => github.com/charmbracelet/ultraviolet v0.0.0-20260803092147-8b693049ce2a
