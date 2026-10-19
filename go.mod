@@ -18,12 +18,12 @@ require (
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/joho/godotenv v1.5.1
 	github.com/leodido/go-conventionalcommits v0.13.0
-	github.com/openai/openai-go/v3 v3.77.0
+	github.com/openai/openai-go/v3 v3.82.0
 	github.com/revrost/go-openrouter v1.8.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/mod v0.42.0
-	google.golang.org/genai v1.74.0
+	google.golang.org/genai v1.75.0
 )
 
 require (
@@ -47,10 +47,10 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
 	github.com/coder/websocket v1.8.15 // indirect
-	github.com/dlclark/regexp2/v2 v2.8.4 // indirect
+	github.com/dlclark/regexp2/v2 v2.9.1 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.16 // indirect
 	github.com/galactixx/ansiwalker v1.0.0 // indirect
 	github.com/getsentry/sentry-go v0.50.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -98,8 +98,8 @@ require (
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
-	google.golang.org/api v0.301.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8 // indirect
+	google.golang.org/api v0.304.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261012220534-4341edf3f941 // indirect
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
