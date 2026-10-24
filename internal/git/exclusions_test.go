@@ -38,6 +38,62 @@ func TestValidateIgnorePattern_InvalidGlob(t *testing.T) {
 	assert.False(t, validateIgnorePattern("[unclosed.glob"))
 }
 
+func TestNormalizeIgnorePattern(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "bare directory with trailing slash",
+			input:    "build/",
+			expected: "**/build/**",
+		},
+		{
+			name:     "double star directory pattern",
+			input:    "**/build/",
+			expected: "**/build/**",
+		},
+		{
+			name:     "pattern already ending with /**",
+			input:    "**/build/**",
+			expected: "**/build/**",
+		},
+		{
+			name:     "nested directory with trailing slash",
+			input:    ".yarn/releases/",
+			expected: "**/.yarn/releases/**",
+		},
+		{
+			name:     "file pattern without trailing slash",
+			input:    "go.sum",
+			expected: "go.sum",
+		},
+		{
+			name:     "glob file pattern",
+			input:    "*.lock",
+			expected: "*.lock",
+		},
+		{
+			name:     "glob file pattern with wildcard",
+			input:    "*-lock.*",
+			expected: "*-lock.*",
+		},
+		{
+			name:     "nested double star file pattern",
+			input:    ".yarn/releases/**",
+			expected: ".yarn/releases/**",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := normalizeIgnorePattern(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestDedupeExclusions(t *testing.T) {
 	excludes := []string{
 		":(exclude)foo.txt",

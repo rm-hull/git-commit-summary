@@ -23,6 +23,12 @@ The `.gitcommitsummaryignore` file uses a simple line-based format:
 *   Patterns starting with `!` (negation) are currently not supported.
 *   Backslashes `\` are not allowed.
 
+### Directory Patterns
+
+When excluding entire directories, use a trailing `**` to match all files within. For example, `**/build/**` excludes everything inside any `build/` directory at any depth.
+
+Directory patterns with a trailing slash (e.g., `build/`) are automatically converted to the `**/build/**` format. This ensures compatibility with Git's `:(exclude)` pathspec, which does not support trailing-slash directory patterns the way `.gitignore` does.
+
 ## Example
 
 ```text

@@ -40,10 +40,35 @@ func exclusions() []string {
 				continue
 			}
 
-			excludes = append(excludes, ":(exclude)"+line)
+			excludes = append(excludes, ":(exclude)"+normalizeIgnorePattern(line))
 		}
 	}
 	return dedupe(excludes)
+}
+
+// normalizeIgnorePattern converts .gitignore-style patterns to Git pathspec-compatible patterns.
+// Git's :(exclude) pathspec does not support ** (recursive glob) or trailing-slash directory
+// patterns the way .gitignore does. This function transforms:
+//   - "build/" -> "**/build/**"
+//   - "**/build/" -> "**/build/**"
+//   - patterns ending with "/**" are left as-is
+//   - file patterns without trailing "/" are left as-is
+func normalizeIgnorePattern(pattern string) string {
+	if !strings.HasSuffix(pattern, "/") {
+		return pattern
+	}
+
+	// Remove trailing slash to get the directory path
+	dirPath := strings.TrimSuffix(pattern, "/")
+
+	// If it already ends with **, it's already a valid pathspec glob
+	if strings.HasSuffix(dirPath, "**") {
+		return pattern
+	}
+
+	// Strip leading **/ if present, then wrap with ** to match at any depth
+	dirPath = strings.TrimPrefix(dirPath, "**/")
+	return "**/" + dirPath + "/**"
 }
 
 func dedupe(excludes []string) []string {
