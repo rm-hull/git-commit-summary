@@ -26,7 +26,7 @@ const (
 	showDiffView
 )
 
-const timerUpdateInterval = time.Second / 3
+const timerUpdateInterval = time.Second / 10
 
 type (
 	gitCheckMsg []string
