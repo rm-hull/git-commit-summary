@@ -26,7 +26,7 @@ const (
 	showDiffView
 )
 
-const timerUpdateInterval = time.Second / 10
+const timerUpdateInterval = time.Second
 
 type (
 	gitCheckMsg []string
@@ -283,7 +283,7 @@ func (m *Model) View() tea.View {
 		waitingTime := time.Since(m.spinnerStartTime)
 		if waitingTime > 5*time.Second {
 			displayedTime := (waitingTime + timerUpdateInterval - 1) / timerUpdateInterval * timerUpdateInterval
-			msg += BoldOrange.Render(fmt.Sprintf(" (working... %.1fs)", displayedTime.Seconds()))
+			msg += BoldOrange.Render(fmt.Sprintf(" (working... %.0fs)", displayedTime.Seconds()))
 		}
 		return tea.NewView(msg)
 	case showCommitView:
