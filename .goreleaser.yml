@@ -46,7 +46,7 @@ homebrew_casks:
       verified: github.com/rm-hull/git-commit-summary
     hooks:
       post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/git-commit-summary"]
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/git-commit-summary"]
           end
