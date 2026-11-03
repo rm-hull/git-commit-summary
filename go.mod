@@ -15,7 +15,7 @@ require (
 	github.com/creack/pty v1.1.24
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
 	github.com/galactixx/stringwrap v1.0.4
-	github.com/go-playground/validator/v10 v10.30.5
+	github.com/go-playground/validator/v10 v10.30.6
 	github.com/joho/godotenv v1.5.1
 	github.com/leodido/go-conventionalcommits v0.13.0
 	github.com/openai/openai-go/v3 v3.91.1
